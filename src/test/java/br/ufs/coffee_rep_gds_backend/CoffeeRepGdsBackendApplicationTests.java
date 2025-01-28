@@ -1,0 +1,13 @@
+package br.ufs.coffee_rep_gds_backend;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class CoffeeRepGdsBackendApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
