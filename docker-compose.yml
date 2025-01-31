@@ -1,3 +1,5 @@
+version: '3.7'
+
 services:
   postgres:
     image: postgres
@@ -37,6 +39,7 @@ services:
       - gds_network
     environment:
       - DB_URL=jdbc:postgresql://gds_database:5432/gds
+    entrypoint: ["sh", "-c", "./mvnw clean package && java -jar target/app.jar"]
 
 volumes:
   pgdata:
