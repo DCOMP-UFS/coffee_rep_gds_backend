@@ -1,5 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.controllers;
 
+import br.ufs.coffee_rep_gds_backend.dtos.CreateUserDto;
 import br.ufs.coffee_rep_gds_backend.dtos.LoginRequest;
 import br.ufs.coffee_rep_gds_backend.dtos.LoginResponse;
 import br.ufs.coffee_rep_gds_backend.services.AuthService;
@@ -20,5 +21,11 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         LoginResponse response = this.authService.authenticate(loginRequest);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@RequestBody CreateUserDto dto) {
+        authService.register(dto);
+        return ResponseEntity.ok().build();
     }
 }

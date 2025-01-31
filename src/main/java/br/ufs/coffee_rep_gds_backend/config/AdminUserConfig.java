@@ -26,7 +26,7 @@ public class AdminUserConfig implements CommandLineRunner {
 
     @Override
     @Transactional
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         var roleAdmin = roleRepository.findByName(Role.Values.ADMIN.name());
 
         if (roleAdmin.isEmpty()) {
