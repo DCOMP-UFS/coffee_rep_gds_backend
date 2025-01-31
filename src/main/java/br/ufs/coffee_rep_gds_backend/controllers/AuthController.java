@@ -4,7 +4,6 @@ import br.ufs.coffee_rep_gds_backend.dtos.LoginRequest;
 import br.ufs.coffee_rep_gds_backend.dtos.LoginResponse;
 import br.ufs.coffee_rep_gds_backend.services.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
