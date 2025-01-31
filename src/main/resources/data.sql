@@ -1,2 +1,2 @@
-INSERT INTO tb_roles (role_id, name) VALUES (1, 'admin');
-INSERT INTO tb_roles (role_id, name) VALUES (2, 'basic');
+INSERT INTO tb_roles (role_id, name) SELECT 1, 'ADMIN' WHERE NOT EXISTS(SELECT role_id FROM tb_roles WHERE role_id = 1);
+INSERT INTO tb_roles (role_id, name) SELECT 2, 'BASIC' WHERE NOT EXISTS(SELECT role_id FROM tb_roles WHERE role_id = 2);

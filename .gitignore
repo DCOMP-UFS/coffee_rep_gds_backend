@@ -4,6 +4,8 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+!**/src/resources/app.key
+
 ### STS ###
 .apt_generated
 .classpath
@@ -31,3 +33,5 @@ build/
 
 ### VS Code ###
 .vscode/
+/src/main/resources/app.key
+/src/main/resources/app.pub
