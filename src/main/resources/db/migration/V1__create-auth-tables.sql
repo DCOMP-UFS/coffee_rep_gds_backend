@@ -14,7 +14,7 @@ CREATE TABLE tb_users (
     username varchar(255), primary key (user_id),
     CONSTRAINT unique_cpf UNIQUE (cpf),
     CONSTRAINT unique_email UNIQUE (email),
-    CONSTRAINT unique_email UNIQUE (username),
+    CONSTRAINT unique_username UNIQUE (username)
 );
 
 CREATE TABLE tb_users_roles (

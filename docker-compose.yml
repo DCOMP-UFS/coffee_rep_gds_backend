@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres
+    container_name: gds_database
+    restart: unless-stopped
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gds
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 5s
+    volumes:
+      - pgdata:/data/postgres
+    networks:
+      - gds_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gds_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    volumes:
+      - .:/gds-app
+    networks:
+      - gds_network
+    environment:
+      - DB_URL=jdbc:postgresql://gds_database:5432/gds
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  gds_network:
+    name: network_gds
+    driver: bridge
