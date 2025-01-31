@@ -2,13 +2,17 @@ package br.ufs.coffee_rep_gds_backend.controllers;
 
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.repositories.UserRepository;
+import br.ufs.coffee_rep_gds_backend.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/user")
@@ -29,7 +33,18 @@ public class UserController {
 
     @GetMapping("authority")
     @PreAuthorize("hasAnyAuthority('SCOPE_ADMIN', 'SCOPE_BASIC')")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.ok("Testing authorities: passed!");
+    public ResponseEntity<String> test(JwtAuthenticationToken token) {
+        Optional<User> optionalUser = userRepository.findById(UUID.fromString(token.getName()));
+
+
+        return ResponseEntity.ok(optionalUser.get().getUsername());
+    }
+
+    @GetMapping("noauthority")
+    public ResponseEntity<String> testNoAuthority(JwtAuthenticationToken token) {
+        Optional<User> optionalUser = userRepository.findById(UUID.fromString(token.getName()));
+
+
+        return ResponseEntity.ok(optionalUser.get().getUsername());
     }
 }
