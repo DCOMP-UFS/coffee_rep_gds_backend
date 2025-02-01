@@ -7,10 +7,6 @@ RUN apk update && apk add --no-cache bash wget ca-certificates
 
 WORKDIR /app
 
-COPY wait-for-it.sh /wait-for-it.sh
-
-RUN chmod +x /wait-for-it.sh
-
 RUN mkdir -p src/main/resources/key
 
 RUN openssl genpkey -algorithm RSA -out src/main/resources/key/app.key -pkeyopt rsa_keygen_bits:2048
