@@ -1,12 +1,10 @@
-version: '3.7'
-
 services:
   postgres:
     image: postgres
     container_name: gds_database
     restart: unless-stopped
     ports:
-      - 5434:5432
+      - 5433:5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
