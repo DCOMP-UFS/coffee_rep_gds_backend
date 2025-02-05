@@ -1,0 +1,60 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker Images
+        run: |
+          docker build -t gds_backend -f Dockerfile .
+
+      - name: Tag Docker Images
+        run: |
+          docker tag gds_backend ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker Images
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} << 'ENDSSH'
+          sudo docker stop app || true
+          sudo docker rm app || true
+          sudo docker network create backend || true
+          
+          echo "DB_URL='jdbc:postgresql://${{ secrets.RDS_ENDPOINT }}:5432/gds'" > .env
+          echo "DB_USERNAME='${{ secrets.RDS_USERNAME }}'" >> .env
+          echo "DB_PASSWORD='${{ secrets.RDS_PASSWORD }}'" >> .env
+          echo "DB_PASSWORD='${{ secrets.EXPIRATION_TIME }}'" >> .env
+          echo "DB_PASSWORD='${{ secrets.ADMIN_CPF }}'" >> .env
+          echo "DB_PASSWORD='${{ secrets.ADMIN_PASSWORD }}'" >> .env
+          
+          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          sudo docker run --env-file .env -d --network=backend --name app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          sudo docker update --restart unless-stopped app
+          
+          ENDSSH

@@ -1,7 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
 import br.ufs.coffee_rep_gds_backend.dtos.LoginRequest;
-import br.ufs.coffee_rep_gds_backend.enums.Position;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import org.hibernate.validator.constraints.br.CPF;
@@ -20,9 +19,10 @@ public class User {
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(unique = true)
-    private String username;
     private String password;
+
+    private String name;
+    private String phone;
 
     @Email
     @Column(unique = true, nullable = false)
@@ -34,9 +34,6 @@ public class User {
 
     @Column(name = "birth_date")
     private Date birthDate;
-
-    @Enumerated(EnumType.STRING)
-    private Position position;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(
@@ -54,20 +51,28 @@ public class User {
         this.userId = userId;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
     public String getPassword() {
         return password;
     }
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public Set<Role> getRoles() {
@@ -100,14 +105,6 @@ public class User {
 
     public void setBirthDate(Date birthDate) {
         this.birthDate = birthDate;
-    }
-
-    public Position getPosition() {
-        return position;
-    }
-
-    public void setPosition(Position position) {
-        this.position = position;
     }
 
     public boolean isLoginCorrect(LoginRequest loginRequest, PasswordEncoder passwordEncoder){

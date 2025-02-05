@@ -3,8 +3,6 @@ FROM openjdk:17-alpine
 
 RUN apk add --no-cache openssl
 
-RUN apk update && apk add --no-cache bash wget ca-certificates
-
 WORKDIR /app
 
 RUN mkdir -p src/main/resources/key
@@ -17,6 +15,6 @@ RUN chmod 600 src/main/resources/key/app.key && chmod 644 src/main/resources/key
 
 COPY . .
 
-ENV APP_PROFILE=dev
-
 EXPOSE 8080
+
+ENTRYPOINT ["sh", "-c", "./mvnw package -Dmaven.test.skip && java -jar target/app.jar"]
