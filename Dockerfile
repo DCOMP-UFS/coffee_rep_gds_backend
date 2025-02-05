@@ -5,15 +5,19 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-RUN mkdir -p src/main/resources/key
+RUN mkdir -p src/main/resources
 
-RUN openssl genpkey -algorithm RSA -out src/main/resources/key/app.key -pkeyopt rsa_keygen_bits:2048
+RUN openssl genpkey -algorithm RSA -out src/main/resources/app.key -pkeyopt rsa_keygen_bits:2048
 
-RUN openssl rsa -pubout -in src/main/resources/key/app.key -out src/main/resources/key/app.pub
+RUN openssl rsa -pubout -in src/main/resources/app.key -out src/main/resources/app.pub
 
-RUN chmod 600 src/main/resources/key/app.key && chmod 644 src/main/resources/key/app.pub
+RUN chmod 600 src/main/resources/app.key && chmod 644 src/main/resources/app.pub
+
+COPY mvnw mvnw
 
 COPY . .
+
+RUN chmod +x mvnw
 
 EXPOSE 8080
 
