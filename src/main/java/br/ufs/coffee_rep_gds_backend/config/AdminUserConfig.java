@@ -2,7 +2,6 @@ package br.ufs.coffee_rep_gds_backend.config;
 
 import br.ufs.coffee_rep_gds_backend.entities.Role;
 import br.ufs.coffee_rep_gds_backend.entities.User;
-import br.ufs.coffee_rep_gds_backend.enums.Position;
 import br.ufs.coffee_rep_gds_backend.repositories.RoleRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,8 +21,8 @@ public class AdminUserConfig implements CommandLineRunner {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    @Value("${admin-user}")
-    private String adminUser;
+    @Value("${admin-cpf}")
+    private String adminCpf;
 
     @Value("${admin-password}")
     private String adminPassword;
@@ -43,7 +42,7 @@ public class AdminUserConfig implements CommandLineRunner {
             throw new RuntimeException("There is no admin role");
         }
 
-        var userAdmin = userRepository.findByUsername("admin");
+        var userAdmin = userRepository.findByCpf(adminCpf);
 
         userAdmin.ifPresentOrElse(
                 (user) -> {
@@ -51,16 +50,16 @@ public class AdminUserConfig implements CommandLineRunner {
                 },
                 () -> {
                     var user = new User();
-                    user.setUsername(adminUser);
+                    user.setName("Admin");
                     user.setPassword(bCryptPasswordEncoder.encode(adminPassword));
                     user.setEmail("admin@admin.com");
-                    user.setCpf("17055661030");
+                    user.setCpf(adminCpf);
                     try {
                         user.setBirthDate(new SimpleDateFormat("yyyy-MM-dd").parse("1995-01-01"));
                     } catch (ParseException e) {
                         throw new RuntimeException(e);
                     }
-                    user.setPosition(Position.SECRETARY);
+                    user.setPhone("79999999999");
                     user.setRoles(Set.of(roleAdmin.get()));
 
                     userRepository.save(user);

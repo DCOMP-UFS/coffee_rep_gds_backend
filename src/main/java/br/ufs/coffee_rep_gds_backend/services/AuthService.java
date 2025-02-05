@@ -5,7 +5,6 @@ import br.ufs.coffee_rep_gds_backend.dtos.LoginRequest;
 import br.ufs.coffee_rep_gds_backend.dtos.LoginResponse;
 import br.ufs.coffee_rep_gds_backend.entities.Role;
 import br.ufs.coffee_rep_gds_backend.entities.User;
-import br.ufs.coffee_rep_gds_backend.enums.Position;
 import br.ufs.coffee_rep_gds_backend.repositories.RoleRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.UserRepository;
 import org.apache.coyote.BadRequestException;
@@ -48,7 +47,7 @@ public class AuthService {
 
     @Transactional
     public LoginResponse authenticate(LoginRequest loginRequest) {
-        var user = userRepository.findByUsername(loginRequest.username());
+        var user = userRepository.findByCpf(loginRequest.cpf());
 
         if (user.isEmpty() || !user.get().isLoginCorrect(loginRequest, passwordEncoder)) {
             throw new BadCredentialsException("Invalid username or password");
@@ -82,7 +81,7 @@ public class AuthService {
             throw new RuntimeException("Role not found");
         }
 
-        Optional<User> userOptional = userRepository.findByUsername(dto.username());
+        Optional<User> userOptional = userRepository.findByCpf(dto.cpf());
 
         if (userOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -97,12 +96,12 @@ public class AuthService {
         }
 
         var user = new User();
-        user.setUsername(dto.username());
+        user.setName(dto.name());
+        user.setPhone(dto.phone());
         user.setPassword(passwordEncoder.encode(dto.password()));
         user.setCpf(dto.cpf());
         user.setEmail(dto.email());
         user.setBirthDate(birthDate);
-        user.setPosition(Position.valueOf(dto.position()));
         user.setRoles(Set.of(roleOptional.get()));
 
         userRepository.save(user);

@@ -10,11 +10,11 @@ CREATE TABLE tb_users (
     cpf varchar(255) not null,
     email varchar(255) not null,
     password varchar(255),
-    position varchar(255) check (position in ('PEDIATRICIAN','GENERAL_PRACTITIONER','SECRETARY')),
-    username varchar(255), primary key (user_id),
+    name varchar(255),
+    phone varchar(255),
+    primary key (user_id),
     CONSTRAINT unique_cpf UNIQUE (cpf),
-    CONSTRAINT unique_email UNIQUE (email),
-    CONSTRAINT unique_username UNIQUE (username)
+    CONSTRAINT unique_email UNIQUE (email)
 );
 
 CREATE TABLE tb_users_roles (

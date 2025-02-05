@@ -2,7 +2,6 @@ package br.ufs.coffee_rep_gds_backend.controllers;
 
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.repositories.UserRepository;
-import br.ufs.coffee_rep_gds_backend.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -36,15 +35,13 @@ public class UserController {
     public ResponseEntity<String> test(JwtAuthenticationToken token) {
         Optional<User> optionalUser = userRepository.findById(UUID.fromString(token.getName()));
 
-
-        return ResponseEntity.ok(optionalUser.get().getUsername());
+        return ResponseEntity.ok(optionalUser.get().getName());
     }
 
     @GetMapping("noauthority")
     public ResponseEntity<String> testNoAuthority(JwtAuthenticationToken token) {
         Optional<User> optionalUser = userRepository.findById(UUID.fromString(token.getName()));
 
-
-        return ResponseEntity.ok(optionalUser.get().getUsername());
+        return ResponseEntity.ok(optionalUser.get().getName());
     }
 }

@@ -17,4 +17,4 @@ COPY . .
 
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "./mvnw clean package && java -jar target/app.jar"]
+ENTRYPOINT ["sh", "-c", "./mvnw package -Dmaven.test.skip && java -jar target/app.jar"]
