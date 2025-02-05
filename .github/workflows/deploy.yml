@@ -48,7 +48,7 @@ jobs:
           echo "DB_USERNAME='${{ secrets.RDS_USERNAME }}'" >> .env
           echo "DB_PASSWORD='${{ secrets.RDS_PASSWORD }}'" >> .env
           echo "DB_PASSWORD='${{ secrets.EXPIRATION_TIME }}'" >> .env
-          echo "DB_PASSWORD='${{ secrets.ADMIN_USER }}'" >> .env
+          echo "DB_PASSWORD='${{ secrets.ADMIN_CPF }}'" >> .env
           echo "DB_PASSWORD='${{ secrets.ADMIN_PASSWORD }}'" >> .env
           
           sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
