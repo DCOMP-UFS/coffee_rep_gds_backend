@@ -5,6 +5,7 @@ import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Position;
 import br.ufs.coffee_rep_gds_backend.repositories.RoleRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +21,12 @@ public class AdminUserConfig implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Value("${admin-user}")
+    private String adminUser;
+
+    @Value("${admin-password}")
+    private String adminPassword;
 
     public AdminUserConfig(RoleRepository roleRepository, UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.roleRepository = roleRepository;
@@ -44,8 +51,8 @@ public class AdminUserConfig implements CommandLineRunner {
                 },
                 () -> {
                     var user = new User();
-                    user.setUsername("admin");
-                    user.setPassword(bCryptPasswordEncoder.encode("1234"));
+                    user.setUsername(adminUser);
+                    user.setPassword(bCryptPasswordEncoder.encode(adminPassword));
                     user.setEmail("admin@admin.com");
                     user.setCpf("17055661030");
                     try {
