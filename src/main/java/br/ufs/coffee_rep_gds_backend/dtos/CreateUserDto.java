@@ -6,6 +6,5 @@ public record CreateUserDto(
         String password,
         String email,
         String cpf,
-        String birthDate,
-        String position
+        String birthDate
 ) {}
