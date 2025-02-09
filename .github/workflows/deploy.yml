@@ -68,5 +68,6 @@ jobs:
           
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
           sudo docker run --env-file .env -d --network=backend --name app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          sudo docker update --restart unless-stopped app
           
           ENDSSH
