@@ -3,11 +3,12 @@ package br.ufs.coffee_rep_gds_backend.services;
 import br.ufs.coffee_rep_gds_backend.dtos.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Room;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
-import br.ufs.coffee_rep_gds_backend.exceptions.RoomNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RoomRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 public class RoomService {
@@ -18,13 +19,10 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
-    public List<RoomResponseDto> getAllActiveRooms() {
-        List<Room> allActive = this.roomRepository.findAllByStatus(Status.ACTIVE);
-        return allActive.stream().map(room -> {return new RoomResponseDto(
-                room.getName(),
-                room.getType().toString(),
-                room.getSection().getName());
-        }).toList();
+    public Page<RoomResponseDto> getAllActiveRooms(Pageable pageable) {
+        Page<Room> allActive = this.roomRepository.findAllByStatus(Status.ACTIVE, pageable);
+        var all = allActive.stream().map(rooms -> {return new RoomResponseDto(rooms.getName(), rooms.getType().toString(), rooms.getStatus().toString());}).toList();
+        return new PageImpl<>(all, pageable, allActive.getTotalElements());
     }
 
     public String getRoomById(Long id) {
