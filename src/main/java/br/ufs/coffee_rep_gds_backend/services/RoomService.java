@@ -21,7 +21,7 @@ public class RoomService {
 
     public Page<RoomResponseDto> getAllActiveRooms(Pageable pageable) {
         Page<Room> allActive = this.roomRepository.findAllByStatus(Status.ACTIVE, pageable);
-        var all = allActive.stream().map(rooms -> {return new RoomResponseDto(rooms.getName(), rooms.getType().toString(), rooms.getStatus().toString());}).toList();
+        var all = allActive.stream().map(rooms -> {return new RoomResponseDto(rooms.getName(), rooms.getType().label, rooms.getSection().getName());}).toList();
         return new PageImpl<>(all, pageable, allActive.getTotalElements());
     }
 
