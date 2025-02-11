@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/room")
@@ -31,5 +30,11 @@ public class RoomController {
     @GetMapping("/{id}")
     public String getRoomById(@PathVariable Long id) {
         return roomService.getRoomById(id);
+    }
+
+    @GetMapping("/section/{sectionId}")
+    public ResponseEntity<Page<RoomResponseDto>> getRoomsBySectionId(@PathVariable Long sectionId, Pageable pageable) {
+        Page<RoomResponseDto> roomsBySectionId = roomService.getRoomsBySectionId(sectionId, pageable);
+        return ResponseEntity.ok(roomsBySectionId);
     }
 }
