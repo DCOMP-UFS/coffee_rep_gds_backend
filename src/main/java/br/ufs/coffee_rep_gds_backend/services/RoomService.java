@@ -28,4 +28,10 @@ public class RoomService {
     public String getRoomById(Long id) {
         throw new RuntimeException("Not implemented yet");
     }
+
+    public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, Pageable pageable) {
+        Page<Room> allBySectionId = this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.toString(), pageable);
+        var all = allBySectionId.stream().map(rooms -> {return new RoomResponseDto(rooms.getName(), rooms.getType().label, rooms.getSection().getName());}).toList();
+        return new PageImpl<>(all, pageable, allBySectionId.getTotalElements());
+    }
 }
