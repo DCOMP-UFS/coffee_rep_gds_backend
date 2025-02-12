@@ -10,8 +10,9 @@ import java.util.Objects;
 @Table(name = "tb_reservations")
 public class Reservation {
 
-    @EmbeddedId
-    private ReservationId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "start_date")
     private Date startDate;
@@ -36,7 +37,7 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(ReservationId id, Date startDate, Date endDate, String observations, ReservationStatus status, Room room, Requester requester) {
+    public Reservation(Long id, Date startDate, Date endDate, String observations, ReservationStatus status, Room room, Requester requester) {
         this.id = id;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -46,11 +47,11 @@ public class Reservation {
         this.requester = requester;
     }
 
-    public ReservationId getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(ReservationId id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -107,11 +108,11 @@ public class Reservation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Reservation that = (Reservation) o;
-        return Objects.equals(id, that.id) && Objects.equals(startDate, that.startDate) && Objects.equals(endDate, that.endDate) && Objects.equals(observations, that.observations) && status == that.status;
+        return Objects.equals(id, that.id) && Objects.equals(startDate, that.startDate) && Objects.equals(endDate, that.endDate) && Objects.equals(room, that.room) && Objects.equals(requester, that.requester);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, startDate, endDate, observations, status);
+        return Objects.hash(id, startDate, endDate, room, requester);
     }
 }
