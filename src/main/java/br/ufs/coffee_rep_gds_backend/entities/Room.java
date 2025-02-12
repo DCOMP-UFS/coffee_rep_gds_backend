@@ -1,7 +1,5 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
-import br.ufs.coffee_rep_gds_backend.enums.RoomType;
-import br.ufs.coffee_rep_gds_backend.enums.Status;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -18,16 +16,15 @@ public class Room {
     @Column(nullable = false)
     private String name;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RoomType type;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Status status;
+    private Integer status;
 
     @ManyToOne
-    @JoinColumn(name = "section_id", nullable = true)
+    @JoinColumn(name = "room_type_id")
+    private RoomType type;
+
+    @ManyToOne
+    @JoinColumn(name = "section_id", nullable = false)
     private Section section;
 
     @OneToMany(mappedBy = "room")
@@ -36,7 +33,7 @@ public class Room {
     public Room() {
     }
 
-    public Room(Long id, String name, RoomType type, Status status, Section section, List<Reservation> reservations) {
+    public Room(Long id, String name, RoomType type, Integer status, Section section, List<Reservation> reservations) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -69,11 +66,11 @@ public class Room {
         this.type = type;
     }
 
-    public Status getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
@@ -98,11 +95,11 @@ public class Room {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Room room = (Room) o;
-        return Objects.equals(id, room.id) && Objects.equals(name, room.name) && type == room.type && status == room.status;
+        return Objects.equals(id, room.id) && Objects.equals(name, room.name) && Objects.equals(status, room.status) && Objects.equals(type, room.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, type, status);
+        return Objects.hash(id, name, status, type);
     }
 }

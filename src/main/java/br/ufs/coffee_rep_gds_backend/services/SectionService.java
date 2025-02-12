@@ -1,6 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.services;
 
-import br.ufs.coffee_rep_gds_backend.dtos.SectionResponseDto;
+import br.ufs.coffee_rep_gds_backend.dtos.response.SectionResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
 import br.ufs.coffee_rep_gds_backend.repositories.SectionRepository;
@@ -19,7 +19,7 @@ public class SectionService {
     }
 
     public Page<SectionResponseDto> findAllActive(Pageable pageable) {
-        Page<Section> allByStatus = sectionRepository.findAllByStatus(Status.ACTIVE, pageable);
+        Page<Section> allByStatus = sectionRepository.findAllByStatus(Status.ACTIVE.value, pageable);
         var all = allByStatus.stream().map(section -> {return new SectionResponseDto(section.getId(), section.getName(), section.getObservations());}).toList();
         return new PageImpl<>(all, pageable, allByStatus.getTotalElements());
     }

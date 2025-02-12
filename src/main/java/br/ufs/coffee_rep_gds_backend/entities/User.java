@@ -1,6 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
-import br.ufs.coffee_rep_gds_backend.dtos.LoginRequest;
+import br.ufs.coffee_rep_gds_backend.dtos.request.LoginRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import org.hibernate.validator.constraints.br.CPF;

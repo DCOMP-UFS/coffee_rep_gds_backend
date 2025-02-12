@@ -1,6 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.exceptions;
 
-import br.ufs.coffee_rep_gds_backend.dtos.ErrorResponse;
+import br.ufs.coffee_rep_gds_backend.dtos.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
