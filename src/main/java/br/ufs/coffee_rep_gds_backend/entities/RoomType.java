@@ -1,6 +1,5 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
-import br.ufs.coffee_rep_gds_backend.enums.Status;
 import jakarta.persistence.*;
 
 import java.util.List;
