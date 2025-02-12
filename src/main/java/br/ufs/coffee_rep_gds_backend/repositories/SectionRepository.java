@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SectionRepository extends JpaRepository<Section, Long> {
 
-    Page<Section> findAllByStatus(Status status, Pageable pageable);
+    Page<Section> findAllByStatus(Integer status, Pageable pageable);
 }

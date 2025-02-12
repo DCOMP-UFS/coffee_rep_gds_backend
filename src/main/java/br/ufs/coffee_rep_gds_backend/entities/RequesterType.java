@@ -1,14 +1,12 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
-import br.ufs.coffee_rep_gds_backend.enums.Status;
 import jakarta.persistence.*;
 
-import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_sections")
-public class Section {
+@Table(name = "tb_requester_type")
+public class RequesterType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,23 +15,19 @@ public class Section {
     @Column(nullable = false)
     private String name;
 
-    private String observations;
+    private String position;
 
     @Column(nullable = false)
     private Integer status;
 
-    @OneToMany(mappedBy = "section")
-    private List<Room> rooms;
-
-    public Section() {
+    public RequesterType() {
     }
 
-    public Section(Long id, String name, String observations, Integer status, List<Room> rooms) {
+    public RequesterType(Long id, String name, String position, Integer status) {
         this.id = id;
         this.name = name;
-        this.observations = observations;
+        this.position = position;
         this.status = status;
-        this.rooms = rooms;
     }
 
     public Long getId() {
@@ -52,12 +46,12 @@ public class Section {
         this.name = name;
     }
 
-    public String getObservations() {
-        return observations;
+    public String getPosition() {
+        return position;
     }
 
-    public void setObservations(String observations) {
-        this.observations = observations;
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     public Integer getStatus() {
@@ -68,24 +62,16 @@ public class Section {
         this.status = status;
     }
 
-    public List<Room> getRooms() {
-        return rooms;
-    }
-
-    public void setRooms(List<Room> rooms) {
-        this.rooms = rooms;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Section section = (Section) o;
-        return Objects.equals(id, section.id) && Objects.equals(name, section.name) && Objects.equals(observations, section.observations) && Objects.equals(status, section.status);
+        RequesterType that = (RequesterType) o;
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(position, that.position) && Objects.equals(status, that.status);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, observations, status);
+        return Objects.hash(id, name, position, status);
     }
 }

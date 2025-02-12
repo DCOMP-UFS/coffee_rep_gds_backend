@@ -10,8 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    Page<Room> findAllByStatus(Status status, Pageable pageable);
+    Page<Room> findAllByStatus(Integer status, Pageable pageable);
 
     @Query(nativeQuery = true, value = "SELECT * FROM tb_rooms WHERE section_id = :sectionId AND status = :status")
-    Page<Room> findBySectionId(Long sectionId, String status, Pageable pageable);
+    Page<Room> findBySectionId(Long sectionId, Integer status, Pageable pageable);
 }

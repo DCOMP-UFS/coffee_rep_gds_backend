@@ -18,6 +18,7 @@ public class Reservation {
 
     @Column(name = "end_date")
     private Date endDate;
+
     private String observations;
 
     @Enumerated(EnumType.STRING)

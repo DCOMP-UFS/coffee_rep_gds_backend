@@ -1,6 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.controllers;
 
-import br.ufs.coffee_rep_gds_backend.dtos.SectionResponseDto;
+import br.ufs.coffee_rep_gds_backend.dtos.response.SectionResponseDto;
 import br.ufs.coffee_rep_gds_backend.services.SectionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

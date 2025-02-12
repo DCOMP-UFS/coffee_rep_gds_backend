@@ -3,11 +3,12 @@ package br.ufs.coffee_rep_gds_backend.entities;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
 import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_positions")
-public class Position {
+@Table(name = "tb_room_type")
+public class RoomType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,21 +17,20 @@ public class Position {
     @Column(nullable = false)
     private String name;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status;
+    private Integer status;
 
-    @OneToOne(mappedBy = "position")
-    private Requester requester;
+    @OneToMany(mappedBy = "type")
+    private List<Room> room;
 
-    public Position() {
+    public RoomType() {
     }
 
-    public Position(Long id, String name, Status status, Requester requester) {
+    public RoomType(Long id, String name, Integer status, List<Room> room) {
         this.id = id;
         this.name = name;
         this.status = status;
-        this.requester = requester;
+        this.room = room;
     }
 
     public Long getId() {
@@ -49,28 +49,28 @@ public class Position {
         this.name = name;
     }
 
-    public Status getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
-    public Requester getRequester() {
-        return requester;
+    public List<Room> getRoom() {
+        return room;
     }
 
-    public void setRequester(Requester requester) {
-        this.requester = requester;
+    public void setRoom(List<Room> room) {
+        this.room = room;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Position position = (Position) o;
-        return Objects.equals(id, position.id) && Objects.equals(name, position.name) && status == position.status;
+        RoomType roomType = (RoomType) o;
+        return Objects.equals(id, roomType.id) && Objects.equals(name, roomType.name) && Objects.equals(status, roomType.status);
     }
 
     @Override
