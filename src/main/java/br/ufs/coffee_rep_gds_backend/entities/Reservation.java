@@ -27,25 +27,12 @@ public class Reservation {
     private ReservationStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "room_id", nullable = true)
+    @JoinColumn(name = "room_id")
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "requester_id", nullable = true)
+    @JoinColumn(name = "requester_id")
     private Requester requester;
-
-    public Reservation() {
-    }
-
-    public Reservation(Long id, Date startDate, Date endDate, String observations, ReservationStatus status, Room room, Requester requester) {
-        this.id = id;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.observations = observations;
-        this.status = status;
-        this.room = room;
-        this.requester = requester;
-    }
 
     public Long getId() {
         return id;

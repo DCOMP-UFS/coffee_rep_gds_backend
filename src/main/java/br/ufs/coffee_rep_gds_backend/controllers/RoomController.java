@@ -5,10 +5,7 @@ import br.ufs.coffee_rep_gds_backend.services.RoomService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -22,19 +19,28 @@ public class RoomController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<RoomResponseDto>> getAllRooms(Pageable pageable) {
-        Page<RoomResponseDto> allActiveRooms = roomService.getAllActiveRooms(pageable);
-        return ResponseEntity.ok(allActiveRooms);
+    public Page<RoomResponseDto> getAllRooms(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String setor,
+            Pageable pageable
+    ) {
+        return roomService.getAllActiveRooms(nome, tipo, setor, pageable);
     }
 
     @GetMapping("/{id}")
-    public String getRoomById(@PathVariable Long id) {
-        return roomService.getRoomById(id);
+    public ResponseEntity<RoomResponseDto> getRoomById(@PathVariable Long id) {
+        RoomResponseDto room = roomService.getRoomById(id);
+        return ResponseEntity.ok(room);
     }
 
     @GetMapping("/section/{sectionId}")
-    public ResponseEntity<Page<RoomResponseDto>> getRoomsBySectionId(@PathVariable Long sectionId, Pageable pageable) {
-        Page<RoomResponseDto> roomsBySectionId = roomService.getRoomsBySectionId(sectionId, pageable);
-        return ResponseEntity.ok(roomsBySectionId);
+    public Page<RoomResponseDto> getRoomsBySectionId(
+            @PathVariable Long sectionId,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String tipo,
+            Pageable pageable
+    ) {
+        return roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
     }
 }

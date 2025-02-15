@@ -2,10 +2,11 @@ package br.ufs.coffee_rep_gds_backend.entities;
 
 import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_requester_type")
+@Table(name = "tb_requester_types")
 public class RequesterType {
 
     @Id
@@ -20,15 +21,8 @@ public class RequesterType {
     @Column(nullable = false)
     private Integer status;
 
-    public RequesterType() {
-    }
-
-    public RequesterType(Long id, String name, String position, Integer status) {
-        this.id = id;
-        this.name = name;
-        this.position = position;
-        this.status = status;
-    }
+    @OneToMany(mappedBy = "requesterType")
+    private List<Requester> requesters;
 
     public Long getId() {
         return id;
@@ -60,6 +54,14 @@ public class RequesterType {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public List<Requester> getRequesters() {
+        return requesters;
+    }
+
+    public void setRequesters(List<Requester> requesters) {
+        this.requesters = requesters;
     }
 
     @Override

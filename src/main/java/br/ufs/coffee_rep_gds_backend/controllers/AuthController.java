@@ -4,6 +4,7 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateUserDto;
 import br.ufs.coffee_rep_gds_backend.dtos.request.LoginRequest;
 import br.ufs.coffee_rep_gds_backend.dtos.response.LoginResponse;
 import br.ufs.coffee_rep_gds_backend.services.AuthService;
+import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody CreateUserDto dto) throws BadRequestException {
+    public ResponseEntity<Void> register(@Valid @RequestBody CreateUserDto dto) throws BadRequestException {
         authService.register(dto);
         return ResponseEntity.ok().build();
     }

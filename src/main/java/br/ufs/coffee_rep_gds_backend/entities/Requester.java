@@ -23,25 +23,12 @@ public class Requester {
     @Column(nullable = false)
     private Integer status;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "requester_type_id", nullable = false)
     private RequesterType requesterType;
 
     @OneToMany(mappedBy = "requester")
     private List<Reservation> reservations;
-
-    public Requester() {
-    }
-
-    public Requester(Long id, String name, String cpf, String contact_number, Integer status, RequesterType requesterType, List<Reservation> reservations) {
-        this.id = id;
-        this.name = name;
-        this.cpf = cpf;
-        this.contact_number = contact_number;
-        this.status = status;
-        this.requesterType = requesterType;
-        this.reservations = reservations;
-    }
 
     public Long getId() {
         return id;
@@ -104,7 +91,7 @@ public class Requester {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Requester requester = (Requester) o;
-        return Objects.equals(id, requester.id) && Objects.equals(name, requester.name) && Objects.equals(cpf, requester.cpf) && status == requester.status;
+        return Objects.equals(id, requester.id) && Objects.equals(name, requester.name) && Objects.equals(cpf, requester.cpf) && Objects.equals(status, requester.status);
     }
 
     @Override

@@ -24,17 +24,6 @@ public class Section {
     @OneToMany(mappedBy = "section")
     private List<Room> rooms;
 
-    public Section() {
-    }
-
-    public Section(Long id, String name, String observations, Integer status, List<Room> rooms) {
-        this.id = id;
-        this.name = name;
-        this.observations = observations;
-        this.status = status;
-        this.rooms = rooms;
-    }
-
     public Long getId() {
         return id;
     }

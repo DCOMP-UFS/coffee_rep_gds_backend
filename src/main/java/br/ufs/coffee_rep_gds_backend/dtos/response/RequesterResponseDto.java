@@ -1,7 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.dtos.response;
 
-public record SectionResponseDto(
-        Long id,
+public record RequesterResponseDto(
         String nome,
-        String observacoes
+        String tipo,
+        String cargo
 ) {}
