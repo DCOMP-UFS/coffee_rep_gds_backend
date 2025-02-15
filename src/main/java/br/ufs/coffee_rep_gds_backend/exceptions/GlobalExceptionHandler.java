@@ -20,6 +20,14 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(BadParametersException.class)
+    public ResponseEntity<ErrorResponse> badParametersException(BadParametersException exception, HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse(HttpStatus.NOT_ACCEPTABLE.value(), HttpStatus.NOT_ACCEPTABLE.getReasonPhrase(), exception.getMessage(), request.getRequestURI());
+        return ResponseEntity
+                .status(HttpStatus.NOT_ACCEPTABLE)
+                .body(error);
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> badCredentialsExceptionHandler(BadCredentialsException exception, HttpServletRequest request) {
         ErrorResponse error = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(), exception.getMessage(), request.getRequestURI());
