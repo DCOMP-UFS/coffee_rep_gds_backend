@@ -1,8 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.repositories;
 
 import br.ufs.coffee_rep_gds_backend.entities.Reservation;
-import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
-import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
