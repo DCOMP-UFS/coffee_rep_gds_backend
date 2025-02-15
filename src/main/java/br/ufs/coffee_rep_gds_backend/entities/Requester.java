@@ -30,19 +30,6 @@ public class Requester {
     @OneToMany(mappedBy = "requester")
     private List<Reservation> reservations;
 
-    public Requester() {
-    }
-
-    public Requester(Long id, String name, String cpf, String contact_number, Integer status, RequesterType requesterType, List<Reservation> reservations) {
-        this.id = id;
-        this.name = name;
-        this.cpf = cpf;
-        this.contact_number = contact_number;
-        this.status = status;
-        this.requesterType = requesterType;
-        this.reservations = reservations;
-    }
-
     public Long getId() {
         return id;
     }

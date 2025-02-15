@@ -30,18 +30,6 @@ public class Room {
     @OneToMany(mappedBy = "room")
     private List<Reservation> reservations;
 
-    public Room() {
-    }
-
-    public Room(Long id, String name, RoomType type, Integer status, Section section, List<Reservation> reservations) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.status = status;
-        this.section = section;
-        this.reservations = reservations;
-    }
-
     public Long getId() {
         return id;
     }

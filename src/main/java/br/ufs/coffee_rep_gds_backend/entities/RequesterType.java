@@ -24,17 +24,6 @@ public class RequesterType {
     @OneToMany(mappedBy = "requesterType")
     private List<Requester> requesters;
 
-    public RequesterType() {
-    }
-
-    public RequesterType(Long id, String name, String position, Integer status, List<Requester> requesters) {
-        this.id = id;
-        this.name = name;
-        this.position = position;
-        this.status = status;
-        this.requesters = requesters;
-    }
-
     public Long getId() {
         return id;
     }

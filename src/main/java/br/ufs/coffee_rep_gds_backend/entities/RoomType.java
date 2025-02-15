@@ -22,16 +22,6 @@ public class RoomType {
     @OneToMany(mappedBy = "type")
     private List<Room> room;
 
-    public RoomType() {
-    }
-
-    public RoomType(Long id, String name, Integer status, List<Room> room) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
-        this.room = room;
-    }
-
     public Long getId() {
         return id;
     }
