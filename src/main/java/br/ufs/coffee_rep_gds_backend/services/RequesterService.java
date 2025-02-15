@@ -3,6 +3,7 @@ package br.ufs.coffee_rep_gds_backend.services;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDetailDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
+import br.ufs.coffee_rep_gds_backend.enums.Status;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RequesterRepository;
 import br.ufs.coffee_rep_gds_backend.specifications.RequesterSpecification;
@@ -26,7 +27,7 @@ public class RequesterService {
 
     public Page<RequesterResponseDto> getAllRequesters(String name, String cpf, Pageable pageable) {
         Specification<Requester> specification = RequesterSpecification.all(name, cpf);
-        Page<Requester> requesterPage = requesterRepository.findAll(specification, pageable);
+        Page<Requester> requesterPage = requesterRepository.findAllByStatus(Status.ACTIVE.value, specification, pageable);
 
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
                 req.getName(),

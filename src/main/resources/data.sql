@@ -17,3 +17,4 @@ INSERT INTO tb_requester_types (id, name, position, status) SELECT 1, 'Funcioná
 
 INSERT INTO tb_requesters (id, name, cpf, contact_number, status, requester_type_id) SELECT 1, 'João da Silva', '25098719003', '79999887766', 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_requesters WHERE id = 1);
 INSERT INTO tb_requesters (id, name, cpf, contact_number, status, requester_type_id) SELECT 2, 'Maria de Souza', '66822603000', '79988776655', 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_requesters WHERE id = 2);
+INSERT INTO tb_requesters (id, name, cpf, contact_number, status, requester_type_id) SELECT 3, 'Marcos da Cruz', '86362170083', '79912345678', 0, 1 WHERE NOT EXISTS(SELECT id FROM tb_requesters WHERE id = 3);
