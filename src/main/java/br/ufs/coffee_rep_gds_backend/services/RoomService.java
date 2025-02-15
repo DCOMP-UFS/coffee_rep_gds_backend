@@ -28,11 +28,10 @@ public class RoomService {
         Specification<Room> spec = RoomSpecification.filter(name, type, section);
         Page<Room> allActive = this.roomRepository.findAllByStatus(Status.ACTIVE.value, spec, pageable);
 
-        var all = allActive.stream().map(rooms -> {return new RoomResponseDto(
+        var all = allActive.stream().map(rooms -> new RoomResponseDto(
                 rooms.getName(),
                 rooms.getType().getName(),
-                rooms.getSection().getName());
-        }).toList();
+                rooms.getSection().getName())).toList();
         return new PageImpl<>(all, pageable, allActive.getTotalElements());
     }
 
@@ -45,7 +44,11 @@ public class RoomService {
     public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, String name, String type, Pageable pageable) {
         Specification<Room> spec = RoomSpecification.filter(name, type, null);
         Page<Room> allBySectionId = this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, spec, pageable);
-        var all = allBySectionId.stream().map(rooms -> {return new RoomResponseDto(rooms.getName(), rooms.getType().getName(), rooms.getSection().getName());}).toList();
+        var all = allBySectionId.stream().map(rooms ->
+                new RoomResponseDto(rooms.getName(),
+                        rooms.getType().getName(),
+                        rooms.getSection().getName()
+                )).toList();
         return new PageImpl<>(all, pageable, allBySectionId.getTotalElements());
     }
 }

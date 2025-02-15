@@ -27,11 +27,11 @@ public class Reservation {
     private ReservationStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "room_id", nullable = true)
+    @JoinColumn(name = "room_id")
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "requester_id", nullable = true)
+    @JoinColumn(name = "requester_id")
     private Requester requester;
 
     public Long getId() {

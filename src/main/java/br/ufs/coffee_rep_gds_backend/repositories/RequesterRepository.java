@@ -18,7 +18,7 @@ public interface RequesterRepository extends JpaRepository<Requester, Long>, Jpa
                 criteriaBuilder.equal(root.get("status"), 1));
 
         return findAll(finalSpec, pageable);
-    };
+    }
 
     default Page<Requester> findAllByRequesterTypeId(Long requesterTypeId, Specification<Requester> spec, Pageable pageable) {
         Specification<Requester> finalSpec = Specification.where(spec);

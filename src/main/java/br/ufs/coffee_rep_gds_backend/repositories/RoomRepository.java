@@ -20,7 +20,7 @@ public interface RoomRepository extends JpaRepository<Room, Long>, JpaSpecificat
                 criteriaBuilder.equal(root.get("status"), 1));
 
         return findAll(finalSpec, pageable);
-    };
+    }
 
     Optional<Room> findByIdAndStatus(Long id, Integer status);
 
@@ -36,5 +36,5 @@ public interface RoomRepository extends JpaRepository<Room, Long>, JpaSpecificat
                 criteriaBuilder.equal(root.get("status"), 1)));
 
         return findAll(finalSpec, pageable);
-    };
+    }
 }

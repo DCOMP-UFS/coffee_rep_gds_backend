@@ -91,7 +91,7 @@ public class Requester {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Requester requester = (Requester) o;
-        return Objects.equals(id, requester.id) && Objects.equals(name, requester.name) && Objects.equals(cpf, requester.cpf) && status == requester.status;
+        return Objects.equals(id, requester.id) && Objects.equals(name, requester.name) && Objects.equals(cpf, requester.cpf) && Objects.equals(status, requester.status);
     }
 
     @Override
