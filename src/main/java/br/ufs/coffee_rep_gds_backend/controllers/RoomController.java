@@ -22,19 +22,18 @@ public class RoomController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<RoomResponseDto>> getAllRooms(Pageable pageable) {
-        Page<RoomResponseDto> allActiveRooms = roomService.getAllActiveRooms(pageable);
-        return ResponseEntity.ok(allActiveRooms);
+    public Page<RoomResponseDto> getAllRooms(Pageable pageable) {
+        return roomService.getAllActiveRooms(pageable);
     }
 
     @GetMapping("/{id}")
-    public String getRoomById(@PathVariable Long id) {
-        return roomService.getRoomById(id);
+    public ResponseEntity<RoomResponseDto> getRoomById(@PathVariable Long id) {
+        RoomResponseDto room = roomService.getRoomById(id);
+        return ResponseEntity.ok(room);
     }
 
     @GetMapping("/section/{sectionId}")
-    public ResponseEntity<Page<RoomResponseDto>> getRoomsBySectionId(@PathVariable Long sectionId, Pageable pageable) {
-        Page<RoomResponseDto> roomsBySectionId = roomService.getRoomsBySectionId(sectionId, pageable);
-        return ResponseEntity.ok(roomsBySectionId);
+    public Page<RoomResponseDto> getRoomsBySectionId(@PathVariable Long sectionId, Pageable pageable) {
+        return roomService.getRoomsBySectionId(sectionId, pageable);
     }
 }

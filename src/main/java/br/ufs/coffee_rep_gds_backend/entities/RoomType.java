@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_room_type")
+@Table(name = "tb_room_types")
 public class RoomType {
 
     @Id

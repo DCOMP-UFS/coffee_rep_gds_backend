@@ -23,7 +23,7 @@ public class Requester {
     @Column(nullable = false)
     private Integer status;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "requester_type_id", nullable = false)
     private RequesterType requesterType;
 
