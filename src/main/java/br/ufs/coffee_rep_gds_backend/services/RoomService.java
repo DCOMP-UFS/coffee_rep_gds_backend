@@ -24,31 +24,19 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
-    public Page<RoomResponseDto> getAllActiveRooms(String name, String type, String section, Pageable pageable) {
+    public Page<Room> getAllActiveRooms(String name, String type, String section, Pageable pageable) {
         Specification<Room> spec = RoomSpecification.filter(name, type, section);
-        Page<Room> allActive = this.roomRepository.findAllByStatus(Status.ACTIVE.value, spec, pageable);
-
-        var all = allActive.stream().map(rooms -> new RoomResponseDto(
-                rooms.getName(),
-                rooms.getType().getName(),
-                rooms.getSection().getName())).toList();
-        return new PageImpl<>(all, pageable, allActive.getTotalElements());
+        return this.roomRepository.findAllByStatus(Status.ACTIVE.value, spec, pageable);
     }
 
-    public RoomResponseDto getRoomById(Long id) {
+    public Room getRoomById(Long id) {
         Optional<Room> optionalRoom = this.roomRepository.findByIdAndStatus(id, Status.ACTIVE.value);
         if (optionalRoom.isEmpty()) throw new EntityNotFoundException("Sala não encontrada!");
-        return new RoomResponseDto(optionalRoom.get().getName(), optionalRoom.get().getType().getName(), optionalRoom.get().getSection().getName());
+        return optionalRoom.get();
     }
 
-    public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, String name, String type, Pageable pageable) {
+    public Page<Room> getRoomsBySectionId(Long sectionId, String name, String type, Pageable pageable) {
         Specification<Room> spec = RoomSpecification.filter(name, type, null);
-        Page<Room> allBySectionId = this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, spec, pageable);
-        var all = allBySectionId.stream().map(rooms ->
-                new RoomResponseDto(rooms.getName(),
-                        rooms.getType().getName(),
-                        rooms.getSection().getName()
-                )).toList();
-        return new PageImpl<>(all, pageable, allBySectionId.getTotalElements());
+        return this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, spec, pageable);
     }
 }

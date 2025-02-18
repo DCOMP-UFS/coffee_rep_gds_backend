@@ -1,8 +1,10 @@
 package br.ufs.coffee_rep_gds_backend.controllers;
 
 import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
+import br.ufs.coffee_rep_gds_backend.entities.Room;
 import br.ufs.coffee_rep_gds_backend.services.RoomService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,13 +27,20 @@ public class RoomController {
             @RequestParam(required = false) String setor,
             Pageable pageable
     ) {
-        return roomService.getAllActiveRooms(nome, tipo, setor, pageable);
+        Page<Room> allActive = roomService.getAllActiveRooms(nome, tipo, setor, pageable);
+
+        var all = allActive.stream().map(rooms -> new RoomResponseDto(
+                rooms.getName(),
+                rooms.getType().getName(),
+                rooms.getSection().getName())).toList();
+        return new PageImpl<>(all, pageable, allActive.getTotalElements());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RoomResponseDto> getRoomById(@PathVariable Long id) {
-        RoomResponseDto room = roomService.getRoomById(id);
-        return ResponseEntity.ok(room);
+        Room room = roomService.getRoomById(id);
+        RoomResponseDto dto = new RoomResponseDto(room.getName(), room.getType().getName(), room.getSection().getName());
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/section/{sectionId}")
@@ -41,6 +50,13 @@ public class RoomController {
             @RequestParam(required = false) String tipo,
             Pageable pageable
     ) {
-        return roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
+        Page<Room> allBySectionId = roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
+
+        var all = allBySectionId.stream().map(rooms ->
+                new RoomResponseDto(rooms.getName(),
+                        rooms.getType().getName(),
+                        rooms.getSection().getName()
+                )).toList();
+        return new PageImpl<>(all, pageable, allBySectionId.getTotalElements());
     }
 }

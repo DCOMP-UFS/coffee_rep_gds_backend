@@ -1,15 +1,19 @@
 package br.ufs.coffee_rep_gds_backend.controllers;
 
+import br.ufs.coffee_rep_gds_backend.dtos.request.CreateReservationDto;
+import br.ufs.coffee_rep_gds_backend.dtos.response.CreateReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
+import br.ufs.coffee_rep_gds_backend.entities.Reservation;
 import br.ufs.coffee_rep_gds_backend.services.ReservationService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reservation")
@@ -21,21 +25,30 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
-    @GetMapping()
+    @GetMapping
     public Page<ReservationResponseDto> getAllReservations(
+            @RequestParam(required = false) LocalDateTime inicio,
+            @RequestParam(required = false) LocalDateTime fim,
             @RequestParam(required = false) String nomeRequisitante,
             @RequestParam(required = false) String nomeSala,
             Pageable pageable) {
-        return reservationService.findAll(nomeRequisitante, nomeSala, pageable);
+        Page<Reservation> sourcePage = reservationService.findAll(inicio, fim, nomeRequisitante, nomeSala, pageable);
+
+        List<ReservationResponseDto> list = sourcePage.stream().map(reservation -> new ReservationResponseDto(
+                reservation.getStartDate(),
+                reservation.getEndDate(),
+                reservation.getRoom().getName(),
+                reservation.getRequester().getName())).toList();
+
+        return new PageImpl<>(list, pageable, sourcePage.getTotalElements());
     }
 
-    @GetMapping("/date")
-    public Page<ReservationResponseDto> getReservationsByStartAndEndDate(
-            @RequestParam LocalDateTime inicio,
-            @RequestParam LocalDateTime fim,
-            @RequestParam(required = false) String nomeRequisitante,
-            @RequestParam(required = false) String nomeSala,
-            Pageable pageable) {
-        return reservationService.findAllReservationsByStartAndEndDate(inicio, fim, nomeRequisitante, nomeSala, pageable);
+    @PostMapping
+    public ResponseEntity<CreateReservationResponseDto> createReservation(@RequestBody CreateReservationDto dto) {
+        Reservation reservationCreated = reservationService.createReservation(dto);
+
+        CreateReservationResponseDto createdDto = new CreateReservationResponseDto(reservationCreated.getId(), reservationCreated.getStartDate(), reservationCreated.getEndDate(), reservationCreated.getRequester().getName(), reservationCreated.getRoom().getName());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdDto);
     }
 }

@@ -32,6 +32,17 @@ public class Reservation {
     @JoinColumn(name = "requester_id")
     private Requester requester;
 
+    public Reservation() {
+    }
+
+    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.observations = observations;
+        this.room = room;
+        this.requester = requester;
+    }
+
     public Long getId() {
         return id;
     }

@@ -25,39 +25,21 @@ public class RequesterService {
         this.requesterRepository = requesterRepository;
     }
 
-    public Page<RequesterResponseDto> getAllRequesters(String name, String cpf, Pageable pageable) {
+    public Page<Requester> getAllRequesters(String name, String cpf, Pageable pageable) {
         Specification<Requester> specification = RequesterSpecification.all(name, cpf);
-        Page<Requester> requesterPage = requesterRepository.findAllByStatus(Status.ACTIVE.value, specification, pageable);
-
-        List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
-                req.getName(),
-                req.getRequesterType().getName(),
-                req.getRequesterType().getPosition())).toList();
-        return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
+        return requesterRepository.findAllByStatus(Status.ACTIVE.value, specification, pageable);
     }
 
-    public RequesterResponseDetailDto getRequesterById(Long id) {
+    public Requester getRequesterById(Long id) {
         Optional<Requester> optional = requesterRepository.findById(id);
 
         if (optional.isEmpty()) throw new EntityNotFoundException("Solicitante não encontrado");
 
-        var requester = optional.get();
-        return new RequesterResponseDetailDto(
-                requester.getName(),
-                requester.getCpf(),
-                requester.getContact_number(),
-                requester.getRequesterType().getName(),
-                requester.getRequesterType().getPosition());
+        return optional.get();
     }
 
-    public Page<RequesterResponseDto> getRequestersByRequesterTypeId(Long requesterTypeId, String name, String cpf, Pageable pageable) {
+    public Page<Requester> getRequestersByRequesterTypeId(Long requesterTypeId, String name, String cpf, Pageable pageable) {
         Specification<Requester> specification = RequesterSpecification.all(name, cpf);
-        Page<Requester> requesterPage = requesterRepository.findAllByRequesterTypeId(requesterTypeId, specification, pageable);
-
-        List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
-                req.getName(),
-                req.getRequesterType().getName(),
-                req.getRequesterType().getPosition())).toList();
-        return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
+        return requesterRepository.findAllByRequesterTypeId(requesterTypeId, specification, pageable);
     }
 }

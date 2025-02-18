@@ -18,9 +18,7 @@ public class SectionService {
         this.sectionRepository = sectionRepository;
     }
 
-    public Page<SectionResponseDto> findAllActive(Pageable pageable) {
-        Page<Section> allByStatus = sectionRepository.findAllByStatus(Status.ACTIVE.value, pageable);
-        var all = allByStatus.stream().map(section -> {return new SectionResponseDto(section.getId(), section.getName(), section.getObservations());}).toList();
-        return new PageImpl<>(all, pageable, allByStatus.getTotalElements());
+    public Page<Section> findAllActive(Pageable pageable) {
+        return sectionRepository.findAllByStatus(Status.ACTIVE.value, pageable);
     }
 }
