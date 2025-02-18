@@ -24,7 +24,7 @@ public class SectionController {
     public Page<SectionResponseDto> getAllSections(Pageable pageable) {
         Page<Section> allByStatus = sectionService.findAllActive(pageable);
 
-        var all = allByStatus.stream().map(section -> {return new SectionResponseDto(section.getId(), section.getName(), section.getObservations());}).toList();
+        var all = allByStatus.stream().map(section -> new SectionResponseDto(section.getId(), section.getName(), section.getObservations())).toList();
         return new PageImpl<>(all, pageable, allByStatus.getTotalElements());
     }
 }
