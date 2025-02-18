@@ -1,10 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.services;
 
 import br.ufs.coffee_rep_gds_backend.dtos.request.CreateReservationDto;
-import br.ufs.coffee_rep_gds_backend.dtos.response.CreateReservationResponseDto;
-import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDetailDto;
-import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
-import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.entities.Reservation;
 import br.ufs.coffee_rep_gds_backend.entities.Room;
@@ -13,13 +9,11 @@ import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
 import br.ufs.coffee_rep_gds_backend.specifications.ReservationSpecification;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class ReservationService {

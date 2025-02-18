@@ -1,13 +1,11 @@
 package br.ufs.coffee_rep_gds_backend.services;
 
-import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Room;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RoomRepository;
 import br.ufs.coffee_rep_gds_backend.specifications.RoomSpecification;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;

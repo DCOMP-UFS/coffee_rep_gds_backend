@@ -1,19 +1,15 @@
 package br.ufs.coffee_rep_gds_backend.services;
 
-import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDetailDto;
-import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RequesterRepository;
 import br.ufs.coffee_rep_gds_backend.specifications.RequesterSpecification;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service

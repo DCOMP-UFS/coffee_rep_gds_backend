@@ -1,11 +1,9 @@
 package br.ufs.coffee_rep_gds_backend.services;
 
-import br.ufs.coffee_rep_gds_backend.dtos.response.SectionResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
 import br.ufs.coffee_rep_gds_backend.repositories.SectionRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
