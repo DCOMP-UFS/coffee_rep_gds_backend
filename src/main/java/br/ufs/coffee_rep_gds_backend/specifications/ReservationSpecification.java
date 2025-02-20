@@ -10,7 +10,7 @@ import java.util.List;
 
 public class ReservationSpecification {
 
-    public static Specification<Reservation> filter(String requesterName, String roomName, LocalDateTime startDate, LocalDateTime endDate) {
+    public static Specification<Reservation> filter(String requesterName, String roomName, Long roomId, Long requesterId, LocalDateTime startDate, LocalDateTime endDate) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -22,12 +22,33 @@ public class ReservationSpecification {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("room").get("name")), "%" + roomName + "%"));
             }
 
-            if (startDate != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("startDate"), startDate));
+            if (roomId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("room").get("id"), roomId));
             }
 
-            if (endDate != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("endDate"), endDate));
+            if (requesterId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("requester").get("id"), requesterId));
+            }
+
+            if (startDate != null && endDate != null) {
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.and(
+                                criteriaBuilder.greaterThanOrEqualTo(root.get("startDate"), startDate),
+                                criteriaBuilder.lessThanOrEqualTo(root.get("endDate"), endDate)
+                        ),
+                        criteriaBuilder.and(
+                                criteriaBuilder.lessThanOrEqualTo(root.get("startDate"), startDate),
+                                criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"), startDate)
+                        ),
+                        criteriaBuilder.and(
+                                criteriaBuilder.lessThanOrEqualTo(root.get("startDate"), endDate),
+                                criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"), endDate)
+                        ),
+                        criteriaBuilder.and(
+                                criteriaBuilder.lessThanOrEqualTo(root.get("startDate"), startDate),
+                                criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"), endDate)
+                        )
+                ));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

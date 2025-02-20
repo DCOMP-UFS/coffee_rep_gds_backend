@@ -27,18 +27,22 @@ public class ReservationController {
 
     @GetMapping
     public Page<ReservationResponseDto> getAllReservations(
-            @RequestParam(required = false) LocalDateTime inicio,
-            @RequestParam(required = false) LocalDateTime fim,
+            @RequestParam LocalDateTime inicio,
+            @RequestParam LocalDateTime fim,
             @RequestParam(required = false) String nomeRequisitante,
             @RequestParam(required = false) String nomeSala,
+            @RequestParam(required = false) Long salaId,
+            @RequestParam(required = false) Long solicitanteId,
             Pageable pageable) {
-        Page<Reservation> sourcePage = reservationService.findAll(inicio, fim, nomeRequisitante, nomeSala, pageable);
+        Page<Reservation> sourcePage = reservationService.findAll(inicio, fim, nomeRequisitante, nomeSala, salaId, solicitanteId, pageable);
 
         List<ReservationResponseDto> list = sourcePage.stream().map(reservation -> new ReservationResponseDto(
                 reservation.getStartDate(),
                 reservation.getEndDate(),
                 reservation.getRoom().getName(),
-                reservation.getRequester().getName())).toList();
+                reservation.getRequester().getName(),
+                reservation.getRoom().getId(),
+                reservation.getRequester().getId())).toList();
 
         return new PageImpl<>(list, pageable, sourcePage.getTotalElements());
     }
