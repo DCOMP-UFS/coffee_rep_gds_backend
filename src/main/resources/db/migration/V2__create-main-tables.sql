@@ -51,7 +51,7 @@ CREATE TABLE tb_reservations (
     status VARCHAR(15) CHECK (status IN ('Aprovada', 'Cancelada')) NOT NULL DEFAULT 'Aprovada',
     room_id BIGINT NOT NULL,
     requester_id BIGINT NOT NULL,
-    PRIMARY KEY (room_id, requester_id),
+    PRIMARY KEY (id),
     CONSTRAINT fk_reservation_room FOREIGN KEY (room_id) REFERENCES tb_rooms (id) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT fk_reservation_requester FOREIGN KEY (requester_id) REFERENCES tb_requesters (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );

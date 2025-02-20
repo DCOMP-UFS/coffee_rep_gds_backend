@@ -1,0 +1,8 @@
+ALTER TABLE tb_reservations
+ALTER COLUMN start_date
+SET DATA TYPE TIMESTAMP;
+
+ALTER TABLE tb_reservations
+ALTER COLUMN end_date
+SET DATA TYPE TIMESTAMP;
+

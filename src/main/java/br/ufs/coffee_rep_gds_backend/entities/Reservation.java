@@ -1,9 +1,8 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
-import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import jakarta.persistence.*;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -15,16 +14,15 @@ public class Reservation {
     private Long id;
 
     @Column(name = "start_date")
-    private Date startDate;
+    private LocalDateTime startDate;
 
     @Column(name = "end_date")
-    private Date endDate;
+    private LocalDateTime endDate;
 
     private String observations;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ReservationStatus status;
+    private String status;
 
     @ManyToOne
     @JoinColumn(name = "room_id")
@@ -34,6 +32,17 @@ public class Reservation {
     @JoinColumn(name = "requester_id")
     private Requester requester;
 
+    public Reservation() {
+    }
+
+    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.observations = observations;
+        this.room = room;
+        this.requester = requester;
+    }
+
     public Long getId() {
         return id;
     }
@@ -42,19 +51,19 @@ public class Reservation {
         this.id = id;
     }
 
-    public Date getStartDate() {
+    public LocalDateTime getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Date startDate) {
+    public void setStartDate(LocalDateTime startDate) {
         this.startDate = startDate;
     }
 
-    public Date getEndDate() {
+    public LocalDateTime getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Date endDate) {
+    public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
     }
 
@@ -66,11 +75,11 @@ public class Reservation {
         this.observations = observations;
     }
 
-    public ReservationStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(ReservationStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
