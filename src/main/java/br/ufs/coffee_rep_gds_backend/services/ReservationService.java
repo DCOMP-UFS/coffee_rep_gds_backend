@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,6 +46,7 @@ public class ReservationService {
         return reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);
     }
 
+    @Transactional
     public Reservation createReservation(CreateReservationDto dto) {
         Room room = roomService.getRoomById(dto.salaId());
         Requester requester = requesterService.getRequesterById(dto.solicitanteId());
@@ -52,7 +54,7 @@ public class ReservationService {
         validateStartAndEndDate(dto.horaInicio(), dto.horaFim());
         validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());
 
-        Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), room, requester);
+        Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), room, requester, ReservationStatus.APPROVED.label);
         return reservationRepository.save(reservation);
     }
 
@@ -65,7 +67,7 @@ public class ReservationService {
     private void validateReservationAlreadyExists(LocalDateTime start, LocalDateTime end, Long roomId) {
         List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(start, end, roomId);
 
-        if (reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para este quarto no horário solicitado!");
+        if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para este quarto no horário solicitado!");
     }
 
 }
