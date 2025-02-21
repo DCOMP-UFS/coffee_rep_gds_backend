@@ -2,7 +2,7 @@ package br.ufs.coffee_rep_gds_backend.controllers;
 
 import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Room;
-import br.ufs.coffee_rep_gds_backend.services.RoomService;
+import br.ufs.coffee_rep_gds_backend.services.application.RoomService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,20 +27,12 @@ public class RoomController {
             @RequestParam(required = false) String setor,
             Pageable pageable
     ) {
-        Page<Room> allActive = roomService.getAllActiveRooms(nome, tipo, setor, pageable);
-
-        var all = allActive.stream().map(rooms -> new RoomResponseDto(
-                rooms.getId(),
-                rooms.getName(),
-                rooms.getType().getName(),
-                rooms.getSection().getName())).toList();
-        return new PageImpl<>(all, pageable, allActive.getTotalElements());
+        return roomService.getAllActiveRooms(nome, tipo, setor, pageable);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RoomResponseDto> getRoomById(@PathVariable Long id) {
-        Room room = roomService.getRoomById(id);
-        RoomResponseDto dto = new RoomResponseDto(room.getId(), room.getName(), room.getType().getName(), room.getSection().getName());
+        RoomResponseDto dto = roomService.getRoomById(id);
         return ResponseEntity.ok(dto);
     }
 
@@ -51,15 +43,6 @@ public class RoomController {
             @RequestParam(required = false) String tipo,
             Pageable pageable
     ) {
-        Page<Room> allBySectionId = roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
-
-        var all = allBySectionId.stream().map(rooms ->
-                new RoomResponseDto(
-                        rooms.getId(),
-                        rooms.getName(),
-                        rooms.getType().getName(),
-                        rooms.getSection().getName()
-                )).toList();
-        return new PageImpl<>(all, pageable, allBySectionId.getTotalElements());
+        return roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
     }
 }

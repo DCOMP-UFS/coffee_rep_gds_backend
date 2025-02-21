@@ -1,4 +1,4 @@
-package br.ufs.coffee_rep_gds_backend.services;
+package br.ufs.coffee_rep_gds_backend.services.application;
 
 import br.ufs.coffee_rep_gds_backend.dtos.request.CreateUserDto;
 import br.ufs.coffee_rep_gds_backend.dtos.request.LoginRequest;

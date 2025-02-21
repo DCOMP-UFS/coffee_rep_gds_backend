@@ -3,7 +3,7 @@ package br.ufs.coffee_rep_gds_backend.controllers;
 import br.ufs.coffee_rep_gds_backend.dtos.request.CreateUserDto;
 import br.ufs.coffee_rep_gds_backend.dtos.request.LoginRequest;
 import br.ufs.coffee_rep_gds_backend.dtos.response.LoginResponse;
-import br.ufs.coffee_rep_gds_backend.services.AuthService;
+import br.ufs.coffee_rep_gds_backend.services.application.AuthService;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;

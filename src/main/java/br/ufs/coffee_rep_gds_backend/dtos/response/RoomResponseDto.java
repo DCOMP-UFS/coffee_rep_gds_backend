@@ -4,5 +4,6 @@ public record RoomResponseDto(
         Long id,
         String nome,
         String tipo,
-        String setor
+        String setor,
+        String status
 ) {}

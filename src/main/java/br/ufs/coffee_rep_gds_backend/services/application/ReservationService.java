@@ -1,6 +1,8 @@
-package br.ufs.coffee_rep_gds_backend.services;
+package br.ufs.coffee_rep_gds_backend.services.application;
 
 import br.ufs.coffee_rep_gds_backend.dtos.request.CreateReservationDto;
+import br.ufs.coffee_rep_gds_backend.dtos.response.CreateReservationResponseDto;
+import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.entities.Reservation;
 import br.ufs.coffee_rep_gds_backend.entities.Room;
@@ -8,8 +10,11 @@ import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
+import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
+import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
 import br.ufs.coffee_rep_gds_backend.specifications.ReservationSpecification;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
@@ -22,16 +27,16 @@ import java.util.List;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final RoomService roomService;
-    private final RequesterService requesterService;
+    private final RoomDomainService roomService;
+    private final RequesterDomainService requesterService;
 
-    public ReservationService(ReservationRepository reservationRepository, RoomService roomService, RequesterService requesterService) {
+    public ReservationService(ReservationRepository reservationRepository, RoomDomainService roomService, RequesterDomainService requesterService) {
         this.reservationRepository = reservationRepository;
         this.roomService = roomService;
         this.requesterService = requesterService;
     }
 
-    public Page<Reservation> findAll(
+    public Page<ReservationResponseDto> findAll(
             LocalDateTime start,
             LocalDateTime end,
             String requesterName,
@@ -43,11 +48,21 @@ public class ReservationService {
         validateStartAndEndDate(start, end);
 
         Specification<Reservation> spec = ReservationSpecification.filter(requesterName, roomName, roomId, requesterId, start, end);
-        return reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);
+        Page<Reservation> sourcePage = reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);
+
+        List<ReservationResponseDto> list = sourcePage.stream().map(reservation -> new ReservationResponseDto(
+                reservation.getStartDate(),
+                reservation.getEndDate(),
+                reservation.getRoom().getName(),
+                reservation.getRequester().getName(),
+                reservation.getRoom().getId(),
+                reservation.getRequester().getId())).toList();
+
+        return new PageImpl<>(list, pageable, sourcePage.getTotalElements());
     }
 
     @Transactional
-    public Reservation createReservation(CreateReservationDto dto) {
+    public CreateReservationResponseDto createReservation(CreateReservationDto dto) {
         Room room = roomService.getRoomById(dto.salaId());
         Requester requester = requesterService.getRequesterById(dto.solicitanteId());
 
@@ -55,7 +70,15 @@ public class ReservationService {
         validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());
 
         Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), room, requester, ReservationStatus.APPROVED.label);
-        return reservationRepository.save(reservation);
+        Reservation reservationCreated = reservationRepository.save(reservation);
+
+        return new CreateReservationResponseDto(
+                reservationCreated.getId(),
+                reservationCreated.getStartDate(),
+                reservationCreated.getEndDate(),
+                reservationCreated.getRequester().getName(),
+                reservationCreated.getRoom().getName()
+        );
     }
 
     private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {

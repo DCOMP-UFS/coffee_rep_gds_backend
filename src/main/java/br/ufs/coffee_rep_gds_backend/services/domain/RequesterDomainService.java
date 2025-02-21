@@ -1,4 +1,4 @@
-package br.ufs.coffee_rep_gds_backend.services;
+package br.ufs.coffee_rep_gds_backend.services.domain;
 
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
@@ -13,17 +13,12 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class RequesterService {
+public class RequesterDomainService {
 
     private final RequesterRepository requesterRepository;
 
-    public RequesterService(RequesterRepository requesterRepository) {
+    public RequesterDomainService(RequesterRepository requesterRepository) {
         this.requesterRepository = requesterRepository;
-    }
-
-    public Page<Requester> getAllRequesters(String name, String cpf, Pageable pageable) {
-        Specification<Requester> specification = RequesterSpecification.all(name, cpf);
-        return requesterRepository.findAllByStatus(Status.ACTIVE.value, specification, pageable);
     }
 
     public Requester getRequesterById(Long id) {
@@ -32,10 +27,5 @@ public class RequesterService {
         if (optional.isEmpty()) throw new EntityNotFoundException("Solicitante não encontrado");
 
         return optional.get();
-    }
-
-    public Page<Requester> getRequestersByRequesterTypeId(Long requesterTypeId, String name, String cpf, Pageable pageable) {
-        Specification<Requester> specification = RequesterSpecification.all(name, cpf);
-        return requesterRepository.findAllByRequesterTypeId(requesterTypeId, specification, pageable);
     }
 }

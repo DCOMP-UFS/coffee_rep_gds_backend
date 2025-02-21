@@ -1,4 +1,4 @@
-package br.ufs.coffee_rep_gds_backend.services;
+package br.ufs.coffee_rep_gds_backend.services.domain;
 
 import br.ufs.coffee_rep_gds_backend.entities.Room;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
@@ -14,27 +14,17 @@ import java.util.Optional;
 
 
 @Service
-public class RoomService {
+public class RoomDomainService {
 
     private final RoomRepository roomRepository;
 
-    public RoomService(RoomRepository roomRepository) {
+    public RoomDomainService(RoomRepository roomRepository) {
         this.roomRepository = roomRepository;
-    }
-
-    public Page<Room> getAllActiveRooms(String name, String type, String section, Pageable pageable) {
-        Specification<Room> spec = RoomSpecification.filter(name, type, section);
-        return this.roomRepository.findAllByStatus(Status.ACTIVE.value, spec, pageable);
     }
 
     public Room getRoomById(Long id) {
         Optional<Room> optionalRoom = this.roomRepository.findByIdAndStatus(id, Status.ACTIVE.value);
         if (optionalRoom.isEmpty()) throw new EntityNotFoundException("Sala não encontrada!");
         return optionalRoom.get();
-    }
-
-    public Page<Room> getRoomsBySectionId(Long sectionId, String name, String type, Pageable pageable) {
-        Specification<Room> spec = RoomSpecification.filter(name, type, null);
-        return this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, spec, pageable);
     }
 }
