@@ -35,12 +35,13 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester) {
+    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester, String status) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.observations = observations;
         this.room = room;
         this.requester = requester;
+        this.status = status;
     }
 
     public Long getId() {

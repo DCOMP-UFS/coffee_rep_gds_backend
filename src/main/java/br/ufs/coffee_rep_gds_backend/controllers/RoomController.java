@@ -30,6 +30,7 @@ public class RoomController {
         Page<Room> allActive = roomService.getAllActiveRooms(nome, tipo, setor, pageable);
 
         var all = allActive.stream().map(rooms -> new RoomResponseDto(
+                rooms.getId(),
                 rooms.getName(),
                 rooms.getType().getName(),
                 rooms.getSection().getName())).toList();
@@ -39,7 +40,7 @@ public class RoomController {
     @GetMapping("/{id}")
     public ResponseEntity<RoomResponseDto> getRoomById(@PathVariable Long id) {
         Room room = roomService.getRoomById(id);
-        RoomResponseDto dto = new RoomResponseDto(room.getName(), room.getType().getName(), room.getSection().getName());
+        RoomResponseDto dto = new RoomResponseDto(room.getId(), room.getName(), room.getType().getName(), room.getSection().getName());
         return ResponseEntity.ok(dto);
     }
 
@@ -53,7 +54,9 @@ public class RoomController {
         Page<Room> allBySectionId = roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
 
         var all = allBySectionId.stream().map(rooms ->
-                new RoomResponseDto(rooms.getName(),
+                new RoomResponseDto(
+                        rooms.getId(),
+                        rooms.getName(),
                         rooms.getType().getName(),
                         rooms.getSection().getName()
                 )).toList();
