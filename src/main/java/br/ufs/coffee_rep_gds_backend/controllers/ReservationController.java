@@ -3,17 +3,14 @@ package br.ufs.coffee_rep_gds_backend.controllers;
 import br.ufs.coffee_rep_gds_backend.dtos.request.CreateReservationDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
-import br.ufs.coffee_rep_gds_backend.entities.Reservation;
 import br.ufs.coffee_rep_gds_backend.services.application.ReservationService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/reservation")

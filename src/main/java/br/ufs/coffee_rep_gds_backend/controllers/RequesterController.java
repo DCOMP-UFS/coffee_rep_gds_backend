@@ -2,15 +2,11 @@ package br.ufs.coffee_rep_gds_backend.controllers;
 
 import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDetailDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDto;
-import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.services.application.RequesterService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/requester")
