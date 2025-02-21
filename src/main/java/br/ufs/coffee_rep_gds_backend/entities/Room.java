@@ -27,7 +27,7 @@ public class Room {
     @JoinColumn(name = "section_id", nullable = false)
     private Section section;
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
     private List<Reservation> reservations;
 
     public Long getId() {
