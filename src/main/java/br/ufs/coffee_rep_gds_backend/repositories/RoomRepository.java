@@ -4,9 +4,7 @@ import br.ufs.coffee_rep_gds_backend.entities.Room;
 import br.ufs.coffee_rep_gds_backend.projections.RoomProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
