@@ -60,6 +60,7 @@ public class AdminUserConfig implements CommandLineRunner {
                         throw new RuntimeException(e);
                     }
                     user.setPhone("79999999999");
+                    user.setStatus(1);
                     user.setRoles(Set.of(roleAdmin.get()));
 
                     userRepository.save(user);

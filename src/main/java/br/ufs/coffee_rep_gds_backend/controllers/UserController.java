@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("api/user")
@@ -33,14 +32,14 @@ public class UserController {
     @GetMapping("authority")
     @PreAuthorize("hasAnyAuthority('SCOPE_ADMIN', 'SCOPE_BASIC')")
     public ResponseEntity<String> test(JwtAuthenticationToken token) {
-        Optional<User> optionalUser = userRepository.findById(UUID.fromString(token.getName()));
+        Optional<User> optionalUser = userRepository.findById(Long.parseLong(token.getName()));
 
         return ResponseEntity.ok(optionalUser.get().getName());
     }
 
     @GetMapping("noauthority")
     public ResponseEntity<String> testNoAuthority(JwtAuthenticationToken token) {
-        Optional<User> optionalUser = userRepository.findById(UUID.fromString(token.getName()));
+        Optional<User> optionalUser = userRepository.findById(Long.parseLong(token.getName()));
 
         return ResponseEntity.ok(optionalUser.get().getName());
     }

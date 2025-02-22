@@ -7,7 +7,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -21,5 +20,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
         return findAll(finalSpec, pageable);
     }
 
-    List<Reservation> findAllByStartDateAndEndDateAndRoom_Id(LocalDateTime startDate, LocalDateTime endDate, Long room_id);
+    default List<Reservation> findAllByStartDateAndEndDateAndRoom_Id(String reservationStatus, Specification<Reservation> spec){
+        Specification<Reservation> finalSpec = Specification.where(spec);
+
+        finalSpec = finalSpec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("status"), reservationStatus));
+
+        return findAll(finalSpec);
+    }
 }

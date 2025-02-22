@@ -78,7 +78,7 @@ public class AuthService {
         Optional<Role> roleOptional = roleRepository.findByName(Role.Values.BASIC.name());
 
         if (roleOptional.isEmpty()) {
-            throw new RuntimeException("Role not found");
+            throw new RuntimeException("Papel não encontrado");
         }
 
         Optional<User> userOptional = userRepository.findByCpf(dto.cpf());
@@ -103,6 +103,7 @@ public class AuthService {
         user.setEmail(dto.email());
         user.setBirthDate(birthDate);
         user.setRoles(Set.of(roleOptional.get()));
+        user.setStatus(1);
 
         userRepository.save(user);
     }

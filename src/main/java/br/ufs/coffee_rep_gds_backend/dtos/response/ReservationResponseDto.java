@@ -7,6 +7,8 @@ public record ReservationResponseDto(
         LocalDateTime horaFim,
         String sala,
         String solicitante,
+        String setor,
         Long salaId,
-        Long solicitanteId
+        Long solicitanteId,
+        Long setorId
 ) {}

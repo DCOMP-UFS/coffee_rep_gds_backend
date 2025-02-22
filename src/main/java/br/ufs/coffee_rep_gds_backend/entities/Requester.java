@@ -2,6 +2,7 @@ package br.ufs.coffee_rep_gds_backend.entities;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,6 +23,16 @@ public class Requester {
 
     @Column(nullable = false)
     private Integer status;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "updated_by", nullable = true, referencedColumnName = "user_id")
+    private User updatedBy;
 
     @ManyToOne
     @JoinColumn(name = "requester_type_id", nullable = false)
@@ -68,6 +79,30 @@ public class Requester {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public User getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(User updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public RequesterType getRequesterType() {
