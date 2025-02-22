@@ -30,6 +30,7 @@ public class RequesterService {
         Page<Requester> requesterPage = requesterRepository.findAllByStatus(Status.ACTIVE.value, specification, pageable);
 
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
+                req.getId(),
                 req.getName(),
                 req.getRequesterType().getName(),
                 req.getRequesterType().getPosition())).toList();
@@ -43,6 +44,7 @@ public class RequesterService {
 
         Requester requester = optional.get();
         return new RequesterResponseDetailDto(
+                requester.getId(),
                 requester.getName(),
                 requester.getCpf(),
                 requester.getContact_number(),
@@ -56,6 +58,7 @@ public class RequesterService {
         Page<Requester> requesterPage = requesterRepository.findAllByRequesterTypeId(requesterTypeId, specification, pageable);
 
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
+                req.getId(),
                 req.getName(),
                 req.getRequesterType().getName(),
                 req.getRequesterType().getPosition())).toList();

@@ -24,6 +24,16 @@ public class Reservation {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "updated_by", nullable = true, referencedColumnName = "user_id")
+    private User updatedBy;
+
     @ManyToOne
     @JoinColumn(name = "room_id")
     private Room room;
@@ -35,13 +45,14 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester, String status) {
+    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester, String status, User updatedBy) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.observations = observations;
         this.room = room;
         this.requester = requester;
         this.status = status;
+        this.updatedBy = updatedBy;
     }
 
     public Long getId() {
@@ -82,6 +93,30 @@ public class Reservation {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public User getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(User updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public Room getRoom() {

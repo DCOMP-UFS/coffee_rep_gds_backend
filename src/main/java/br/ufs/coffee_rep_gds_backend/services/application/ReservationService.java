@@ -6,13 +6,16 @@ import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.entities.Reservation;
 import br.ufs.coffee_rep_gds_backend.entities.Room;
+import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
+import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
 import br.ufs.coffee_rep_gds_backend.specifications.ReservationSpecification;
+import br.ufs.coffee_rep_gds_backend.utils.JwtInfoUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,11 +32,13 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final RoomDomainService roomService;
     private final RequesterDomainService requesterService;
+    private final UserDomainService userService;
 
-    public ReservationService(ReservationRepository reservationRepository, RoomDomainService roomService, RequesterDomainService requesterService) {
+    public ReservationService(ReservationRepository reservationRepository, RoomDomainService roomService, RequesterDomainService requesterService, UserDomainService userService) {
         this.reservationRepository = reservationRepository;
         this.roomService = roomService;
         this.requesterService = requesterService;
+        this.userService = userService;
     }
 
     public Page<ReservationResponseDto> findAll(
@@ -55,8 +60,11 @@ public class ReservationService {
                 reservation.getEndDate(),
                 reservation.getRoom().getName(),
                 reservation.getRequester().getName(),
+                reservation.getRoom().getSection().getName(),
                 reservation.getRoom().getId(),
-                reservation.getRequester().getId())).toList();
+                reservation.getRequester().getId(),
+                reservation.getRoom().getSection().getId()
+                )).toList();
 
         return new PageImpl<>(list, pageable, sourcePage.getTotalElements());
     }
@@ -65,11 +73,13 @@ public class ReservationService {
     public CreateReservationResponseDto createReservation(CreateReservationDto dto) {
         Room room = roomService.getRoomById(dto.salaId());
         Requester requester = requesterService.getRequesterById(dto.solicitanteId());
+        String userId = JwtInfoUtils.getUsernameFromSecurityContext();
+        User user = userService.findByID(convertId(userId));
 
         validateStartAndEndDate(dto.horaInicio(), dto.horaFim());
         validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());
 
-        Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), room, requester, ReservationStatus.APPROVED.label);
+        Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), room, requester, ReservationStatus.APPROVED.label, user);
         Reservation reservationCreated = reservationRepository.save(reservation);
 
         return new CreateReservationResponseDto(
@@ -81,6 +91,18 @@ public class ReservationService {
         );
     }
 
+    private Long convertId(String id) {
+        if (id == null || id.isEmpty()) {
+            throw new RuntimeException("ID não pode ser nulo");
+        }
+
+        try {
+            return Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("O formato do ID é inválido!");
+        }
+    }
+
     private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {
         if (start != null && end != null) {
             if (start.isAfter(end)) throw new BadParametersException("A hora de início não pode ser maior que a hora fim da reserva.");
@@ -88,7 +110,8 @@ public class ReservationService {
     }
 
     private void validateReservationAlreadyExists(LocalDateTime start, LocalDateTime end, Long roomId) {
-        List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(start, end, roomId);
+        Specification<Reservation> spec = ReservationSpecification.filter(null, null, roomId, null, start, end);
+        List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(ReservationStatus.APPROVED.label, spec);
 
         if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para este quarto no horário solicitado!");
     }
