@@ -2,7 +2,6 @@ package br.ufs.coffee_rep_gds_backend.repositories;
 
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
-import br.ufs.coffee_rep_gds_backend.specifications.SectionSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,7 +16,7 @@ public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpec
         Specification<Section> finalSpec = Specification.where(spec);
 
         finalSpec = finalSpec.and((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("status"), 1));
+                criteriaBuilder.equal(root.get("status"), status));
 
         return findAll(finalSpec, pageable);
     }

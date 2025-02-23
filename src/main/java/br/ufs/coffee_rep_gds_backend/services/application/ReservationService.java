@@ -48,13 +48,15 @@ public class ReservationService {
             LocalDateTime end,
             String requesterName,
             String roomName,
+            String sectionName,
             Long roomId,
             Long requesterId,
+            Long sectionId,
             Pageable pageable
     ) {
         validateStartAndEndDate(start, end);
 
-        Specification<Reservation> spec = ReservationSpecification.filter(requesterName, roomName, roomId, requesterId, start, end);
+        Specification<Reservation> spec = ReservationSpecification.filter(requesterName, roomName, roomId, requesterId, sectionName, sectionId, start, end);
         Page<Reservation> sourcePage = reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);
 
         List<ReservationResponseDto> list = sourcePage.stream().map(reservation -> new ReservationResponseDto(
@@ -93,12 +95,12 @@ public class ReservationService {
         );
     }
 
-    public List<ReservationResponseDto> findReservationsInCurrentMonth() {
+    public List<ReservationResponseDto> findReservationsInCurrentMonth(Long sectionId, String sectionName) {
         YearMonth currentMonth = YearMonth.now();
         LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
         LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(LocalTime.MAX);
 
-        Specification<Reservation> spec = ReservationSpecification.filter(null, null, null, null, startOfMonth, endOfMonth);
+        Specification<Reservation> spec = ReservationSpecification.filter(null, null, null, null, sectionName, sectionId, startOfMonth, endOfMonth);
         List<Reservation> allReservationsInCurrentMonth = reservationRepository.findAllReservationsInCurrentMonth(spec);
 
         return allReservationsInCurrentMonth.stream().map(request -> new ReservationResponseDto(
@@ -132,7 +134,7 @@ public class ReservationService {
     }
 
     private void validateReservationAlreadyExists(LocalDateTime start, LocalDateTime end, Long roomId) {
-        Specification<Reservation> spec = ReservationSpecification.filter(null, null, roomId, null, start, end);
+        Specification<Reservation> spec = ReservationSpecification.filter(null, null, roomId, null, null, null, start, end);
         List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(ReservationStatus.APPROVED.label, spec);
 
         if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para este quarto no horário solicitado!");
