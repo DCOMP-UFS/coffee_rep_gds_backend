@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpecificationExecutor<Section> {
 
@@ -20,5 +21,5 @@ public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpec
         return findAll(finalSpec, pageable);
     }
 
-    List<Section> findAllByNameAndStatus(String name, Integer status);
+    Optional<Section> findAllByName(String name);
 }

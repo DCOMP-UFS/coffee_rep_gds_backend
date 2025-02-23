@@ -15,6 +15,7 @@ import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
 import br.ufs.coffee_rep_gds_backend.specifications.ReservationSpecification;
+import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
 import br.ufs.coffee_rep_gds_backend.utils.JwtInfoUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -60,6 +61,7 @@ public class ReservationService {
         Page<Reservation> sourcePage = reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);
 
         List<ReservationResponseDto> list = sourcePage.stream().map(reservation -> new ReservationResponseDto(
+                reservation.getId(),
                 reservation.getStartDate(),
                 reservation.getEndDate(),
                 reservation.getRoom().getName(),
@@ -77,8 +79,7 @@ public class ReservationService {
     public CreateReservationResponseDto createReservation(CreateReservationDto dto) {
         Room room = roomService.getRoomById(dto.salaId());
         Requester requester = requesterService.getRequesterById(dto.solicitanteId());
-        String userId = JwtInfoUtils.getUsernameFromSecurityContext();
-        User user = userService.findByID(convertId(userId));
+        User user = userService.findByID(CurrentUserUtils.getCurrentUserID());
 
         validateStartAndEndDate(dto.horaInicio(), dto.horaFim());
         validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());
@@ -103,28 +104,17 @@ public class ReservationService {
         Specification<Reservation> spec = ReservationSpecification.filter(null, null, null, null, sectionName, sectionId, startOfMonth, endOfMonth);
         List<Reservation> allReservationsInCurrentMonth = reservationRepository.findAllReservationsInCurrentMonth(spec);
 
-        return allReservationsInCurrentMonth.stream().map(request -> new ReservationResponseDto(
-                request.getStartDate(),
-                request.getEndDate(),
-                request.getRoom().getName(),
-                request.getRequester().getName(),
-                request.getRoom().getSection().getName(),
-                request.getRoom().getId(),
-                request.getRequester().getId(),
-                request.getRoom().getSection().getId()
+        return allReservationsInCurrentMonth.stream().map(reservation -> new ReservationResponseDto(
+                reservation.getId(),
+                reservation.getStartDate(),
+                reservation.getEndDate(),
+                reservation.getRoom().getName(),
+                reservation.getRequester().getName(),
+                reservation.getRoom().getSection().getName(),
+                reservation.getRoom().getId(),
+                reservation.getRequester().getId(),
+                reservation.getRoom().getSection().getId()
                 )).toList();
-    }
-
-    private Long convertId(String id) {
-        if (id == null || id.isEmpty()) {
-            throw new RuntimeException("ID não pode ser nulo");
-        }
-
-        try {
-            return Long.parseLong(id);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("O formato do ID é inválido!");
-        }
     }
 
     private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {
