@@ -12,5 +12,5 @@ public interface RoomProjection {
 //    Integer getStatus();
 //    RoomType getType();
 //    Section getSection();
-    String getOcupationStatus();
+    Boolean getOcupationStatus();
 }

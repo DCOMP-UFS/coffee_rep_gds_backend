@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then 'Ocupada' else 'Livre' end as ocupationStatus " +
+    @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
                                        "FROM tb_rooms r " +
                                        "left join tb_reservations tr on r.id = tr.room_id " +
                                        "and now() >= tr.start_date and now() <= tr.end_date " +
@@ -27,7 +27,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     Optional<Room> findByIdAndStatus(Long id, Integer status);
 
-    @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then 'Ocupada' else 'Livre' end as ocupationStatus " +
+    @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
                                        "FROM tb_rooms r " +
                                        "left join tb_reservations tr on r.id = tr.room_id " +
                                        "and now() >= tr.start_date and now() <= tr.end_date " +
@@ -39,7 +39,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                                        "and (tt.name like concat('%', :type, '%') or :type is null)")
     Page<RoomProjection> findBySectionId(Long sectionId, Integer status, String name, String type, Pageable pageable);
 
-    @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then 'Ocupada' else 'Livre' end as ocupationStatus " +
+    @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
                                        "FROM tb_rooms r " +
                                        "left join tb_reservations tr on r.id = tr.room_id " +
                                        "and now() >= tr.start_date and now() <= tr.end_date " +

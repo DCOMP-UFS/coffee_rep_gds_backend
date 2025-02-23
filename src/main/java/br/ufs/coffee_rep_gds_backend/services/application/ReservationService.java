@@ -24,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.List;
 
 @Service
@@ -89,6 +91,26 @@ public class ReservationService {
                 reservationCreated.getRequester().getName(),
                 reservationCreated.getRoom().getName()
         );
+    }
+
+    public List<ReservationResponseDto> findReservationsInCurrentMonth() {
+        YearMonth currentMonth = YearMonth.now();
+        LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
+        LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(LocalTime.MAX);
+
+        Specification<Reservation> spec = ReservationSpecification.filter(null, null, null, null, startOfMonth, endOfMonth);
+        List<Reservation> allReservationsInCurrentMonth = reservationRepository.findAllReservationsInCurrentMonth(spec);
+
+        return allReservationsInCurrentMonth.stream().map(request -> new ReservationResponseDto(
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getRoom().getName(),
+                request.getRequester().getName(),
+                request.getRoom().getSection().getName(),
+                request.getRoom().getId(),
+                request.getRequester().getId(),
+                request.getRoom().getSection().getId()
+                )).toList();
     }
 
     private Long convertId(String id) {

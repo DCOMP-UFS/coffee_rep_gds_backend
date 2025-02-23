@@ -5,5 +5,5 @@ public record RoomResponseDto(
         String nome,
         String tipo,
         String setor,
-        String status
+        Boolean ocupada
 ) {}

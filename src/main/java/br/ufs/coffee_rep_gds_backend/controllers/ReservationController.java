@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reservation")
@@ -39,5 +40,11 @@ public class ReservationController {
         CreateReservationResponseDto createdDto = reservationService.createReservation(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDto);
+    }
+
+    @GetMapping("/current-month")
+    public ResponseEntity<List<ReservationResponseDto>> getAllReservationsInCurrentMonth() {
+        List<ReservationResponseDto> reservationsInCurrentMonth = reservationService.findReservationsInCurrentMonth();
+        return ResponseEntity.ok(reservationsInCurrentMonth);
     }
 }
