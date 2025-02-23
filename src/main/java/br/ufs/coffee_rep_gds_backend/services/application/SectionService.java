@@ -19,6 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -53,8 +54,11 @@ public class SectionService {
 
         if (sectionOptional.isPresent()) {
             Section section = sectionOptional.get();
-            section.setStatus(Status.ACTIVE.value);
-            sectionRepository.save(section);
+            if (section.getStatus().equals(Status.ACTIVE.value)) {
+                section.setStatus(Status.ACTIVE.value);
+                section.setUpdatedAt(LocalDateTime.now());
+                section = sectionRepository.save(section);
+            }
             return new CreateSectionResponseDTO(
                     section.getId(),
                     section.getName(),
@@ -79,13 +83,16 @@ public class SectionService {
 
     @Transactional
     public CreateSectionResponseDTO update(Long id, CreateSectionDTO dto) {
-        Optional<Section> sectionOptional = sectionRepository.findById(id);
+        Optional<Section> sectionOptional = sectionRepository.findByIdAndStatus(id, Status.ACTIVE.value);
+        User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
         if (sectionOptional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado!");
 
         Section sectionToSave = sectionOptional.get();
         if (dto.nome() != null && !dto.nome().trim().isEmpty()) sectionToSave.setName(dto.nome());
         if (dto.observacao() != null) sectionToSave.setObservations(dto.observacao());
+        sectionToSave.setUpdatedAt(LocalDateTime.now());
+        sectionToSave.setUpdatedBy(user);
 
         Section savedSection = sectionRepository.save(sectionToSave);
 
@@ -97,7 +104,7 @@ public class SectionService {
     }
 
     public void delete(Long id) {
-        Optional<Section> sectionOptional = sectionRepository.findById(id);
+        Optional<Section> sectionOptional = sectionRepository.findByIdAndStatus(id, Status.ACTIVE.value);
 
         if (sectionOptional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado!");
 

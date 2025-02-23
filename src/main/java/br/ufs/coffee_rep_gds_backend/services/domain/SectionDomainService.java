@@ -1,6 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.services.domain;
 
 import br.ufs.coffee_rep_gds_backend.entities.Section;
+import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.SectionRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,14 @@ public class SectionDomainService {
     }
 
     public Optional<Section> findByName(String name) {
-        return sectionRepository.findAllByName(name);
+        return sectionRepository.findAllByNameIgnoreCase(name);
+    }
+
+    public Section findById(Long id) {
+        Optional<Section> optional = sectionRepository.findById(id);
+
+        if (optional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado");
+
+        return optional.get();
     }
 }

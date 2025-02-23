@@ -43,6 +43,6 @@ public class SectionController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSection(@PathVariable Long id) {
         sectionService.delete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

@@ -20,5 +20,7 @@ public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpec
         return findAll(finalSpec, pageable);
     }
 
-    Optional<Section> findAllByName(String name);
+    Optional<Section> findAllByNameIgnoreCase(String name);
+
+    Optional<Section> findByIdAndStatus(Long id, Integer status);
 }

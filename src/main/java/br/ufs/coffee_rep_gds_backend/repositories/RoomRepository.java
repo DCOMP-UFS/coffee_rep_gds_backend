@@ -1,6 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.repositories;
 
 import br.ufs.coffee_rep_gds_backend.entities.Room;
+import br.ufs.coffee_rep_gds_backend.entities.Section;
 import br.ufs.coffee_rep_gds_backend.projections.RoomProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,4 +51,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                                        "and (tt.name like concat('%', :type, '%') or :type is null) " +
                                        "and (ts.name like concat('%', :section, '%') or :section is null)")
     Page<RoomProjection> findRoomWithOccupation(Integer status, String name, String type, String section, Pageable pageable);
+
+    Optional<Room> getRoomByNameIgnoreCaseAndSection(String name, Section section);
 }
