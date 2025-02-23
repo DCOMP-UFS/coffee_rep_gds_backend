@@ -1,6 +1,5 @@
 package br.ufs.coffee_rep_gds_backend.repositories;
 
-import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -55,7 +55,6 @@ public class Reservation {
         this.requester = requester;
         this.status = status;
         this.updatedBy = updatedBy;
-        this.createdAt = createdAt;
     }
 
     public Long getId() {
