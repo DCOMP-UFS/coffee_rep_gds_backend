@@ -10,6 +10,7 @@ import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
+import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReservationService {
@@ -114,6 +116,16 @@ public class ReservationService {
                 reservation.getRequester().getId(),
                 reservation.getRoom().getSection().getId()
                 )).toList();
+    }
+
+    public void cancelReservation(Long reservationId) {
+        Optional<Reservation> optionalReservation = reservationRepository.findByIdAndStatus(reservationId, ReservationStatus.APPROVED.label);
+
+        if (optionalReservation.isEmpty()) throw new EntityNotFoundException("Nenhuma reserva ativa encontrada para este ID: " + reservationId);
+        Reservation reservation = optionalReservation.get();
+        reservation.setStatus(ReservationStatus.CANCELLED.label);
+
+        reservationRepository.save(reservation);
     }
 
     private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {

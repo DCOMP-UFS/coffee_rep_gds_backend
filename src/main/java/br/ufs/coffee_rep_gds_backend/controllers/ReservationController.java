@@ -52,4 +52,10 @@ public class ReservationController {
         List<ReservationResponseDto> reservationsInCurrentMonth = reservationService.findReservationsInCurrentMonth(setorId, setor);
         return ResponseEntity.ok(reservationsInCurrentMonth);
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> cancelReservation(@PathVariable Long id) {
+        reservationService.cancelReservation(id);
+        return ResponseEntity.noContent().build();
+    }
 }

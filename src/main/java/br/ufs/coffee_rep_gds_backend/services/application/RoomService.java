@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -75,6 +76,7 @@ public class RoomService {
         return new PageImpl<>(list, pageable, allBySectionId.getTotalElements());
     }
 
+    @Transactional
     public CreateRoomResponseDTO create(CreateRoomDTO dto) {
         RoomType roomType = roomDomainService.createRoomType(dto.tipo());
         Section section = sectionDomainService.findById(dto.setorId());
@@ -106,6 +108,7 @@ public class RoomService {
         );
     }
 
+    @Transactional
     public CreateRoomResponseDTO update(Long id, CreateRoomDTO dto) {
         Optional<Room> optionalRoom = this.roomRepository.findByIdAndStatus(id, Status.ACTIVE.value);
 
@@ -136,6 +139,7 @@ public class RoomService {
         );
     }
 
+    @Transactional
     public void delete(Long id) {
         Optional<Room> optionalRoom = this.roomRepository.findByIdAndStatus(id, Status.ACTIVE.value);
 

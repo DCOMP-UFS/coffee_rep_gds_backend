@@ -103,6 +103,7 @@ public class SectionService {
         );
     }
 
+    @Transactional
     public void delete(Long id) {
         Optional<Section> sectionOptional = sectionRepository.findByIdAndStatus(id, Status.ACTIVE.value);
 
