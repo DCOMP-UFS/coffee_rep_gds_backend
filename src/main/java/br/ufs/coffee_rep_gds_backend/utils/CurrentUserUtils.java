@@ -1,7 +1,5 @@
 package br.ufs.coffee_rep_gds_backend.utils;
 
-import br.ufs.coffee_rep_gds_backend.entities.User;
-
 public class CurrentUserUtils {
 
     public static Long getCurrentUserID() {

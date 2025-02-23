@@ -16,7 +16,6 @@ import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
 import br.ufs.coffee_rep_gds_backend.specifications.ReservationSpecification;
 import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
-import br.ufs.coffee_rep_gds_backend.utils.JwtInfoUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
