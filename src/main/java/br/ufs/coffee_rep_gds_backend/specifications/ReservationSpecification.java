@@ -10,16 +10,16 @@ import java.util.List;
 
 public class ReservationSpecification {
 
-    public static Specification<Reservation> filter(String requesterName, String roomName, Long roomId, Long requesterId, LocalDateTime startDate, LocalDateTime endDate) {
+    public static Specification<Reservation> filter(String requesterName, String roomName, Long roomId, Long requesterId, String sectionName, Long sectionId, LocalDateTime startDate, LocalDateTime endDate) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (requesterName != null) {
-                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("requester").get("name")), "%" + requesterName + "%"));
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("requester").get("name")), "%" + requesterName.toLowerCase() + "%"));
             }
 
             if (roomName != null) {
-                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("room").get("name")), "%" + roomName + "%"));
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("room").get("name")), "%" + roomName.toLowerCase() + "%"));
             }
 
             if (roomId != null) {
@@ -28,6 +28,14 @@ public class ReservationSpecification {
 
             if (requesterId != null) {
                 predicates.add(criteriaBuilder.equal(root.get("requester").get("id"), requesterId));
+            }
+
+            if (sectionName != null) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("room").get("section").get("name")), "%" + sectionName.toLowerCase() + "%"));
+            }
+
+            if (sectionId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("room").get("section").get("id"), sectionId));
             }
 
             if (startDate != null && endDate != null) {

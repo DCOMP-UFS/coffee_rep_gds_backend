@@ -10,12 +10,13 @@ import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
+import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
 import br.ufs.coffee_rep_gds_backend.specifications.ReservationSpecification;
-import br.ufs.coffee_rep_gds_backend.utils.JwtInfoUtils;
+import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,7 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReservationService {
@@ -46,16 +50,19 @@ public class ReservationService {
             LocalDateTime end,
             String requesterName,
             String roomName,
+            String sectionName,
             Long roomId,
             Long requesterId,
+            Long sectionId,
             Pageable pageable
     ) {
         validateStartAndEndDate(start, end);
 
-        Specification<Reservation> spec = ReservationSpecification.filter(requesterName, roomName, roomId, requesterId, start, end);
+        Specification<Reservation> spec = ReservationSpecification.filter(requesterName, roomName, roomId, requesterId, sectionName, sectionId, start, end);
         Page<Reservation> sourcePage = reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);
 
         List<ReservationResponseDto> list = sourcePage.stream().map(reservation -> new ReservationResponseDto(
+                reservation.getId(),
                 reservation.getStartDate(),
                 reservation.getEndDate(),
                 reservation.getRoom().getName(),
@@ -73,8 +80,7 @@ public class ReservationService {
     public CreateReservationResponseDto createReservation(CreateReservationDto dto) {
         Room room = roomService.getRoomById(dto.salaId());
         Requester requester = requesterService.getRequesterById(dto.solicitanteId());
-        String userId = JwtInfoUtils.getUsernameFromSecurityContext();
-        User user = userService.findByID(convertId(userId));
+        User user = userService.findByID(CurrentUserUtils.getCurrentUserID());
 
         validateStartAndEndDate(dto.horaInicio(), dto.horaFim());
         validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());
@@ -91,16 +97,35 @@ public class ReservationService {
         );
     }
 
-    private Long convertId(String id) {
-        if (id == null || id.isEmpty()) {
-            throw new RuntimeException("ID não pode ser nulo");
-        }
+    public List<ReservationResponseDto> findReservationsInCurrentMonth(Long sectionId, String sectionName) {
+        YearMonth currentMonth = YearMonth.now();
+        LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
+        LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(LocalTime.MAX);
 
-        try {
-            return Long.parseLong(id);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("O formato do ID é inválido!");
-        }
+        Specification<Reservation> spec = ReservationSpecification.filter(null, null, null, null, sectionName, sectionId, startOfMonth, endOfMonth);
+        List<Reservation> allReservationsInCurrentMonth = reservationRepository.findAllReservationsInCurrentMonth(spec);
+
+        return allReservationsInCurrentMonth.stream().map(reservation -> new ReservationResponseDto(
+                reservation.getId(),
+                reservation.getStartDate(),
+                reservation.getEndDate(),
+                reservation.getRoom().getName(),
+                reservation.getRequester().getName(),
+                reservation.getRoom().getSection().getName(),
+                reservation.getRoom().getId(),
+                reservation.getRequester().getId(),
+                reservation.getRoom().getSection().getId()
+                )).toList();
+    }
+
+    public void cancelReservation(Long reservationId) {
+        Optional<Reservation> optionalReservation = reservationRepository.findByIdAndStatus(reservationId, ReservationStatus.APPROVED.label);
+
+        if (optionalReservation.isEmpty()) throw new EntityNotFoundException("Nenhuma reserva ativa encontrada para este ID: " + reservationId);
+        Reservation reservation = optionalReservation.get();
+        reservation.setStatus(ReservationStatus.CANCELLED.label);
+
+        reservationRepository.save(reservation);
     }
 
     private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {
@@ -110,7 +135,7 @@ public class ReservationService {
     }
 
     private void validateReservationAlreadyExists(LocalDateTime start, LocalDateTime end, Long roomId) {
-        Specification<Reservation> spec = ReservationSpecification.filter(null, null, roomId, null, start, end);
+        Specification<Reservation> spec = ReservationSpecification.filter(null, null, roomId, null, null, null, start, end);
         List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(ReservationStatus.APPROVED.label, spec);
 
         if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para este quarto no horário solicitado!");

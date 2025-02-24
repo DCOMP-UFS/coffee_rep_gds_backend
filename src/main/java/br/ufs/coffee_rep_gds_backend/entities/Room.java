@@ -1,6 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,13 +22,14 @@ public class Room {
     private Integer status;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "updated_by", nullable = true, referencedColumnName = "user_id")
+    @JoinColumn(name = "updated_by", referencedColumnName = "user_id")
     private User updatedBy;
 
     @ManyToOne
@@ -40,6 +42,17 @@ public class Room {
 
     @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
     private List<Reservation> reservations;
+
+    public Room() {
+    }
+
+    public Room(String name, Integer status, User updatedBy, RoomType type, Section section) {
+        this.name = name;
+        this.status = status;
+        this.updatedBy = updatedBy;
+        this.type = type;
+        this.section = section;
+    }
 
     public Long getId() {
         return id;

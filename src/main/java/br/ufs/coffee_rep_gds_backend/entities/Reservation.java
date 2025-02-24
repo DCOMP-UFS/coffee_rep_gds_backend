@@ -1,6 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -25,13 +26,14 @@ public class Reservation {
     private String status;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "updated_by", nullable = true, referencedColumnName = "user_id")
+    @JoinColumn(name = "updated_by", referencedColumnName = "user_id")
     private User updatedBy;
 
     @ManyToOne

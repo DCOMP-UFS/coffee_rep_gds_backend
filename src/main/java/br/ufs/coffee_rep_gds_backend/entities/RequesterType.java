@@ -1,6 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,17 +24,28 @@ public class RequesterType {
     private Integer status;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "updated_by", nullable = true, referencedColumnName = "user_id")
+    @JoinColumn(name = "updated_by", referencedColumnName = "user_id")
     private User updatedBy;
 
     @OneToMany(mappedBy = "requesterType")
     private List<Requester> requesters;
+
+    public RequesterType() {
+    }
+
+    public RequesterType(String name, String position, User updatedBy, Integer status) {
+        this.name = name;
+        this.position = position;
+        this.updatedBy = updatedBy;
+        this.status = status;
+    }
 
     public Long getId() {
         return id;

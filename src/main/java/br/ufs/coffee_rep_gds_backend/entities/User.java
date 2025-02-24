@@ -3,6 +3,7 @@ package br.ufs.coffee_rep_gds_backend.entities;
 import br.ufs.coffee_rep_gds_backend.dtos.request.LoginRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.validator.constraints.br.CPF;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -39,6 +40,7 @@ public class User {
     private Integer status;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

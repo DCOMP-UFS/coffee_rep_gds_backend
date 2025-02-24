@@ -1,9 +1,8 @@
 package br.ufs.coffee_rep_gds_backend.dtos.response;
 
-public record RoomResponseDto(
+public record CreateRoomResponseDTO(
         Long id,
         String nome,
-        String tipo,
         String setor,
-        Boolean ocupada
+        String tipo
 ) {}
