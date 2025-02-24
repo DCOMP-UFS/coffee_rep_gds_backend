@@ -2,7 +2,6 @@ package br.ufs.coffee_rep_gds_backend.repositories;
 
 import br.ufs.coffee_rep_gds_backend.entities.RoomType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
