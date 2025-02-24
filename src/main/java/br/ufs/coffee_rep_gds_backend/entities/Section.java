@@ -34,7 +34,7 @@ public class Section {
     @JoinColumn(name = "updated_by", referencedColumnName = "user_id")
     private User updatedBy;
 
-    @OneToMany(mappedBy = "section")
+    @OneToMany(mappedBy = "section", cascade = CascadeType.ALL)
     private List<Room> rooms;
 
     public Section() {

@@ -79,14 +79,15 @@ public class RoomService {
     @Transactional
     public CreateRoomResponseDTO create(CreateRoomDTO dto) {
         RoomType roomType = roomDomainService.createRoomType(dto.tipo());
-        Section section = sectionDomainService.findById(dto.setorId());
+        Section section = sectionDomainService.findByIdAndStatus(dto.setorId(), Status.ACTIVE.value);
+
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
         Optional<Room> optionalRoom = roomDomainService.getRoomByNameAndSection(dto.nome(), section);
 
         if (optionalRoom.isPresent()) {
             Room room = optionalRoom.get();
-            if (room.getStatus().equals(Status.ACTIVE.value)) {
-                room.setStatus(Status.INACTIVE.value);
+            if (room.getStatus().equals(Status.INACTIVE.value)) {
+                room.setStatus(Status.ACTIVE.value);
                 room.setUpdatedAt(LocalDateTime.now());
                 room = roomRepository.save(room);
             }
@@ -122,7 +123,7 @@ public class RoomService {
         if (!roomToSave.getType().getName().equals(dto.tipo())) roomType = roomDomainService.createRoomType(dto.tipo());
 
         Section section = roomToSave.getSection();
-        if (!dto.setorId().equals(roomToSave.getSection().getId())) section = sectionDomainService.findById(dto.setorId());
+        if (!dto.setorId().equals(roomToSave.getSection().getId())) section = sectionDomainService.findByIdAndStatus(dto.setorId(), Status.ACTIVE.value);
 
         if (dto.nome() != null && !dto.nome().trim().isEmpty()) roomToSave.setName(dto.nome());
         roomToSave.setSection(section);

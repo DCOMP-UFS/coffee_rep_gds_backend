@@ -6,12 +6,14 @@ import br.ufs.coffee_rep_gds_backend.dtos.response.SectionResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
+import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.SectionRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.SectionDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
 import br.ufs.coffee_rep_gds_backend.specifications.SectionSpecification;
 import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -54,9 +56,10 @@ public class SectionService {
 
         if (sectionOptional.isPresent()) {
             Section section = sectionOptional.get();
-            if (section.getStatus().equals(Status.ACTIVE.value)) {
+            if (section.getStatus().equals(Status.INACTIVE.value)) {
                 section.setStatus(Status.ACTIVE.value);
                 section.setUpdatedAt(LocalDateTime.now());
+                section.setUpdatedBy(user);
                 section = sectionRepository.save(section);
             }
             return new CreateSectionResponseDTO(
@@ -88,7 +91,26 @@ public class SectionService {
 
         if (sectionOptional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado!");
 
+        Optional<Section> optionalNameSearch = sectionDomainService.findByName(dto.nome());
+        if (optionalNameSearch.isPresent()) {
+            Section nameSearchedSection = optionalNameSearch.get();
+            if (nameSearchedSection.getStatus().equals(Status.ACTIVE.value)) throw new EntityAlreadyExistsException("Já existe um setor com esse nome!");
+            else {
+                nameSearchedSection.setStatus(Status.ACTIVE.value);
+                nameSearchedSection.setUpdatedAt(LocalDateTime.now());
+                nameSearchedSection.setUpdatedBy(user);
+                Section saved = sectionRepository.save(nameSearchedSection);
+
+                return new CreateSectionResponseDTO(
+                        saved.getId(),
+                        saved.getName(),
+                        saved.getObservations()
+                );
+            }
+        }
+
         Section sectionToSave = sectionOptional.get();
+
         if (dto.nome() != null && !dto.nome().trim().isEmpty()) sectionToSave.setName(dto.nome());
         if (dto.observacao() != null) sectionToSave.setObservations(dto.observacao());
         sectionToSave.setUpdatedAt(LocalDateTime.now());
@@ -106,13 +128,18 @@ public class SectionService {
     @Transactional
     public void delete(Long id) {
         Optional<Section> sectionOptional = sectionRepository.findByIdAndStatus(id, Status.ACTIVE.value);
+        User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
         if (sectionOptional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado!");
 
         Section section = sectionOptional.get();
         section.setStatus(Status.INACTIVE.value);
+        section.setUpdatedAt(LocalDateTime.now());
+        section.setUpdatedBy(user);
         section.getRooms().forEach(room -> {
             room.setStatus(Status.INACTIVE.value);
+            room.setUpdatedBy(user);
+            room.setUpdatedAt(LocalDateTime.now());
         });
 
         sectionRepository.save(section);

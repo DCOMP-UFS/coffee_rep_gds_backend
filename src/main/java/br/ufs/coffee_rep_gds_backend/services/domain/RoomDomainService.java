@@ -53,7 +53,9 @@ public class RoomDomainService {
             return roomType;
         }
 
-        return new RoomType(name, Status.ACTIVE.value, user);
+        RoomType roomType = new RoomType(name, Status.ACTIVE.value, user);
+
+        return roomTypeRepository.save(roomType);
     }
 
 }

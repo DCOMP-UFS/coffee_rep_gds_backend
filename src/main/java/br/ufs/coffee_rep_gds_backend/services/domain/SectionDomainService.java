@@ -17,11 +17,19 @@ public class SectionDomainService {
     }
 
     public Optional<Section> findByName(String name) {
-        return sectionRepository.findAllByNameIgnoreCase(name);
+        return sectionRepository.findByNameIgnoreCase(name);
     }
 
     public Section findById(Long id) {
         Optional<Section> optional = sectionRepository.findById(id);
+
+        if (optional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado");
+
+        return optional.get();
+    }
+
+    public Section findByIdAndStatus(Long id, Integer status) {
+        Optional<Section> optional = sectionRepository.findByIdAndStatus(id, status);
 
         if (optional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado");
 
