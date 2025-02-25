@@ -16,7 +16,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
                                        "FROM tb_rooms r " +
                                        "left join tb_reservations tr on r.id = tr.room_id " +
-                                       "and now() >= tr.start_date and now() <= tr.end_date " +
+                                       "and now() >= tr.start_date and now() <= tr.end_date  and tr.status = 'Aprovada' " +
                                        "left join tb_sections ts on r.section_id = ts.id " +
                                        "left join tb_room_types tt on r.room_type_id = tt.id " +
                                        "where r.status = :status " +
@@ -31,7 +31,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
                                        "FROM tb_rooms r " +
                                        "left join tb_reservations tr on r.id = tr.room_id " +
-                                       "and now() >= tr.start_date and now() <= tr.end_date " +
+                                       "and now() >= tr.start_date and now() <= tr.end_date and tr.status = 'Aprovada' " +
                                        "left join tb_sections ts on r.section_id = ts.id " +
                                        "left join tb_room_types tt on r.room_type_id = tt.id " +
                                        "where r.status = :status " +
@@ -43,7 +43,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
                                        "FROM tb_rooms r " +
                                        "left join tb_reservations tr on r.id = tr.room_id " +
-                                       "and now() >= tr.start_date and now() <= tr.end_date " +
+                                       "and now() >= tr.start_date and now() <= tr.end_date  and tr.status = 'Aprovada' " +
                                        "left join tb_sections ts on r.section_id = ts.id " +
                                        "left join tb_room_types tt on r.room_type_id = tt.id " +
                                        "where r.status = :status " +
