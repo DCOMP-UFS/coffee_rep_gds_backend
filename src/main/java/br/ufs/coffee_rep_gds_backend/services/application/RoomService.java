@@ -8,6 +8,7 @@ import br.ufs.coffee_rep_gds_backend.entities.RoomType;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
+import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.projections.RoomProjection;
 import br.ufs.coffee_rep_gds_backend.repositories.RoomRepository;
@@ -90,13 +91,7 @@ public class RoomService {
                 room.setStatus(Status.ACTIVE.value);
                 room.setUpdatedAt(LocalDateTime.now());
                 room = roomRepository.save(room);
-            }
-            return new CreateRoomResponseDTO(
-                    room.getId(),
-                    room.getName(),
-                    room.getSection().getName(),
-                    room.getType().getName()
-            );
+            } else throw new EntityAlreadyExistsException("Já existe uma sala com este nome!");
         }
 
         Room room = new Room(dto.nome(), Status.ACTIVE.value, user, roomType, section);

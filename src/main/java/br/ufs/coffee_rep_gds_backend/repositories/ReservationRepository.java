@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
 
-    default Page<Reservation> findAllByStartEndDate(String reservationStatus, Specification<Reservation> spec, Pageable pageable) {
+    default Page<Reservation> findAllByStartEndDate(Integer reservationStatus, Specification<Reservation> spec, Pageable pageable) {
         Specification<Reservation> finalSpec = Specification.where(spec);
 
         finalSpec = finalSpec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("status"), reservationStatus));
@@ -22,7 +22,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
         return findAll(finalSpec, pageable);
     }
 
-    default List<Reservation> findAllByStartDateAndEndDateAndRoom_Id(String reservationStatus, Specification<Reservation> spec){
+    default List<Reservation> findAllByStartDateAndEndDateAndRoom_Id(Integer reservationStatus, Specification<Reservation> spec){
         Specification<Reservation> finalSpec = Specification.where(spec);
 
         finalSpec = finalSpec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("status"), reservationStatus));
@@ -32,12 +32,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
 
     default List<Reservation> findAllReservationsInCurrentMonth(Specification<Reservation> spec) {
         Specification<Reservation> finalSpec = Specification.where(spec);
-        String reservationStatus = ReservationStatus.APPROVED.label;
+        Integer reservationStatus = ReservationStatus.APPROVED.label;
 
         finalSpec = finalSpec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("status"), reservationStatus));
 
         return findAll(finalSpec);
     }
 
-    Optional<Reservation> findByIdAndStatus(Long id, String reservationStatus);
+    Optional<Reservation> findByIdAndStatus(Long id, Integer reservationStatus);
 }

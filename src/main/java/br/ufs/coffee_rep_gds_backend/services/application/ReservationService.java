@@ -138,7 +138,7 @@ public class ReservationService {
         Specification<Reservation> spec = ReservationSpecification.filter(null, null, roomId, null, null, null, start, end);
         List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(ReservationStatus.APPROVED.label, spec);
 
-        if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para este quarto no horário solicitado!");
+        if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para esta sala no horário solicitado!");
     }
 
 }

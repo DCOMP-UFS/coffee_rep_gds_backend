@@ -60,12 +60,7 @@ public class SectionService {
                 section.setUpdatedAt(LocalDateTime.now());
                 section.setUpdatedBy(user);
                 section = sectionRepository.save(section);
-            }
-            return new CreateSectionResponseDTO(
-                    section.getId(),
-                    section.getName(),
-                    section.getObservations()
-            );
+            } else throw new EntityAlreadyExistsException("Já existe um setor com esse nome!");
         }
 
         Section section = new Section(
