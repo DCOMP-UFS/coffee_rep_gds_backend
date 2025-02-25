@@ -1,12 +1,12 @@
 package br.ufs.coffee_rep_gds_backend.enums;
 
 public enum ReservationStatus {
-    APPROVED("Aprovada"),
-    CANCELLED("Cancelada");
+    APPROVED(1),
+    CANCELLED(2);
 
-    public final String label;
+    public final Integer label;
 
-    ReservationStatus(String label) {
+    ReservationStatus(Integer label) {
         this.label = label;
     }
 }

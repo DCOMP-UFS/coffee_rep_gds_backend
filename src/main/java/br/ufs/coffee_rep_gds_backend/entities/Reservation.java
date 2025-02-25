@@ -23,7 +23,7 @@ public class Reservation {
     private String observations;
 
     @Column(nullable = false)
-    private String status;
+    private Integer status;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -47,7 +47,7 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester, String status, User updatedBy) {
+    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester, Integer status, User updatedBy) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.observations = observations;
@@ -89,11 +89,11 @@ public class Reservation {
         this.observations = observations;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
