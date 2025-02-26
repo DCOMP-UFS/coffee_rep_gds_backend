@@ -36,7 +36,7 @@ public class Requester {
     @JoinColumn(name = "updated_by", referencedColumnName = "user_id")
     private User updatedBy;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name = "requester_type_id", nullable = false)
     private RequesterType requesterType;
 

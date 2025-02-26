@@ -27,9 +27,10 @@ public class RoomController {
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String setor,
+            @RequestParam(required = false) Boolean ocupada,
             Pageable pageable
     ) {
-        return roomService.getAllActiveRooms(nome, tipo, setor, pageable);
+        return roomService.getAllActiveRooms(nome, tipo, setor, ocupada, pageable);
     }
 
     @GetMapping("/{id}")
@@ -37,9 +38,10 @@ public class RoomController {
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String setor,
+            @RequestParam(required = false) Boolean ocupada,
             @PathVariable Long id
     ) {
-        RoomResponseDto dto = roomService.getRoomById(id, nome, tipo, setor);
+        RoomResponseDto dto = roomService.getRoomById(id, nome, tipo, setor, ocupada);
         return ResponseEntity.ok(dto);
     }
 
@@ -48,9 +50,10 @@ public class RoomController {
             @PathVariable Long sectionId,
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) Boolean ocupada,
             Pageable pageable
     ) {
-        return roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
+        return roomService.getRoomsBySectionId(sectionId, nome, tipo, ocupada, pageable);
     }
 
     @PostMapping

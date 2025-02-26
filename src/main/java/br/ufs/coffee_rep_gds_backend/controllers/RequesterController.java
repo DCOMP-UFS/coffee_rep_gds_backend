@@ -32,7 +32,7 @@ public class RequesterController {
             @RequestParam(required = false) Boolean unpaged,
             Pageable pageable) {
 
-        if (unpaged) {
+        if (unpaged != null && unpaged) {
             List<RequesterResponseDto> requesters = requesterService.getAllRequesters(nome, cpf);
             return ResponseEntity.ok(requesters);
         }

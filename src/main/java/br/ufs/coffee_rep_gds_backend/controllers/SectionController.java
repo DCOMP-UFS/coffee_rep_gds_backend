@@ -29,7 +29,7 @@ public class SectionController {
             @RequestParam(required = false) Boolean unpaged,
             Pageable pageable
     ) {
-        if (unpaged) {
+        if (unpaged != null && unpaged) {
             List<SectionResponseDto> allActive = sectionService.findAllActive(name);
             return ResponseEntity.ok(allActive);
         }

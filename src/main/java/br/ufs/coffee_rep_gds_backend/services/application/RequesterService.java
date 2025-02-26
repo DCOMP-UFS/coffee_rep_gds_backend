@@ -109,6 +109,7 @@ public class RequesterService {
         Requester requester = new Requester(dto.nome(), dto.cpf(), dto.telefone(), Status.ACTIVE.value, user, requesterType);
         Requester saved = requesterRepository.save(requester);
         return new CreateRequesterResponseDTO(
+                saved.getId(),
                 saved.getName(),
                 saved.getCpf(),
                 saved.getContactNumber(),
@@ -138,6 +139,7 @@ public class RequesterService {
 
         Requester saved = requesterRepository.save(requester);
         return new CreateRequesterResponseDTO(
+                saved.getId(),
                 saved.getName(),
                 saved.getCpf(),
                 saved.getContactNumber(),
