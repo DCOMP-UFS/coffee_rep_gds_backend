@@ -4,6 +4,7 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateRoomDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateRoomResponseDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.services.application.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -53,7 +54,7 @@ public class RoomController {
     }
 
     @PostMapping
-    public ResponseEntity<CreateRoomResponseDTO> createRoom(@RequestBody CreateRoomDTO dto) {
+    public ResponseEntity<CreateRoomResponseDTO> createRoom(@RequestBody @Valid CreateRoomDTO dto) {
         CreateRoomResponseDTO createRoomResponseDTO = roomService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createRoomResponseDTO);
     }

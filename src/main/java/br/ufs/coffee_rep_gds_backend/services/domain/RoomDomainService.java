@@ -40,20 +40,14 @@ public class RoomDomainService {
 
     public RoomType createRoomType(String name) {
         Optional<RoomType> optionalRoomType = this.roomTypeRepository.findByNameIgnoreCase(name);
-        User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
-
+        
         if (optionalRoomType.isPresent()) {
-            RoomType roomType = optionalRoomType.get();
-            if (roomType.getStatus().equals(Status.INACTIVE.value)) {
-                roomType.setStatus(Status.ACTIVE.value);
-                roomType.setUpdatedBy(user);
-                roomType.setUpdatedAt(LocalDateTime.now());
-                roomTypeRepository.save(roomType);
-            }
-            return roomType;
+            return optionalRoomType.get();
         }
 
+        User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
         RoomType roomType = new RoomType(name, Status.ACTIVE.value, user);
+        roomType.setUpdatedAt(LocalDateTime.now());
 
         return roomTypeRepository.save(roomType);
     }

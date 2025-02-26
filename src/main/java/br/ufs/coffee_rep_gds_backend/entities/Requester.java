@@ -20,7 +20,7 @@ public class Requester {
 
     @Column(nullable = false)
     private String cpf;
-    private String contact_number;
+    private String contactNumber;
 
     @Column(nullable = false)
     private Integer status;
@@ -46,10 +46,10 @@ public class Requester {
     public Requester() {
     }
 
-    public Requester(String name, String cpf, String contact_number, Integer status, User updatedBy, RequesterType requesterType) {
+    public Requester(String name, String cpf, String contactNumber, Integer status, User updatedBy, RequesterType requesterType) {
         this.name = name;
         this.cpf = cpf;
-        this.contact_number = contact_number;
+        this.contactNumber = contactNumber;
         this.status = status;
         this.updatedBy = updatedBy;
         this.requesterType = requesterType;
@@ -79,12 +79,12 @@ public class Requester {
         this.cpf = cpf;
     }
 
-    public String getContact_number() {
-        return contact_number;
+    public String getContactNumber() {
+        return contactNumber;
     }
 
-    public void setContact_number(String contact_number) {
-        this.contact_number = contact_number;
+    public void setContactNumber(String contact_number) {
+        this.contactNumber = contact_number;
     }
 
     public Integer getStatus() {

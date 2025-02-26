@@ -90,7 +90,7 @@ public class RoomService {
             if (room.getStatus().equals(Status.INACTIVE.value)) {
                 room.setStatus(Status.ACTIVE.value);
                 room.setUpdatedAt(LocalDateTime.now());
-                room = roomRepository.save(room);
+                roomRepository.save(room);
             } else throw new EntityAlreadyExistsException("Já existe uma sala com este nome!");
         }
 
@@ -120,7 +120,7 @@ public class RoomService {
         Section section = roomToSave.getSection();
         if (!dto.setorId().equals(roomToSave.getSection().getId())) section = sectionDomainService.findByIdAndStatus(dto.setorId(), Status.ACTIVE.value);
 
-        if (dto.nome() != null && !dto.nome().trim().isEmpty()) roomToSave.setName(dto.nome());
+        if (dto.nome() != null) roomToSave.setName(dto.nome());
         roomToSave.setSection(section);
         roomToSave.setType(roomType);
         roomToSave.setUpdatedAt(LocalDateTime.now());

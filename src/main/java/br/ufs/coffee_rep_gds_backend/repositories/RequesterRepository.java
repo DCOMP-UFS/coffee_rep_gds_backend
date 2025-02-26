@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RequesterRepository extends JpaRepository<Requester, Long>, JpaSpecificationExecutor<Requester> {
 
@@ -15,9 +16,18 @@ public interface RequesterRepository extends JpaRepository<Requester, Long>, Jpa
         Specification<Requester> finalSpec = Specification.where(spec);
 
         finalSpec = finalSpec.and((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("status"), 1));
+                criteriaBuilder.equal(root.get("status"), status));
 
         return findAll(finalSpec, pageable);
+    }
+
+    default List<Requester> findAllByStatusUnpaged(Integer status, Specification<Requester> spec) {
+        Specification<Requester> finalSpec = Specification.where(spec);
+
+        finalSpec = finalSpec.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("status"), status));
+
+        return findAll(finalSpec);
     }
 
     default Page<Requester> findAllByRequesterTypeId(Long requesterTypeId, Specification<Requester> spec, Pageable pageable) {
@@ -32,4 +42,6 @@ public interface RequesterRepository extends JpaRepository<Requester, Long>, Jpa
 
         return findAll(finalSpec, pageable);
     }
+
+    Optional<Requester> findByCpf(String cpf);
 }
