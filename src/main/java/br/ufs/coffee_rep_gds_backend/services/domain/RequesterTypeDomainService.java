@@ -7,7 +7,6 @@ import br.ufs.coffee_rep_gds_backend.repositories.RequesterTypeRepository;
 import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service

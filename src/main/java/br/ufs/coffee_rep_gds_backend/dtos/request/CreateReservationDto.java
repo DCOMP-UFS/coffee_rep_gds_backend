@@ -1,6 +1,5 @@
 package br.ufs.coffee_rep_gds_backend.dtos.request;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
