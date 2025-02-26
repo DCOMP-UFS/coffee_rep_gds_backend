@@ -47,6 +47,18 @@ public class RoomService {
         return getRoomResponseDTOs(pageable, roomWithOccupation);
     }
 
+    public List<RoomResponseDto> getAllActiveRoomsUnpaged(String name, String type, String section, Boolean occupationStatus) {
+        List<RoomProjection> allActiveRoomUnpaged = roomRepository.findAllActiveRoomUnpaged(Status.ACTIVE.value, name, type, section, occupationStatus);
+
+        return allActiveRoomUnpaged.stream().map(roomProjection -> new RoomResponseDto(
+                roomProjection.getId(),
+                roomProjection.getName(),
+                roomProjection.getType(),
+                roomProjection.getSection(),
+                roomProjection.getOcupationStatus()
+        )).toList();
+    }
+
     public RoomResponseDto getRoomById(Long id, String name, String type, String section, Boolean occupationStatus) {
         Optional<RoomProjection> optionalRoom = this.roomRepository.findActive(id, Status.ACTIVE.value, name, type, occupationStatus, section);
         if (optionalRoom.isEmpty()) throw new EntityNotFoundException("Sala não encontrada!");

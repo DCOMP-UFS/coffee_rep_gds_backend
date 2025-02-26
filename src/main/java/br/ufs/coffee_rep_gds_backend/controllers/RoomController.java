@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/room")
@@ -23,14 +25,20 @@ public class RoomController {
     }
 
     @GetMapping
-    public Page<RoomResponseDto> getAllRooms(
+    public ResponseEntity<?> getAllRooms(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String setor,
             @RequestParam(required = false) Boolean ocupada,
+            @RequestParam(required = false) Boolean unpaged,
             Pageable pageable
     ) {
-        return roomService.getAllActiveRooms(nome, tipo, setor, ocupada, pageable);
+        if (unpaged != null && unpaged) {
+            List<RoomResponseDto> allActiveRoomsUnpaged = roomService.getAllActiveRoomsUnpaged(nome, tipo, setor, ocupada);
+            return ResponseEntity.ok(allActiveRoomsUnpaged);
+        }
+        Page<RoomResponseDto> allActiveRooms = roomService.getAllActiveRooms(nome, tipo, setor, ocupada, pageable);
+        return ResponseEntity.ok(allActiveRooms);
     }
 
     @GetMapping("/{id}")
