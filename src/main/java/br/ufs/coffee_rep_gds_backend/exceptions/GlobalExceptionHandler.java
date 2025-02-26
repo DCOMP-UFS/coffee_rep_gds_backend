@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
 
         String errorMessage = exception.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
 
-        ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), errorMessage, HttpStatus.BAD_REQUEST.getReasonPhrase(), request.getRequestURI());
+        ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), errorMessage, request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(error);
