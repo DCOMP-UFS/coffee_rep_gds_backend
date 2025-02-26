@@ -1,22 +1,17 @@
 package br.ufs.coffee_rep_gds_backend.exceptions;
 
 import br.ufs.coffee_rep_gds_backend.dtos.response.ErrorResponse;
-import br.ufs.coffee_rep_gds_backend.dtos.response.ErrorValidationResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -78,14 +73,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorValidationResponse> methodArgumentNotValidException(MethodArgumentNotValidException exception, HttpServletRequest request) {
-        Map<String, String> errors = new HashMap<>();
+    public ResponseEntity<ErrorResponse> methodArgumentNotValidException(MethodArgumentNotValidException exception, HttpServletRequest request) {
 
-        for (FieldError error : exception.getBindingResult().getFieldErrors()) {
-            errors.put(error.getField(), error.getDefaultMessage());
-        }
+        String errorMessage = exception.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
 
-        ErrorValidationResponse error = new ErrorValidationResponse(HttpStatus.BAD_REQUEST.value(), request.getRequestURI(), HttpStatus.BAD_REQUEST.getReasonPhrase(), errors);
+        ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), errorMessage, HttpStatus.BAD_REQUEST.getReasonPhrase(), request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(error);
