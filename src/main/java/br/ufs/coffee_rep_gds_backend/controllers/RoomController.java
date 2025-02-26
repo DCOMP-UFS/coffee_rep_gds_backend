@@ -4,6 +4,7 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateRoomDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateRoomResponseDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.services.application.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,10 @@ public class RoomController {
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String setor,
+            @RequestParam(required = false) Boolean ocupada,
             Pageable pageable
     ) {
-        return roomService.getAllActiveRooms(nome, tipo, setor, pageable);
+        return roomService.getAllActiveRooms(nome, tipo, setor, ocupada, pageable);
     }
 
     @GetMapping("/{id}")
@@ -36,9 +38,10 @@ public class RoomController {
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String setor,
+            @RequestParam(required = false) Boolean ocupada,
             @PathVariable Long id
     ) {
-        RoomResponseDto dto = roomService.getRoomById(id, nome, tipo, setor);
+        RoomResponseDto dto = roomService.getRoomById(id, nome, tipo, setor, ocupada);
         return ResponseEntity.ok(dto);
     }
 
@@ -47,13 +50,14 @@ public class RoomController {
             @PathVariable Long sectionId,
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) Boolean ocupada,
             Pageable pageable
     ) {
-        return roomService.getRoomsBySectionId(sectionId, nome, tipo, pageable);
+        return roomService.getRoomsBySectionId(sectionId, nome, tipo, ocupada, pageable);
     }
 
     @PostMapping
-    public ResponseEntity<CreateRoomResponseDTO> createRoom(@RequestBody CreateRoomDTO dto) {
+    public ResponseEntity<CreateRoomResponseDTO> createRoom(@RequestBody @Valid CreateRoomDTO dto) {
         CreateRoomResponseDTO createRoomResponseDTO = roomService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createRoomResponseDTO);
     }
@@ -64,6 +68,7 @@ public class RoomController {
         return ResponseEntity.ok(updated);
     }
 
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
         roomService.delete(id);
         return ResponseEntity.noContent().build();

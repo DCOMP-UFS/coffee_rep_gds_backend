@@ -42,13 +42,13 @@ public class RoomService {
         this.userDomainService = userDomainService;
     }
 
-    public Page<RoomResponseDto> getAllActiveRooms(String name, String type, String section, Pageable pageable) {
-        Page<RoomProjection> roomWithOccupation = roomRepository.findRoomWithOccupation(Status.ACTIVE.value, name, type, section, pageable);
+    public Page<RoomResponseDto> getAllActiveRooms(String name, String type, String section, Boolean occupationStatus, Pageable pageable) {
+        Page<RoomProjection> roomWithOccupation = roomRepository.findRoomWithOccupation(Status.ACTIVE.value, name, type, section, occupationStatus, pageable);
         return getRoomResponseDTOs(pageable, roomWithOccupation);
     }
 
-    public RoomResponseDto getRoomById(Long id, String name, String type, String section) {
-        Optional<RoomProjection> optionalRoom = this.roomRepository.findActive(id, Status.ACTIVE.value, name, type, section);
+    public RoomResponseDto getRoomById(Long id, String name, String type, String section, Boolean occupationStatus) {
+        Optional<RoomProjection> optionalRoom = this.roomRepository.findActive(id, Status.ACTIVE.value, name, type, occupationStatus, section);
         if (optionalRoom.isEmpty()) throw new EntityNotFoundException("Sala não encontrada!");
 
         RoomProjection room = optionalRoom.get();
@@ -61,8 +61,8 @@ public class RoomService {
         );
     }
 
-    public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, String name, String type, Pageable pageable) {
-        Page<RoomProjection> allBySectionId = this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, name, type, pageable);
+    public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, String name, String type, Boolean occupationStatus, Pageable pageable) {
+        Page<RoomProjection> allBySectionId = this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, name, type, occupationStatus, pageable);
         return getRoomResponseDTOs(pageable, allBySectionId);
     }
 
@@ -90,7 +90,7 @@ public class RoomService {
             if (room.getStatus().equals(Status.INACTIVE.value)) {
                 room.setStatus(Status.ACTIVE.value);
                 room.setUpdatedAt(LocalDateTime.now());
-                room = roomRepository.save(room);
+                roomRepository.save(room);
             } else throw new EntityAlreadyExistsException("Já existe uma sala com este nome!");
         }
 
@@ -120,7 +120,7 @@ public class RoomService {
         Section section = roomToSave.getSection();
         if (!dto.setorId().equals(roomToSave.getSection().getId())) section = sectionDomainService.findByIdAndStatus(dto.setorId(), Status.ACTIVE.value);
 
-        if (dto.nome() != null && !dto.nome().trim().isEmpty()) roomToSave.setName(dto.nome());
+        if (dto.nome() != null) roomToSave.setName(dto.nome());
         roomToSave.setSection(section);
         roomToSave.setType(roomType);
         roomToSave.setUpdatedAt(LocalDateTime.now());

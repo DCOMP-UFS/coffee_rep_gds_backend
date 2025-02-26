@@ -4,6 +4,7 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateReservationDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.services.application.ReservationService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -38,7 +39,7 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<CreateReservationResponseDto> createReservation(@RequestBody CreateReservationDto dto) {
+    public ResponseEntity<CreateReservationResponseDto> createReservation(@RequestBody @Valid CreateReservationDto dto) {
         CreateReservationResponseDto createdDto = reservationService.createReservation(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDto);

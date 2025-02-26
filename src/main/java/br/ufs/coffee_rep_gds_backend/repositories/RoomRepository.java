@@ -23,8 +23,11 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                                        "and r.id = :id " +
                                        "and (r.name like concat('%', :name, '%') or :name is null) " +
                                        "and (tt.name like concat('%', :type, '%') or :type is null) " +
-                                       "and (ts.name like concat('%', :section, '%') or :section is null)")
-    Optional<RoomProjection> findActive(Long id, Integer status, String name, String type, String section);
+                                       "and (ts.name like concat('%', :section, '%') or :section is null) " +
+                                       "and (:ocupationStatus is null or " +
+                                       "(:ocupationStatus = true and tr.id is not null) or " +
+                                       "(:ocupationStatus = false AND tr.id IS NULL))")
+    Optional<RoomProjection> findActive(Long id, Integer status, String name, String type, Boolean ocupationStatus, String section);
 
     Optional<Room> findByIdAndStatus(Long id, Integer status);
 
@@ -37,8 +40,11 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                                        "where r.status = :status " +
                                        "and ts.id = :sectionId " +
                                        "and (r.name like concat('%', :name, '%') or :name is null) " +
-                                       "and (tt.name like concat('%', :type, '%') or :type is null)")
-    Page<RoomProjection> findBySectionId(Long sectionId, Integer status, String name, String type, Pageable pageable);
+                                       "and (tt.name like concat('%', :type, '%') or :type is null) " +
+                                       "and (:ocupationStatus is null or " +
+                                       "(:ocupationStatus = true and tr.id is not null) or " +
+                                       "(:ocupationStatus = false AND tr.id IS NULL))")
+    Page<RoomProjection> findBySectionId(Long sectionId, Integer status, String name, String type, Boolean ocupationStatus, Pageable pageable);
 
     @Query(nativeQuery = true, value = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
                                        "FROM tb_rooms r " +
@@ -49,8 +55,11 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                                        "where r.status = :status " +
                                        "and (r.name like concat('%', :name, '%') or :name is null) " +
                                        "and (tt.name like concat('%', :type, '%') or :type is null) " +
-                                       "and (ts.name like concat('%', :section, '%') or :section is null)")
-    Page<RoomProjection> findRoomWithOccupation(Integer status, String name, String type, String section, Pageable pageable);
+                                       "and (ts.name like concat('%', :section, '%') or :section is null) " +
+                                       "and (:ocupationStatus is null or " +
+                                       "(:ocupationStatus = true and tr.id is not null) or " +
+                                       "(:ocupationStatus = false AND tr.id IS NULL))")
+    Page<RoomProjection> findRoomWithOccupation(Integer status, String name, String type, String section, Boolean ocupationStatus, Pageable pageable);
 
     Optional<Room> getRoomByNameIgnoreCaseAndSection(String name, Section section);
 }

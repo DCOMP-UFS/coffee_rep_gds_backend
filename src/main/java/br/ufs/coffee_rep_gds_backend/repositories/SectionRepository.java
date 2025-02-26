@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpecificationExecutor<Section> {
@@ -18,6 +19,15 @@ public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpec
                 criteriaBuilder.equal(root.get("status"), status));
 
         return findAll(finalSpec, pageable);
+    }
+
+    default List<Section> findAllByStatusUnpaged(Integer status, Specification<Section> spec) {
+        Specification<Section> finalSpec = Specification.where(spec);
+
+        finalSpec = finalSpec.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("status"), status));
+
+        return findAll(finalSpec);
     }
 
     Optional<Section> findByNameIgnoreCase(String name);

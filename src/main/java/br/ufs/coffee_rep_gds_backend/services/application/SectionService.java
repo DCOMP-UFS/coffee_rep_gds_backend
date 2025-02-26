@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,6 +49,17 @@ public class SectionService {
         return new PageImpl<>(all, pageable, allByStatus.getTotalElements());
     }
 
+    public List<SectionResponseDto> findAllActive(String name) {
+        Specification<Section> spec = SectionSpecification.filter(name);
+        List<Section> allByStatus = sectionRepository.findAllByStatusUnpaged(Status.ACTIVE.value, spec);
+
+        return allByStatus.stream().map(section -> new SectionResponseDto(
+                section.getId(),
+                section.getName(),
+                section.getObservations())
+        ).toList();
+    }
+
     @Transactional
     public CreateSectionResponseDTO create(CreateSectionDTO dto) {
         Optional<Section> sectionOptional = sectionDomainService.findByName(dto.nome());
@@ -59,7 +71,7 @@ public class SectionService {
                 section.setStatus(Status.ACTIVE.value);
                 section.setUpdatedAt(LocalDateTime.now());
                 section.setUpdatedBy(user);
-                section = sectionRepository.save(section);
+                sectionRepository.save(section);
             } else throw new EntityAlreadyExistsException("Já existe um setor com esse nome!");
         }
 
