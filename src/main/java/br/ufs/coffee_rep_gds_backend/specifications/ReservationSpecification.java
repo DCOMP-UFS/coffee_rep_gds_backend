@@ -1,6 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.specifications;
 
 import br.ufs.coffee_rep_gds_backend.entities.Reservation;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("DuplicatedCode")
 public class ReservationSpecification {
 
     public static Specification<Reservation> filter(String requesterName, String roomName, Long roomId, Long requesterId, String sectionName, Long sectionId, LocalDateTime startDate, LocalDateTime endDate) {
@@ -58,6 +60,16 @@ public class ReservationSpecification {
                         )
                 ));
             }
+
+            Expression<Object> nullOrder = criteriaBuilder.selectCase()
+                    .when(root.get("updatedAt").isNull(), 1)
+                    .otherwise(0);
+
+            query.orderBy(
+                    criteriaBuilder.asc(nullOrder),
+                    criteriaBuilder.desc(root.get("updatedAt")),
+                    criteriaBuilder.desc(root.get("createdAt"))
+            );
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 

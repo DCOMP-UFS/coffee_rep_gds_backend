@@ -32,13 +32,12 @@ public class Requester {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "specialty")
+    private String specialty;
+
     @ManyToOne
     @JoinColumn(name = "updated_by", referencedColumnName = "user_id")
     private User updatedBy;
-
-    @ManyToOne
-    @JoinColumn(name = "requester_type_id", nullable = false)
-    private RequesterType requesterType;
 
     @OneToMany(mappedBy = "requester")
     private List<Reservation> reservations;
@@ -46,13 +45,13 @@ public class Requester {
     public Requester() {
     }
 
-    public Requester(String name, String cpf, String contactNumber, Integer status, User updatedBy, RequesterType requesterType) {
+    public Requester(String name, String cpf, String contactNumber, Integer status, User updatedBy, String specialty) {
         this.name = name;
         this.cpf = cpf;
         this.contactNumber = contactNumber;
         this.status = status;
         this.updatedBy = updatedBy;
-        this.requesterType = requesterType;
+        this.specialty = specialty;
     }
 
     public Long getId() {
@@ -119,12 +118,12 @@ public class Requester {
         this.updatedBy = updatedBy;
     }
 
-    public RequesterType getRequesterType() {
-        return requesterType;
+    public String getSpecialty() {
+        return specialty;
     }
 
-    public void setRequesterType(RequesterType requesterType) {
-        this.requesterType = requesterType;
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
     }
 
     public List<Reservation> getReservations() {
