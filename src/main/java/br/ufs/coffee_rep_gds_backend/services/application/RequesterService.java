@@ -46,6 +46,8 @@ public class RequesterService {
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
                 req.getId(),
                 req.getName(),
+                req.getCpf(),
+                req.getContactNumber(),
                 req.getRequesterType().getName(),
                 req.getRequesterType().getPosition())).toList();
         return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
@@ -58,6 +60,8 @@ public class RequesterService {
         return requesters.stream().map(req -> new RequesterResponseDto(
                 req.getId(),
                 req.getName(),
+                req.getCpf(),
+                req.getContactNumber(),
                 req.getRequesterType().getName(),
                 req.getRequesterType().getPosition())).toList();
     }
@@ -85,6 +89,8 @@ public class RequesterService {
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
                 req.getId(),
                 req.getName(),
+                req.getCpf(),
+                req.getContactNumber(),
                 req.getRequesterType().getName(),
                 req.getRequesterType().getPosition())).toList();
         return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
