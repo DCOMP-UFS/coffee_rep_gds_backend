@@ -54,14 +54,20 @@ public class RoomController {
     }
 
     @GetMapping("/section/{sectionId}")
-    public Page<RoomResponseDto> getRoomsBySectionId(
+    public ResponseEntity<?> getRoomsBySectionId(
             @PathVariable Long sectionId,
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) Boolean ocupada,
+            @RequestParam(required = false) Boolean unpaged,
             Pageable pageable
     ) {
-        return roomService.getRoomsBySectionId(sectionId, nome, tipo, ocupada, pageable);
+        if (unpaged != null && unpaged) {
+            List<RoomResponseDto> rooms = roomService.getRoomsBySectionIdUnpaged(sectionId, nome, tipo, ocupada);
+            return ResponseEntity.ok(rooms);
+        }
+        Page<RoomResponseDto> roomsBySectionId = roomService.getRoomsBySectionId(sectionId, nome, tipo, ocupada, pageable);
+        return ResponseEntity.ok(roomsBySectionId);
     }
 
     @PostMapping

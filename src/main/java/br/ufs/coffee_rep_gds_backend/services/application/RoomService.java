@@ -74,8 +74,20 @@ public class RoomService {
     }
 
     public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, String name, String type, Boolean occupationStatus, Pageable pageable) {
-        Page<RoomProjection> allBySectionId = this.roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, name, type, occupationStatus, pageable);
+        Page<RoomProjection> allBySectionId = roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, name, type, occupationStatus, pageable);
         return getRoomResponseDTOs(pageable, allBySectionId);
+    }
+
+    public List<RoomResponseDto> getRoomsBySectionIdUnpaged(Long sectionId, String name, String type, Boolean occupationStatus) {
+        List<RoomProjection> roomUnpaged = roomRepository.findBySectionIdUnpaged(sectionId, Status.ACTIVE.value, name, type, occupationStatus);
+
+        return roomUnpaged.stream().map(room -> new RoomResponseDto(
+                room.getId(),
+                room.getName(),
+                room.getType(),
+                room.getSection(),
+                room.getOcupationStatus()
+        )).toList();
     }
 
     private Page<RoomResponseDto> getRoomResponseDTOs(Pageable pageable, Page<RoomProjection> allBySectionId) {
