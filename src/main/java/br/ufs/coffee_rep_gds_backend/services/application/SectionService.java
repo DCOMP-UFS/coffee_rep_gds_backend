@@ -71,7 +71,7 @@ public class SectionService {
                 section.setStatus(Status.ACTIVE.value);
                 section.setUpdatedAt(LocalDateTime.now());
                 section.setUpdatedBy(user);
-                section = sectionRepository.save(section);
+                sectionRepository.save(section);
             } else throw new EntityAlreadyExistsException("Já existe um setor com esse nome!");
         }
 
