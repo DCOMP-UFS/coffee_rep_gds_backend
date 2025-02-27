@@ -2,7 +2,6 @@ package br.ufs.coffee_rep_gds_backend.specifications;
 
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -24,15 +23,7 @@ public class RequesterSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("cpf"), cpf));
             }
 
-            Expression<Object> nullOrder = criteriaBuilder.selectCase()
-                    .when(root.get("updatedAt").isNull(), 1)
-                    .otherwise(0);
-
-            query.orderBy(
-                    criteriaBuilder.asc(nullOrder),
-                    criteriaBuilder.desc(root.get("updatedAt")),
-                    criteriaBuilder.desc(root.get("createdAt"))
-            );
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };

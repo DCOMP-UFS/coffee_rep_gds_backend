@@ -23,11 +23,7 @@ public class SectionSpecification {
                     .when(root.get("updatedAt").isNull(), 1)
                     .otherwise(0);
 
-            query.orderBy(
-                    criteriaBuilder.asc(nullOrder),
-                    criteriaBuilder.desc(root.get("updatedAt")),
-                    criteriaBuilder.desc(root.get("createdAt"))
-            );
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };

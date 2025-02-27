@@ -27,7 +27,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                    "and (:ocupationStatus is null or " +
                    "(:ocupationStatus = true and tr.id is not null) or " +
                    "(:ocupationStatus = false AND tr.id IS NULL)) " +
-                   "order by r.updated_at desc nulls last, r.created_at desc";
+                   "order by r.id desc";
 
     String querySection = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus, r.updated_at as updatedAt, r.created_at as createdAt " +
                           "FROM tb_rooms r " +
@@ -42,7 +42,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                           "and (:ocupationStatus is null or " +
                           "(:ocupationStatus = true and tr.id is not null) or " +
                           "(:ocupationStatus = false AND tr.id IS NULL)) " +
-                          "order by r.updated_at desc nulls last, r.created_at desc";
+                          "order by r.id desc";
 
     @Query(nativeQuery = true, value = query)
     Optional<RoomProjection> findActive(Long id, Integer status, String name, String type, Boolean ocupationStatus, String section);

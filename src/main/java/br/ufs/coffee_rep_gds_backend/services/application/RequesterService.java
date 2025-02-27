@@ -99,7 +99,14 @@ public class RequesterService {
                 requester.setStatus(Status.ACTIVE.value);
                 requester.setUpdatedAt(LocalDateTime.now());
                 requester.setUpdatedBy(user);
-                requesterRepository.save(requester);
+                Requester saved = requesterRepository.save(requester);
+                return new CreateRequesterResponseDTO(
+                        saved.getId(),
+                        saved.getName(),
+                        saved.getCpf(),
+                        saved.getContactNumber(),
+                        saved.getSpecialty()
+                );
             }
             throw new EntityAlreadyExistsException("CPF já cadastrado!");
         }
