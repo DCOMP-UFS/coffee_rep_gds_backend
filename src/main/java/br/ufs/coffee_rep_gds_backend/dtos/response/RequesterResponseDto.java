@@ -5,6 +5,5 @@ public record RequesterResponseDto(
         String nome,
         String cpf,
         String contato,
-        String tipo,
-        String cargo
+        String especialidade
 ) {}

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("DuplicatedCode")
 public class ReservationSpecification {
 
     public static Specification<Reservation> filter(String requesterName, String roomName, Long roomId, Long requesterId, String sectionName, Long sectionId, LocalDateTime startDate, LocalDateTime endDate) {
@@ -58,6 +59,8 @@ public class ReservationSpecification {
                         )
                 ));
             }
+
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 

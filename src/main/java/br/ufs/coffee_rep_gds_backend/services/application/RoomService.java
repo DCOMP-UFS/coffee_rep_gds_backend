@@ -111,11 +111,18 @@ public class RoomService {
 
         if (optionalRoom.isPresent()) {
             Room room = optionalRoom.get();
-            if (room.getStatus().equals(Status.INACTIVE.value)) {
+            if (room.getStatus().equals(Status.ACTIVE.value)) {
                 room.setStatus(Status.ACTIVE.value);
                 room.setUpdatedAt(LocalDateTime.now());
-                roomRepository.save(room);
-            } else throw new EntityAlreadyExistsException("Já existe uma sala com este nome!");
+                Room saved = roomRepository.save(room);
+                return new CreateRoomResponseDTO(
+                        saved.getId(),
+                        saved.getName(),
+                        saved.getSection().getName(),
+                        saved.getType().getName()
+                );
+            }
+            throw new EntityAlreadyExistsException("Já existe uma sala com este nome!");
         }
 
         Room room = new Room(dto.nome(), Status.ACTIVE.value, user, roomType, section);

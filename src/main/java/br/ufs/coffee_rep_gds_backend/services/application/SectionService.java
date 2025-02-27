@@ -71,7 +71,13 @@ public class SectionService {
                 section.setStatus(Status.ACTIVE.value);
                 section.setUpdatedAt(LocalDateTime.now());
                 section.setUpdatedBy(user);
-                sectionRepository.save(section);
+                Section saved = sectionRepository.save(section);
+                return new CreateSectionResponseDTO(
+                        saved.getId(),
+                        saved.getName(),
+                        saved.getObservations()
+                );
+
             } else throw new EntityAlreadyExistsException("Já existe um setor com esse nome!");
         }
 
@@ -84,7 +90,7 @@ public class SectionService {
         Section savedSection = sectionRepository.save(section);
 
         return new CreateSectionResponseDTO(
-                section.getId(),
+                savedSection.getId(),
                 savedSection.getName(),
                 savedSection.getObservations()
         );
@@ -95,30 +101,21 @@ public class SectionService {
         Optional<Section> sectionOptional = sectionRepository.findByIdAndStatus(id, Status.ACTIVE.value);
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
-        if (sectionOptional.isEmpty()) throw new EntityNotFoundException("Setor não encontrado!");
+        if (sectionOptional.isEmpty())
+            throw new EntityNotFoundException("Setor não encontrado!");
 
         Optional<Section> optionalNameSearch = sectionDomainService.findByName(dto.nome());
         if (optionalNameSearch.isPresent()) {
             Section nameSearchedSection = optionalNameSearch.get();
-            if (nameSearchedSection.getStatus().equals(Status.ACTIVE.value)) throw new EntityAlreadyExistsException("Já existe um setor com esse nome!");
-            else {
-                nameSearchedSection.setStatus(Status.ACTIVE.value);
-                nameSearchedSection.setUpdatedAt(LocalDateTime.now());
-                nameSearchedSection.setUpdatedBy(user);
-                Section saved = sectionRepository.save(nameSearchedSection);
-
-                return new CreateSectionResponseDTO(
-                        saved.getId(),
-                        saved.getName(),
-                        saved.getObservations()
-                );
-            }
+            if (nameSearchedSection.getStatus().equals(Status.ACTIVE.value) && !dto.nome().equals(nameSearchedSection.getName()))
+                throw new EntityAlreadyExistsException("Já existe um setor com esse nome!");
         }
 
         Section sectionToSave = sectionOptional.get();
 
         if (dto.nome() != null && !dto.nome().trim().isEmpty()) sectionToSave.setName(dto.nome());
         if (dto.observacao() != null) sectionToSave.setObservations(dto.observacao());
+        sectionToSave.setStatus(Status.ACTIVE.value);
         sectionToSave.setUpdatedAt(LocalDateTime.now());
         sectionToSave.setUpdatedBy(user);
 

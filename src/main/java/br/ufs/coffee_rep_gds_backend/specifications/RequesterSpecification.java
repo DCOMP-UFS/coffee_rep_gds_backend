@@ -9,6 +9,7 @@ import java.util.List;
 
 public class RequesterSpecification {
 
+    @SuppressWarnings("DuplicatedCode")
     public static Specification<Requester> all(String name, String cpf) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -20,6 +21,8 @@ public class RequesterSpecification {
             if (cpf != null && !cpf.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(root.get("cpf"), cpf));
             }
+
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };

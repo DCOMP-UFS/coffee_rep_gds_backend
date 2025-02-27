@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    String query = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
+    String query = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus, r.updated_at as updatedAt, r.created_at as createdAt " +
                    "FROM tb_rooms r " +
                    "left join tb_reservations tr on r.id = tr.room_id " +
                    "and now() >= tr.start_date and now() <= tr.end_date  and tr.status = 1 " +
@@ -26,9 +26,10 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                    "and (ts.name like concat('%', :section, '%') or :section is null) " +
                    "and (:ocupationStatus is null or " +
                    "(:ocupationStatus = true and tr.id is not null) or " +
-                   "(:ocupationStatus = false AND tr.id IS NULL))";
+                   "(:ocupationStatus = false AND tr.id IS NULL)) " +
+                   "order by r.id desc";
 
-    String querySection = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus " +
+    String querySection = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus, r.updated_at as updatedAt, r.created_at as createdAt " +
                           "FROM tb_rooms r " +
                           "left join tb_reservations tr on r.id = tr.room_id " +
                           "and now() >= tr.start_date and now() <= tr.end_date and tr.status = 1 " +
@@ -40,7 +41,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                           "and (tt.name like concat('%', :type, '%') or :type is null) " +
                           "and (:ocupationStatus is null or " +
                           "(:ocupationStatus = true and tr.id is not null) or " +
-                          "(:ocupationStatus = false AND tr.id IS NULL))";
+                          "(:ocupationStatus = false AND tr.id IS NULL)) " +
+                          "order by r.id desc";
 
     @Query(nativeQuery = true, value = query)
     Optional<RoomProjection> findActive(Long id, Integer status, String name, String type, Boolean ocupationStatus, String section);

@@ -6,13 +6,11 @@ import br.ufs.coffee_rep_gds_backend.dtos.response.CreateRequesterResponseDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDetailDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
-import br.ufs.coffee_rep_gds_backend.entities.RequesterType;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RequesterRepository;
-import br.ufs.coffee_rep_gds_backend.services.domain.RequesterTypeDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
 import br.ufs.coffee_rep_gds_backend.specifications.RequesterSpecification;
 import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
@@ -31,12 +29,10 @@ public class RequesterService {
 
     private final RequesterRepository requesterRepository;
     private final UserDomainService userDomainService;
-    private final RequesterTypeDomainService requesterTypeDomainService;
 
-    public RequesterService(RequesterRepository requesterRepository, UserDomainService userDomainService, RequesterTypeDomainService requesterTypeDomainService) {
+    public RequesterService(RequesterRepository requesterRepository, UserDomainService userDomainService) {
         this.requesterRepository = requesterRepository;
         this.userDomainService = userDomainService;
-        this.requesterTypeDomainService = requesterTypeDomainService;
     }
 
     public Page<RequesterResponseDto> getAllRequesters(String name, String cpf, Pageable pageable) {
@@ -48,8 +44,8 @@ public class RequesterService {
                 req.getName(),
                 req.getCpf(),
                 req.getContactNumber(),
-                req.getRequesterType().getName(),
-                req.getRequesterType().getPosition())).toList();
+                req.getSpecialty()
+        )).toList();
         return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
     }
 
@@ -62,8 +58,7 @@ public class RequesterService {
                 req.getName(),
                 req.getCpf(),
                 req.getContactNumber(),
-                req.getRequesterType().getName(),
-                req.getRequesterType().getPosition())).toList();
+                req.getSpecialty())).toList();
     }
 
     public RequesterResponseDetailDto getRequesterById(Long id) {
@@ -77,8 +72,7 @@ public class RequesterService {
                 requester.getName(),
                 requester.getCpf(),
                 requester.getContactNumber(),
-                requester.getRequesterType().getName(),
-                requester.getRequesterType().getPosition()
+                requester.getSpecialty()
         );
     }
 
@@ -91,8 +85,7 @@ public class RequesterService {
                 req.getName(),
                 req.getCpf(),
                 req.getContactNumber(),
-                req.getRequesterType().getName(),
-                req.getRequesterType().getPosition())).toList();
+                req.getSpecialty())).toList();
         return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
     }
 
@@ -106,21 +99,26 @@ public class RequesterService {
                 requester.setStatus(Status.ACTIVE.value);
                 requester.setUpdatedAt(LocalDateTime.now());
                 requester.setUpdatedBy(user);
-                requesterRepository.save(requester);
+                Requester saved = requesterRepository.save(requester);
+                return new CreateRequesterResponseDTO(
+                        saved.getId(),
+                        saved.getName(),
+                        saved.getCpf(),
+                        saved.getContactNumber(),
+                        saved.getSpecialty()
+                );
             }
             throw new EntityAlreadyExistsException("CPF já cadastrado!");
         }
 
-        RequesterType requesterType = requesterTypeDomainService.createRequesterType(dto.tipo(), dto.cargo());
-        Requester requester = new Requester(dto.nome(), dto.cpf(), dto.telefone(), Status.ACTIVE.value, user, requesterType);
+        Requester requester = new Requester(dto.nome(), dto.cpf(), dto.telefone(), Status.ACTIVE.value, user, dto.especialidade());
         Requester saved = requesterRepository.save(requester);
         return new CreateRequesterResponseDTO(
                 saved.getId(),
                 saved.getName(),
                 saved.getCpf(),
                 saved.getContactNumber(),
-                saved.getRequesterType().getName(),
-                saved.getRequesterType().getPosition()
+                saved.getSpecialty()
         );
     }
 
@@ -132,14 +130,10 @@ public class RequesterService {
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
         Requester requester = optional.get();
-        RequesterType requesterType = requester.getRequesterType();
-        if (dto.tipo() != null && dto.cargo() != null) {
-            requesterType = requesterTypeDomainService.createRequesterType(dto.tipo(), dto.cargo());
-        }
 
-        if (dto.nome() != null) requester.setName(dto.nome());
+        if (dto.nome() != null && !dto.nome().trim().isEmpty()) requester.setName(dto.nome());
         requester.setContactNumber(dto.telefone());
-        requester.setRequesterType(requesterType);
+        if (dto.especialidade() != null && !dto.especialidade().trim().isEmpty()) requester.setSpecialty(dto.especialidade());
         requester.setUpdatedAt(LocalDateTime.now());
         requester.setUpdatedBy(user);
 
@@ -149,8 +143,7 @@ public class RequesterService {
                 saved.getName(),
                 saved.getCpf(),
                 saved.getContactNumber(),
-                saved.getRequesterType().getName(),
-                saved.getRequesterType().getPosition()
+                saved.getSpecialty()
         );
     }
 

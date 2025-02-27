@@ -15,9 +15,7 @@ public record CreateRequesterDTO(
 
         String telefone,
 
-        @NotEmpty(message = "O tipo de requisitante deve ser preenchido!")
-        @NotBlank(message = "O tipo de requisitante não deve ser deixado em branco!")
-        String tipo,
-
-        String cargo
+        @NotEmpty(message = "A especialiade deve ser preenchida!")
+        @NotBlank(message = "A especialidade não deve ser deixada em branco!")
+        String especialidade
 ) {}
