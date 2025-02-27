@@ -19,10 +19,6 @@ public class SectionSpecification {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")),"%" + name.toLowerCase() + "%"));
             }
 
-            Expression<Object> nullOrder = criteriaBuilder.selectCase()
-                    .when(root.get("updatedAt").isNull(), 1)
-                    .otherwise(0);
-
             query.orderBy(criteriaBuilder.desc(root.get("id")));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

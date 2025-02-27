@@ -1,7 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.specifications;
 
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
