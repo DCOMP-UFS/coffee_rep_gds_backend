@@ -19,7 +19,11 @@ public class SectionSpecification {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")),"%" + name.toLowerCase() + "%"));
             }
 
-            query.orderBy(criteriaBuilder.desc(root.get("id")));
+            Expression<Object> maxDate = criteriaBuilder.selectCase()
+                    .when(criteriaBuilder.greaterThan(root.get("updatedAt"), root.get("createdAt")), root.get("updatedAt"))
+                    .otherwise(root.get("createdAt"));
+
+            query.orderBy(criteriaBuilder.desc(maxDate));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
