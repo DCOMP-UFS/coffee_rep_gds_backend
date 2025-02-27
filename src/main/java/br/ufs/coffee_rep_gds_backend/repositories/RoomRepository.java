@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    String query = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus, r.updated_at as updatedAt, r.created_at as createdAt " +
+    String query = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
                    "FROM tb_rooms r " +
                    "left join tb_reservations tr on r.id = tr.room_id " +
                    "and now() >= tr.start_date and now() <= tr.end_date  and tr.status = 1 " +
@@ -27,9 +27,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                    "and (:ocupationStatus is null or " +
                    "(:ocupationStatus = true and tr.id is not null) or " +
                    "(:ocupationStatus = false AND tr.id IS NULL)) " +
-                   "order by r.id desc";
+                   "order by max_date desc";
 
-    String querySection = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus, r.updated_at as updatedAt, r.created_at as createdAt " +
+    String querySection = "SELECT distinct r.id, r.name, tt.name as type, ts.name as section, case when tr.id is not null then true else false end as ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
                           "FROM tb_rooms r " +
                           "left join tb_reservations tr on r.id = tr.room_id " +
                           "and now() >= tr.start_date and now() <= tr.end_date and tr.status = 1 " +
@@ -42,7 +42,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                           "and (:ocupationStatus is null or " +
                           "(:ocupationStatus = true and tr.id is not null) or " +
                           "(:ocupationStatus = false AND tr.id IS NULL)) " +
-                          "order by r.id desc";
+                          "order by max_date desc";
 
     @Query(nativeQuery = true, value = query)
     Optional<RoomProjection> findActive(Long id, Integer status, String name, String type, Boolean ocupationStatus, String section);

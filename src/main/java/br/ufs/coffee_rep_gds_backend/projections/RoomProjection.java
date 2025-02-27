@@ -15,6 +15,4 @@ public interface RoomProjection {
 //    RoomType getType();
 //    Section getSection();
     Boolean getOcupationStatus();
-    LocalDateTime getUpdatedAt();
-    LocalDateTime getCreatedAt();
 }

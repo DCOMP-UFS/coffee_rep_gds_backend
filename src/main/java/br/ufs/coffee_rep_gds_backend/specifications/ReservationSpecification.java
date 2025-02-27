@@ -1,6 +1,7 @@
 package br.ufs.coffee_rep_gds_backend.specifications;
 
 import br.ufs.coffee_rep_gds_backend.entities.Reservation;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -60,7 +61,11 @@ public class ReservationSpecification {
                 ));
             }
 
-            query.orderBy(criteriaBuilder.desc(root.get("id")));
+            Expression<Object> maxDate = criteriaBuilder.selectCase()
+                    .when(criteriaBuilder.greaterThan(root.get("updatedAt"), root.get("createdAt")), root.get("updatedAt"))
+                    .otherwise(root.get("createdAt"));
+
+            query.orderBy(criteriaBuilder.desc(maxDate));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 
