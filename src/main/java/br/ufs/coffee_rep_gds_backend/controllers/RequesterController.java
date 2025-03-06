@@ -62,7 +62,7 @@ public class RequesterController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CreateRequesterResponseDTO> update(@PathVariable Long id, @RequestBody UpdateRequesterDTO dto){
+    public ResponseEntity<CreateRequesterResponseDTO> update(@PathVariable Long id, @Valid @RequestBody UpdateRequesterDTO dto){
         CreateRequesterResponseDTO update = requesterService.update(id, dto);
         return ResponseEntity.ok(update);
     }
