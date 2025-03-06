@@ -33,10 +33,6 @@ public class Room {
     private User updatedBy;
 
     @ManyToOne
-    @JoinColumn(name = "room_type_id")
-    private RoomType type;
-
-    @ManyToOne
     @JoinColumn(name = "section_id", nullable = false)
     private Section section;
 
@@ -46,11 +42,10 @@ public class Room {
     public Room() {
     }
 
-    public Room(String name, Integer status, User updatedBy, RoomType type, Section section) {
+    public Room(String name, Integer status, User updatedBy, Section section) {
         this.name = name;
         this.status = status;
         this.updatedBy = updatedBy;
-        this.type = type;
         this.section = section;
     }
 
@@ -68,14 +63,6 @@ public class Room {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public RoomType getType() {
-        return type;
-    }
-
-    public void setType(RoomType type) {
-        this.type = type;
     }
 
     public Integer getStatus() {
@@ -131,11 +118,11 @@ public class Room {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Room room = (Room) o;
-        return Objects.equals(id, room.id) && Objects.equals(name, room.name) && Objects.equals(status, room.status) && Objects.equals(type, room.type);
+        return Objects.equals(id, room.id) && Objects.equals(name, room.name) && Objects.equals(section, room.section);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, status, type);
+        return Objects.hash(id, name, section);
     }
 }
