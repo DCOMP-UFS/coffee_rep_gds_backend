@@ -2,14 +2,11 @@ package br.ufs.coffee_rep_gds_backend.services.domain;
 
 import br.ufs.coffee_rep_gds_backend.entities.Room;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
-import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RoomRepository;
-import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 
