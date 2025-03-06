@@ -124,8 +124,13 @@ public class RequesterService {
 
     public CreateRequesterResponseDTO update(Long id, UpdateRequesterDTO dto) {
         Optional<Requester> optional = requesterRepository.findById(id);
+        Optional<Requester> byCpf = requesterRepository.findByCpf(dto.cpf());
 
         if (optional.isEmpty()) throw new EntityNotFoundException("Solicitante não encontrado!");
+        if (byCpf.isPresent()) {
+            Requester requester = byCpf.get();
+            if (requester.getStatus().equals(Status.ACTIVE.value) && !requester.getId().equals(id)) throw new EntityAlreadyExistsException("CPF já cadastrado!");
+        }
 
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
@@ -133,6 +138,7 @@ public class RequesterService {
 
         if (dto.nome() != null && !dto.nome().trim().isEmpty()) requester.setName(dto.nome());
         requester.setContactNumber(dto.telefone());
+        if (dto.cpf() != null && !dto.cpf().trim().isEmpty()) requester.setCpf(dto.cpf());
         if (dto.especialidade() != null && !dto.especialidade().trim().isEmpty()) requester.setSpecialty(dto.especialidade());
         requester.setUpdatedAt(LocalDateTime.now());
         requester.setUpdatedBy(user);
