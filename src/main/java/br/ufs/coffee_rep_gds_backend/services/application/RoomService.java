@@ -4,7 +4,6 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateRoomDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateRoomResponseDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Room;
-import br.ufs.coffee_rep_gds_backend.entities.RoomType;
 import br.ufs.coffee_rep_gds_backend.entities.Section;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
@@ -42,50 +41,50 @@ public class RoomService {
         this.userDomainService = userDomainService;
     }
 
-    public Page<RoomResponseDto> getAllActiveRooms(String name, String type, String section, Boolean occupationStatus, Pageable pageable) {
-        Page<RoomProjection> roomWithOccupation = roomRepository.findRoomWithOccupation(Status.ACTIVE.value, name, type, section, occupationStatus, pageable);
+    public Page<RoomResponseDto> getAllActiveRooms(String name, String type, Boolean occupationStatus, Pageable pageable) {
+        Page<RoomProjection> roomWithOccupation = roomRepository.findRoomWithOccupation(Status.ACTIVE.value, name, type, occupationStatus, pageable);
         return getRoomResponseDTOs(pageable, roomWithOccupation);
     }
 
-    public List<RoomResponseDto> getAllActiveRoomsUnpaged(String name, String type, String section, Boolean occupationStatus) {
-        List<RoomProjection> allActiveRoomUnpaged = roomRepository.findAllActiveRoomUnpaged(Status.ACTIVE.value, name, type, section, occupationStatus);
+    public List<RoomResponseDto> getAllActiveRoomsUnpaged(String name, String type, Boolean occupationStatus) {
+        List<RoomProjection> allActiveRoomUnpaged = roomRepository.findAllActiveRoomUnpaged(Status.ACTIVE.value, name, type, occupationStatus);
 
         return allActiveRoomUnpaged.stream().map(roomProjection -> new RoomResponseDto(
                 roomProjection.getId(),
                 roomProjection.getName(),
-                roomProjection.getType(),
                 roomProjection.getSection(),
+                roomProjection.getSectionId(),
                 roomProjection.getOcupationStatus()
         )).toList();
     }
 
-    public RoomResponseDto getRoomById(Long id, String name, String type, String section, Boolean occupationStatus) {
-        Optional<RoomProjection> optionalRoom = this.roomRepository.findActive(id, Status.ACTIVE.value, name, type, occupationStatus, section);
+    public RoomResponseDto getRoomById(Long id) {
+        Optional<RoomProjection> optionalRoom = this.roomRepository.findActive(id, Status.ACTIVE.value);
         if (optionalRoom.isEmpty()) throw new EntityNotFoundException("Sala não encontrada!");
 
         RoomProjection room = optionalRoom.get();
         return new RoomResponseDto(
                 room.getId(),
                 room.getName(),
-                room.getType(),
                 room.getSection(),
+                room.getSectionId(),
                 room.getOcupationStatus()
         );
     }
 
-    public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, String name, String type, Boolean occupationStatus, Pageable pageable) {
-        Page<RoomProjection> allBySectionId = roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, name, type, occupationStatus, pageable);
+    public Page<RoomResponseDto> getRoomsBySectionId(Long sectionId, String name, Boolean occupationStatus, Pageable pageable) {
+        Page<RoomProjection> allBySectionId = roomRepository.findBySectionId(sectionId, Status.ACTIVE.value, name, occupationStatus, pageable);
         return getRoomResponseDTOs(pageable, allBySectionId);
     }
 
-    public List<RoomResponseDto> getRoomsBySectionIdUnpaged(Long sectionId, String name, String type, Boolean occupationStatus) {
-        List<RoomProjection> roomUnpaged = roomRepository.findBySectionIdUnpaged(sectionId, Status.ACTIVE.value, name, type, occupationStatus);
+    public List<RoomResponseDto> getRoomsBySectionIdUnpaged(Long sectionId, String name, Boolean occupationStatus) {
+        List<RoomProjection> roomUnpaged = roomRepository.findBySectionIdUnpaged(sectionId, Status.ACTIVE.value, name, occupationStatus);
 
         return roomUnpaged.stream().map(room -> new RoomResponseDto(
                 room.getId(),
                 room.getName(),
-                room.getType(),
                 room.getSection(),
+                room.getSectionId(),
                 room.getOcupationStatus()
         )).toList();
     }
@@ -94,8 +93,8 @@ public class RoomService {
         List<RoomResponseDto> list = allBySectionId.stream().map(roomProjection -> new RoomResponseDto(
                 roomProjection.getId(),
                 roomProjection.getName(),
-                roomProjection.getType(),
                 roomProjection.getSection(),
+                roomProjection.getSectionId(),
                 roomProjection.getOcupationStatus()
         )).toList();
         return new PageImpl<>(list, pageable, allBySectionId.getTotalElements());
@@ -103,7 +102,6 @@ public class RoomService {
 
     @Transactional
     public CreateRoomResponseDTO create(CreateRoomDTO dto) {
-        RoomType roomType = roomDomainService.createRoomType(dto.tipo());
         Section section = sectionDomainService.findByIdAndStatus(dto.setorId(), Status.ACTIVE.value);
 
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
@@ -118,20 +116,18 @@ public class RoomService {
                 return new CreateRoomResponseDTO(
                         saved.getId(),
                         saved.getName(),
-                        saved.getSection().getName(),
-                        saved.getType().getName()
+                        saved.getSection().getName()
                 );
             }
             throw new EntityAlreadyExistsException("Já existe uma sala com este nome!");
         }
 
-        Room room = new Room(dto.nome(), Status.ACTIVE.value, user, roomType, section);
+        Room room = new Room(dto.nome(), Status.ACTIVE.value, user, section);
         Room saved = roomRepository.save(room);
         return new CreateRoomResponseDTO(
                 saved.getId(),
                 saved.getName(),
-                saved.getSection().getName(),
-                saved.getType().getName()
+                saved.getSection().getName()
         );
     }
 
@@ -145,15 +141,11 @@ public class RoomService {
 
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
-        RoomType roomType = roomToSave.getType();
-        if (!roomToSave.getType().getName().equals(dto.tipo())) roomType = roomDomainService.createRoomType(dto.tipo());
-
         Section section = roomToSave.getSection();
         if (!dto.setorId().equals(roomToSave.getSection().getId())) section = sectionDomainService.findByIdAndStatus(dto.setorId(), Status.ACTIVE.value);
 
         if (dto.nome() != null) roomToSave.setName(dto.nome());
         roomToSave.setSection(section);
-        roomToSave.setType(roomType);
         roomToSave.setUpdatedAt(LocalDateTime.now());
         roomToSave.setUpdatedBy(user);
         Room saved = roomRepository.save(roomToSave);
@@ -161,8 +153,7 @@ public class RoomService {
         return new CreateRoomResponseDTO(
                 saved.getId(),
                 saved.getName(),
-                saved.getSection().getName(),
-                saved.getType().getName()
+                saved.getSection().getName()
         );
     }
 

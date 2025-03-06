@@ -16,14 +16,12 @@ INSERT INTO tb_sections (id, name, status) SELECT 10, 'Saúde da Mulher', 1 WHER
 INSERT INTO tb_sections (id, name, status) SELECT 11, 'Oncologia', 1 WHERE NOT EXISTS(SELECT id FROM tb_sections WHERE id = 11);
 INSERT INTO tb_sections (id, name, status) SELECT 12, 'CC Ambulatorial', 1 WHERE NOT EXISTS(SELECT id FROM tb_sections WHERE id = 12);
 
-INSERT INTO tb_room_types (id, name, status) SELECT 1, 'Ambulatório', 1 WHERE NOT EXISTS(SELECT id FROM tb_room_types WHERE id = 1);
-
-INSERT INTO tb_rooms (id, name, room_type_id, status, section_id) SELECT 1, 'Sala 1', 1, 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 1);
-INSERT INTO tb_rooms (id, name, room_type_id, status, section_id) SELECT 2, 'Sala 2', 1, 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 2);
-INSERT INTO tb_rooms (id, name, room_type_id, status, section_id) SELECT 3, 'Sala 3', 1, 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 3);
-INSERT INTO tb_rooms (id, name, room_type_id, status, section_id) SELECT 4, 'Sala 4', 1, 0, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 4);
-INSERT INTO tb_rooms (id, name, room_type_id, status, section_id) SELECT 5, 'Sala 5', 1, 1, 2 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 5);
-INSERT INTO tb_rooms (id, name, room_type_id, status, section_id) SELECT 6, 'Sala 6', 1, 1, 2 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 6);
+INSERT INTO tb_rooms (id, name, status, section_id) SELECT 1, 'Sala 1', 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 1);
+INSERT INTO tb_rooms (id, name, status, section_id) SELECT 2, 'Sala 2', 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 2);
+INSERT INTO tb_rooms (id, name, status, section_id) SELECT 3, 'Sala 3', 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 3);
+INSERT INTO tb_rooms (id, name, status, section_id) SELECT 4, 'Sala 4', 1, 1 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 4);
+INSERT INTO tb_rooms (id, name, status, section_id) SELECT 5, 'Sala 5', 1, 2 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 5);
+INSERT INTO tb_rooms (id, name, status, section_id) SELECT 6, 'Sala 6', 1, 2 WHERE NOT EXISTS(SELECT id FROM tb_rooms WHERE id = 6);
 
 INSERT INTO tb_requesters (id, name, cpf, contact_number, status, specialty) SELECT 1, 'João da Silva', '25098719003', '79999887766', 1, 'Cardiologista' WHERE NOT EXISTS(SELECT id FROM tb_requesters WHERE id = 1);
 INSERT INTO tb_requesters (id, name, cpf, contact_number, status, specialty) SELECT 2, 'Maria de Souza', '66822603000', '79988776655', 1, 'Pediatra' WHERE NOT EXISTS(SELECT id FROM tb_requesters WHERE id = 2);
@@ -33,7 +31,6 @@ INSERT INTO tb_reservations (start_date, end_date, observations, room_id, reques
 
 
 SELECT setval(pg_get_serial_sequence('tb_sections', 'id'), COALESCE(MAX(id), 1)) FROM tb_sections;
-SELECT setval(pg_get_serial_sequence('tb_room_types', 'id'), COALESCE(MAX(id), 1)) FROM tb_room_types;
 SELECT setval(pg_get_serial_sequence('tb_rooms', 'id'), COALESCE(MAX(id), 1)) FROM tb_rooms;
 SELECT setval(pg_get_serial_sequence('tb_requesters', 'id'), COALESCE(MAX(id), 1)) FROM tb_requesters;
 SELECT setval(pg_get_serial_sequence('tb_reservations', 'id'), COALESCE(MAX(id), 1)) FROM tb_reservations;

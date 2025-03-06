@@ -27,29 +27,24 @@ public class RoomController {
     @GetMapping
     public ResponseEntity<?> getAllRooms(
             @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String setor,
             @RequestParam(required = false) Boolean ocupada,
             @RequestParam(required = false) Boolean unpaged,
             Pageable pageable
     ) {
         if (unpaged != null && unpaged) {
-            List<RoomResponseDto> allActiveRoomsUnpaged = roomService.getAllActiveRoomsUnpaged(nome, tipo, setor, ocupada);
+            List<RoomResponseDto> allActiveRoomsUnpaged = roomService.getAllActiveRoomsUnpaged(nome, setor, ocupada);
             return ResponseEntity.ok(allActiveRoomsUnpaged);
         }
-        Page<RoomResponseDto> allActiveRooms = roomService.getAllActiveRooms(nome, tipo, setor, ocupada, pageable);
+        Page<RoomResponseDto> allActiveRooms = roomService.getAllActiveRooms(nome, setor, ocupada, pageable);
         return ResponseEntity.ok(allActiveRooms);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RoomResponseDto> getRoomById(
-            @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String tipo,
-            @RequestParam(required = false) String setor,
-            @RequestParam(required = false) Boolean ocupada,
             @PathVariable Long id
     ) {
-        RoomResponseDto dto = roomService.getRoomById(id, nome, tipo, setor, ocupada);
+        RoomResponseDto dto = roomService.getRoomById(id);
         return ResponseEntity.ok(dto);
     }
 
@@ -57,16 +52,15 @@ public class RoomController {
     public ResponseEntity<?> getRoomsBySectionId(
             @PathVariable Long sectionId,
             @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String tipo,
             @RequestParam(required = false) Boolean ocupada,
             @RequestParam(required = false) Boolean unpaged,
             Pageable pageable
     ) {
         if (unpaged != null && unpaged) {
-            List<RoomResponseDto> rooms = roomService.getRoomsBySectionIdUnpaged(sectionId, nome, tipo, ocupada);
+            List<RoomResponseDto> rooms = roomService.getRoomsBySectionIdUnpaged(sectionId, nome, ocupada);
             return ResponseEntity.ok(rooms);
         }
-        Page<RoomResponseDto> roomsBySectionId = roomService.getRoomsBySectionId(sectionId, nome, tipo, ocupada, pageable);
+        Page<RoomResponseDto> roomsBySectionId = roomService.getRoomsBySectionId(sectionId, nome, ocupada, pageable);
         return ResponseEntity.ok(roomsBySectionId);
     }
 
