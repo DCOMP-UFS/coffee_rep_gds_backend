@@ -68,4 +68,4 @@ jobs:
           sudo docker run --env-file .env -d --network=network_cr --name app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
           sudo docker update --restart unless-stopped app
           
-          ENDSSH
+          EOF
