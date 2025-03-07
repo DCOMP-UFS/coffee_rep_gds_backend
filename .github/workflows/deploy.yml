@@ -50,8 +50,8 @@ jobs:
       - name: Deploy to EC2
         run: |
           sshpass -p "${{ secrets.HETZNER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.HETZNER_HOST }} << 'EOF'
-          sudo docker stop app || true
-          sudo docker rm app || true
+          sudo docker stop clinic_room_backend || true
+          sudo docker rm clinic_room_backend || true
           sudo docker network create network_cr || true
           
           echo "APP_PROFILE=prod" > .env
@@ -65,7 +65,7 @@ jobs:
           sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
           
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
-          sudo docker run --env-file .env -d --network=network_cr --name app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
-          sudo docker update --restart unless-stopped app
+          sudo docker run --env-file .env -d --network=network_cr --name clinic_room_backend -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
+          sudo docker update --restart unless-stopped clinic_room_backend
           
           EOF
