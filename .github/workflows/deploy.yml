@@ -30,7 +30,7 @@ jobs:
 
       - name: Build Docker Images
         run: |
-          docker build -t gds_backend -f Dockerfile.prod .
+          docker build -t clinic_room_backend -f Dockerfile.prod .
 
       - name: Tag Docker Images
         run: |
