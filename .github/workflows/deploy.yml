@@ -50,8 +50,8 @@ jobs:
       - name: Deploy to EC2
         run: |
           sshpass -p "${{ secrets.HETZNER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.HETZNER_HOST }} << 'EOF'
-          sudo docker stop app || true
-          sudo docker rm app || true
+          sudo docker stop clinic_room_backend || true
+          sudo docker rm clinic_room_backend || true
           sudo docker network create network_cr || true
           
           echo "APP_PROFILE=prod" > .env
