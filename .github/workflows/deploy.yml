@@ -34,7 +34,7 @@ jobs:
 
       - name: Tag Docker Images
         run: |
-          docker tag gds_backend ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          docker tag clinic_room_backend ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
 
       - name: Docker Login
         run: |
@@ -42,19 +42,17 @@ jobs:
 
       - name: Push Docker Images
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          docker push ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'ENDSSH'
+          sshpass -p "${{ secrets.HETZNER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.HETZNER_HOST }} << 'EOF'
           sudo docker stop app || true
           sudo docker rm app || true
-          sudo docker network create backend || true
+          sudo docker network create network_cr || true
           
           echo "APP_PROFILE=prod" > .env
           echo "DB_URL=jdbc:postgresql://${{ secrets.RDS_ENDPOINT }}:5432/gds" >> .env
@@ -64,10 +62,10 @@ jobs:
           echo "ADMIN_CPF=${{ secrets.ADMIN_CPF }}" >> .env
           echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
           
-          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
           
-          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
-          sudo docker run --env-file .env -d --network=backend --name app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/coffeeteam:gds_backend
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
+          sudo docker run --env-file .env -d --network=network_cr --name app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
           sudo docker update --restart unless-stopped app
           
           ENDSSH
