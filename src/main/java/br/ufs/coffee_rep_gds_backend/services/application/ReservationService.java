@@ -151,6 +151,16 @@ public class ReservationService {
         reservationRepository.save(reservation);
     }
 
+    public void cancelRecurrentReservation(Long reservationId) {
+        List<Reservation> foundRecurrences = reservationRepository.findAllByRecurrenceIdAndStatus(reservationId, ReservationStatus.APPROVED.label);
+
+        if (foundRecurrences.isEmpty()) throw new EntityNotFoundException("Nenhuma reserva ativa encontrada para este ID: " + reservationId);
+
+        foundRecurrences.forEach(r -> r.setStatus(ReservationStatus.CANCELLED.label));
+
+        reservationRepository.saveAll(foundRecurrences);
+    }
+
     private List<Reservation> createRecurrentReservations(CreateReservationDto dto, Room room, Requester requester, User user) {
         Optional<Long> optionalLastId = reservationRepository.findLastRecurrenceId();
 

@@ -61,4 +61,10 @@ public class ReservationController {
         reservationService.cancelReservation(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/recurrent/{id}")
+    public ResponseEntity<Void> cancelRecurrentReservation(@PathVariable Long id) {
+        reservationService.cancelRecurrentReservation(id);
+        return ResponseEntity.noContent().build();
+    }
 }
