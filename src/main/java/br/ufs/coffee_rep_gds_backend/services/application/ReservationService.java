@@ -24,11 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.util.List;
-import java.util.Optional;
+import java.time.*;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.TemporalUnit;
+import java.util.*;
 
 @Service
 public class ReservationService {
@@ -68,9 +68,11 @@ public class ReservationService {
                 reservation.getRoom().getName(),
                 reservation.getRequester().getName(),
                 reservation.getRoom().getSection().getName(),
+                reservation.getUpdatedBy().getName(),
                 reservation.getRoom().getId(),
                 reservation.getRequester().getId(),
-                reservation.getRoom().getSection().getId()
+                reservation.getRoom().getSection().getId(),
+                reservation.getRecurrenceId()
                 )).toList();
 
         return new PageImpl<>(list, pageable, sourcePage.getTotalElements());
@@ -85,16 +87,35 @@ public class ReservationService {
         validateStartAndEndDate(dto.horaInicio(), dto.horaFim());
         validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());
 
-        Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), room, requester, ReservationStatus.APPROVED.label, user);
-        Reservation reservationCreated = reservationRepository.save(reservation);
+        boolean isRecurrent;
+        if (dto.fixo() == null) isRecurrent = false;
+        else isRecurrent = dto.fixo();
 
-        return new CreateReservationResponseDto(
-                reservationCreated.getId(),
-                reservationCreated.getStartDate(),
-                reservationCreated.getEndDate(),
-                reservationCreated.getRequester().getName(),
-                reservationCreated.getRoom().getName()
-        );
+        if (!isRecurrent) {
+            Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), null, room, requester, ReservationStatus.APPROVED.label, user);
+            Reservation reservationCreated = reservationRepository.save(reservation);
+
+            return new CreateReservationResponseDto(
+                    reservationCreated.getId(),
+                    reservationCreated.getStartDate(),
+                    reservationCreated.getEndDate(),
+                    reservationCreated.getRequester().getName(),
+                    reservationCreated.getRoom().getName(),
+                    null
+            );
+        }
+
+        List<Reservation> recurrentReservations = createRecurrentReservations(dto, room, requester, user);
+
+        if (recurrentReservations.isEmpty()) {
+            throw new BadParametersException("Nenhuma reserva foi criada!");
+        }
+
+        reservationRepository.saveAll(recurrentReservations);
+
+        Long recurrenceId = recurrentReservations.get(0).getId();
+
+        return new CreateReservationResponseDto(null, null, null, requester.getName(), room.getName(), recurrenceId);
     }
 
     public List<ReservationResponseDto> findReservationsInCurrentMonth(Long sectionId, String sectionName) {
@@ -112,9 +133,11 @@ public class ReservationService {
                 reservation.getRoom().getName(),
                 reservation.getRequester().getName(),
                 reservation.getRoom().getSection().getName(),
+                reservation.getUpdatedBy().getName(),
                 reservation.getRoom().getId(),
                 reservation.getRequester().getId(),
-                reservation.getRoom().getSection().getId()
+                reservation.getRoom().getSection().getId(),
+                reservation.getRecurrenceId()
                 )).toList();
     }
 
@@ -126,6 +149,51 @@ public class ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED.label);
 
         reservationRepository.save(reservation);
+    }
+
+    public void cancelRecurrentReservation(Long reservationId) {
+        List<Reservation> foundRecurrences = reservationRepository.findAllByRecurrenceIdAndStatus(reservationId, ReservationStatus.APPROVED.label);
+
+        if (foundRecurrences.isEmpty()) throw new EntityNotFoundException("Nenhuma reserva ativa encontrada para este ID: " + reservationId);
+
+        foundRecurrences.forEach(r -> r.setStatus(ReservationStatus.CANCELLED.label));
+
+        reservationRepository.saveAll(foundRecurrences);
+    }
+
+    private List<Reservation> createRecurrentReservations(CreateReservationDto dto, Room room, Requester requester, User user) {
+        Optional<Long> optionalLastId = reservationRepository.findLastRecurrenceId();
+
+        Long newRecurrenceId = optionalLastId.map(aLong -> aLong + 1).orElse(1L);
+
+        LocalDate startDate = dto.horaInicio().toLocalDate();
+        LocalDate endDate = dto.horaFim().toLocalDate();
+
+        LocalTime startTime = dto.horaInicio().toLocalTime();
+        LocalTime endTime = dto.horaFim().toLocalTime();
+
+        List<Integer> weekDays = new ArrayList<>(dto.dias());
+        Collections.sort(weekDays);
+
+        List<Reservation> reservations = new ArrayList<>();
+
+        for (Integer weekDay: weekDays) {
+            LocalDate firstOccur = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(weekDay)));
+
+            while (!firstOccur.isAfter(endDate)) {
+                LocalDateTime startDateTime = LocalDateTime.of(firstOccur, startTime);
+                LocalDateTime endDateTime = LocalDateTime.of(firstOccur, endTime);
+
+                Reservation reservation = new Reservation(startDateTime, endDateTime, dto.observacoes(), newRecurrenceId, room, requester, ReservationStatus.APPROVED.label, user);
+                reservations.add(reservation);
+
+                firstOccur = firstOccur.plusWeeks(1);
+            }
+        }
+
+        reservations.sort(Comparator.comparing(Reservation::getStartDate));
+
+        return reservations;
     }
 
     private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {

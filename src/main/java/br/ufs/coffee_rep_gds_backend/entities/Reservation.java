@@ -25,6 +25,9 @@ public class Reservation {
     @Column(nullable = false)
     private Integer status;
 
+    @Column(name = "recurrence_id", nullable = true)
+    private Long recurrenceId;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -32,7 +35,7 @@ public class Reservation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "updated_by", referencedColumnName = "user_id")
     private User updatedBy;
 
@@ -47,10 +50,13 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Room room, Requester requester, Integer status, User updatedBy) {
+
+
+    public Reservation(LocalDateTime startDate, LocalDateTime endDate, String observations, Long recurrenceId, Room room, Requester requester, Integer status, User updatedBy) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.observations = observations;
+        this.recurrenceId = recurrenceId;
         this.room = room;
         this.requester = requester;
         this.status = status;
@@ -95,6 +101,14 @@ public class Reservation {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public Long getRecurrenceId() {
+        return recurrenceId;
+    }
+
+    public void setRecurrenceId(Long recurrenceId) {
+        this.recurrenceId = recurrenceId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -142,11 +156,11 @@ public class Reservation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Reservation that = (Reservation) o;
-        return Objects.equals(id, that.id) && Objects.equals(startDate, that.startDate) && Objects.equals(endDate, that.endDate) && Objects.equals(room, that.room) && Objects.equals(requester, that.requester);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, startDate, endDate, room, requester);
+        return Objects.hashCode(id);
     }
 }

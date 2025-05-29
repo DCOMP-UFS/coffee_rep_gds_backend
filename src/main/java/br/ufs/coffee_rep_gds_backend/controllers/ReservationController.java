@@ -4,6 +4,7 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateReservationDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
 import br.ufs.coffee_rep_gds_backend.services.application.ReservationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/reservation")
+@Tag(name = "ReservationController", description = "Controller para Reservas")
 public class ReservationController {
 
     private final ReservationService reservationService;
@@ -57,6 +59,12 @@ public class ReservationController {
     @PatchMapping("/{id}")
     public ResponseEntity<Void> cancelReservation(@PathVariable Long id) {
         reservationService.cancelReservation(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/recurrent/{id}")
+    public ResponseEntity<Void> cancelRecurrentReservation(@PathVariable Long id) {
+        reservationService.cancelRecurrentReservation(id);
         return ResponseEntity.noContent().build();
     }
 }
