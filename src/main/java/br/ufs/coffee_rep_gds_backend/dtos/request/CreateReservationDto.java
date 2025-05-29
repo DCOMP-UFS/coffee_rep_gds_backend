@@ -3,6 +3,7 @@ package br.ufs.coffee_rep_gds_backend.dtos.request;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 public record CreateReservationDto(
     @NotNull(message = "O ID da sala deve ser preenchido!")
@@ -17,5 +18,9 @@ public record CreateReservationDto(
     @NotNull(message = "A hora de fim deve ser preenchida!")
     LocalDateTime horaFim,
 
-    String observacoes
+    String observacoes,
+
+    Boolean fixo,
+
+    Set<Integer> dias
 ) {}

@@ -4,6 +4,7 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateRoomDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateRoomResponseDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.RoomResponseDto;
 import br.ufs.coffee_rep_gds_backend.services.application.RoomService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/room")
+@Tag(name = "RoomController", description = "Controller para Salas")
 public class RoomController {
 
     private final RoomService roomService;

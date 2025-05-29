@@ -4,6 +4,7 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.CreateSectionDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.CreateSectionResponseDTO;
 import br.ufs.coffee_rep_gds_backend.dtos.response.SectionResponseDto;
 import br.ufs.coffee_rep_gds_backend.services.application.SectionService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/section")
+@Tag(name = "SectionController", description = "Controller para Setor")
 public class SectionController {
 
     private final SectionService sectionService;

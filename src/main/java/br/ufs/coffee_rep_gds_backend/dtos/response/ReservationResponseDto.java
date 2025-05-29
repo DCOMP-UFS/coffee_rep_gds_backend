@@ -9,7 +9,9 @@ public record ReservationResponseDto(
         String sala,
         String solicitante,
         String setor,
+        String criador,
         Long salaId,
         Long solicitanteId,
-        Long setorId
+        Long setorId,
+        Long recorrenciaId
 ) {}

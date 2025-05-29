@@ -7,5 +7,6 @@ public record CreateReservationResponseDto(
         LocalDateTime startDate,
         LocalDateTime endDate,
         String requesterName,
-        String roomName
+        String roomName,
+        Long recurrenceId
 ) {}
