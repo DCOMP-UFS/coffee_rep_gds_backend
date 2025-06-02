@@ -25,9 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
-import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 
 @Service
@@ -113,7 +111,7 @@ public class ReservationService {
 
         reservationRepository.saveAll(recurrentReservations);
 
-        Long recurrenceId = recurrentReservations.get(0).getId();
+        Long recurrenceId = recurrentReservations.get(0).getRecurrenceId();
 
         return new CreateReservationResponseDto(null, null, null, requester.getName(), room.getName(), recurrenceId);
     }
@@ -141,6 +139,7 @@ public class ReservationService {
                 )).toList();
     }
 
+    @Transactional
     public void cancelReservation(Long reservationId) {
         Optional<Reservation> optionalReservation = reservationRepository.findByIdAndStatus(reservationId, ReservationStatus.APPROVED.label);
 
@@ -151,14 +150,13 @@ public class ReservationService {
         reservationRepository.save(reservation);
     }
 
-    public void cancelRecurrentReservation(Long reservationId) {
-        List<Reservation> foundRecurrences = reservationRepository.findAllByRecurrenceIdAndStatus(reservationId, ReservationStatus.APPROVED.label);
+    @Transactional
+    public void cancelRecurrentReservation(Long recurrenceId) {
+        Optional<Long> foundRecurrences = reservationRepository.findOneRecurrenceId(recurrenceId, ReservationStatus.APPROVED.label);
 
-        if (foundRecurrences.isEmpty()) throw new EntityNotFoundException("Nenhuma reserva ativa encontrada para este ID: " + reservationId);
+        if (foundRecurrences.isEmpty()) throw new EntityNotFoundException("Nenhuma reserva ativa encontrada para este ID: " + recurrenceId);
 
-        foundRecurrences.forEach(r -> r.setStatus(ReservationStatus.CANCELLED.label));
-
-        reservationRepository.saveAll(foundRecurrences);
+        reservationRepository.updateStatusByRecurrenceId(recurrenceId, ReservationStatus.CANCELLED.label);
     }
 
     private List<Reservation> createRecurrentReservations(CreateReservationDto dto, Room room, Requester requester, User user) {

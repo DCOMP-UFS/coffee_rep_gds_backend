@@ -7,7 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,5 +47,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
     @Query(nativeQuery = true, value = "SELECT recurrence_id FROM tb_reservations where recurrence_id is not NULL ORDER BY recurrence_id DESC LIMIT 1;")
     Optional<Long> findLastRecurrenceId();
 
-    List<Reservation> findAllByRecurrenceIdAndStatus(Long recurrenceId, Integer status);
+    @Query(nativeQuery = true, value = "SELECT id FROM tb_reservations WHERE recurrence_id = :recurrenceId AND status = :status LIMIT 1")
+    Optional<Long> findOneRecurrenceId(Long recurrenceId, Integer status);
+
+    @Transactional
+    @Modifying
+    @Query(nativeQuery = true, value = "UPDATE tb_reservations SET status = :status WHERE recurrence_id = :recurrenceId AND status = 1")
+    void updateStatusByRecurrenceId(Long recurrenceId, Integer status);
 }
