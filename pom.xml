@@ -13,6 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>coffee_rep_gds_backend</name>
     <description>coffee_rep_gds_backend</description>
+    <packaging>war</packaging>
     <url/>
     <licenses>
         <license/>
@@ -122,5 +123,23 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <spring.profiles.active>default</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <spring.profiles.active>prod</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
