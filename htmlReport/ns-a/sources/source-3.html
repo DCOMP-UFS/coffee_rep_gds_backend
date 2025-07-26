@@ -1,0 +1,344 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ReservationService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">br.ufs.coffee_rep_gds_backend.services.application</a>
+</div>
+
+<h1>Coverage Summary for Class: ReservationService (br.ufs.coffee_rep_gds_backend.services.application)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ReservationService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (11/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86,4%
+  </span>
+  <span class="absValue">
+    (19/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (94/94)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ReservationService$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (11/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86,4%
+  </span>
+  <span class="absValue">
+    (19/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (94/94)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package br.ufs.coffee_rep_gds_backend.services.application;
+&nbsp;
+&nbsp;import br.ufs.coffee_rep_gds_backend.dtos.request.CreateReservationDto;
+&nbsp;import br.ufs.coffee_rep_gds_backend.dtos.response.CreateReservationResponseDto;
+&nbsp;import br.ufs.coffee_rep_gds_backend.dtos.response.ReservationResponseDto;
+&nbsp;import br.ufs.coffee_rep_gds_backend.entities.Requester;
+&nbsp;import br.ufs.coffee_rep_gds_backend.entities.Reservation;
+&nbsp;import br.ufs.coffee_rep_gds_backend.entities.Room;
+&nbsp;import br.ufs.coffee_rep_gds_backend.entities.User;
+&nbsp;import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
+&nbsp;import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
+&nbsp;import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
+&nbsp;import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
+&nbsp;import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
+&nbsp;import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
+&nbsp;import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
+&nbsp;import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
+&nbsp;import br.ufs.coffee_rep_gds_backend.specifications.ReservationSpecification;
+&nbsp;import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.PageImpl;
+&nbsp;import org.springframework.data.jpa.domain.Specification;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.time.*;
+&nbsp;import java.time.temporal.TemporalAdjusters;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class ReservationService {
+&nbsp;
+&nbsp;    private final ReservationRepository reservationRepository;
+&nbsp;    private final RoomDomainService roomService;
+&nbsp;    private final RequesterDomainService requesterService;
+&nbsp;    private final UserDomainService userService;
+&nbsp;
+<b class="fc">&nbsp;    public ReservationService(ReservationRepository reservationRepository, RoomDomainService roomService, RequesterDomainService requesterService, UserDomainService userService) {</b>
+<b class="fc">&nbsp;        this.reservationRepository = reservationRepository;</b>
+<b class="fc">&nbsp;        this.roomService = roomService;</b>
+<b class="fc">&nbsp;        this.requesterService = requesterService;</b>
+<b class="fc">&nbsp;        this.userService = userService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Page&lt;ReservationResponseDto&gt; findAll(
+&nbsp;            LocalDateTime start,
+&nbsp;            LocalDateTime end,
+&nbsp;            String requesterName,
+&nbsp;            String roomName,
+&nbsp;            String sectionName,
+&nbsp;            Long roomId,
+&nbsp;            Long requesterId,
+&nbsp;            Long sectionId,
+&nbsp;            Pageable pageable
+&nbsp;    ) {
+<b class="fc">&nbsp;        validateStartAndEndDate(start, end);</b>
+&nbsp;
+<b class="fc">&nbsp;        Specification&lt;Reservation&gt; spec = ReservationSpecification.filter(requesterName, roomName, roomId, requesterId, sectionName, sectionId, start, end);</b>
+<b class="fc">&nbsp;        Page&lt;Reservation&gt; sourcePage = reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;ReservationResponseDto&gt; list = sourcePage.stream().map(reservation -&gt; new ReservationResponseDto(</b>
+<b class="fc">&nbsp;                reservation.getId(),</b>
+<b class="fc">&nbsp;                reservation.getStartDate(),</b>
+<b class="fc">&nbsp;                reservation.getEndDate(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getName(),</b>
+<b class="fc">&nbsp;                reservation.getRequester().getName(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getSection().getName(),</b>
+<b class="fc">&nbsp;                reservation.getUpdatedBy().getName(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getId(),</b>
+<b class="fc">&nbsp;                reservation.getRequester().getId(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getSection().getId(),</b>
+<b class="fc">&nbsp;                reservation.getRecurrenceId()</b>
+<b class="fc">&nbsp;                )).toList();</b>
+&nbsp;
+<b class="fc">&nbsp;        return new PageImpl&lt;&gt;(list, pageable, sourcePage.getTotalElements());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public CreateReservationResponseDto createReservation(CreateReservationDto dto) {
+<b class="fc">&nbsp;        Room room = roomService.getRoomById(dto.salaId());</b>
+<b class="fc">&nbsp;        Requester requester = requesterService.getRequesterById(dto.solicitanteId());</b>
+<b class="fc">&nbsp;        User user = userService.findByID(CurrentUserUtils.getCurrentUserID());</b>
+&nbsp;
+<b class="fc">&nbsp;        validateStartAndEndDate(dto.horaInicio(), dto.horaFim());</b>
+<b class="fc">&nbsp;        validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());</b>
+&nbsp;
+&nbsp;        boolean isRecurrent;
+<b class="pc">&nbsp;        if (dto.fixo() == null) isRecurrent = false;</b>
+<b class="fc">&nbsp;        else isRecurrent = dto.fixo();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!isRecurrent) {</b>
+<b class="fc">&nbsp;            Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), null, room, requester, ReservationStatus.APPROVED.label, user);</b>
+<b class="fc">&nbsp;            Reservation reservationCreated = reservationRepository.save(reservation);</b>
+&nbsp;
+<b class="fc">&nbsp;            return new CreateReservationResponseDto(</b>
+<b class="fc">&nbsp;                    reservationCreated.getId(),</b>
+<b class="fc">&nbsp;                    reservationCreated.getStartDate(),</b>
+<b class="fc">&nbsp;                    reservationCreated.getEndDate(),</b>
+<b class="fc">&nbsp;                    reservationCreated.getRequester().getName(),</b>
+<b class="fc">&nbsp;                    reservationCreated.getRoom().getName(),</b>
+&nbsp;                    null
+&nbsp;            );
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Reservation&gt; recurrentReservations = createRecurrentReservations(dto, room, requester, user);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (recurrentReservations.isEmpty()) {</b>
+<b class="fc">&nbsp;            throw new BadParametersException(&quot;Nenhuma reserva foi criada!&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        reservationRepository.saveAll(recurrentReservations);</b>
+&nbsp;
+<b class="fc">&nbsp;        Long recurrenceId = recurrentReservations.get(0).getRecurrenceId();</b>
+&nbsp;
+<b class="fc">&nbsp;        return new CreateReservationResponseDto(null, null, null, requester.getName(), room.getName(), recurrenceId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;ReservationResponseDto&gt; findReservationsInCurrentMonth(Long sectionId, String sectionName) {
+<b class="fc">&nbsp;        YearMonth currentMonth = YearMonth.now();</b>
+<b class="fc">&nbsp;        LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();</b>
+<b class="fc">&nbsp;        LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(LocalTime.MAX);</b>
+&nbsp;
+<b class="fc">&nbsp;        Specification&lt;Reservation&gt; spec = ReservationSpecification.filter(null, null, null, null, sectionName, sectionId, startOfMonth, endOfMonth);</b>
+<b class="fc">&nbsp;        List&lt;Reservation&gt; allReservationsInCurrentMonth = reservationRepository.findAllReservationsInCurrentMonth(spec);</b>
+&nbsp;
+<b class="fc">&nbsp;        return allReservationsInCurrentMonth.stream().map(reservation -&gt; new ReservationResponseDto(</b>
+<b class="fc">&nbsp;                reservation.getId(),</b>
+<b class="fc">&nbsp;                reservation.getStartDate(),</b>
+<b class="fc">&nbsp;                reservation.getEndDate(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getName(),</b>
+<b class="fc">&nbsp;                reservation.getRequester().getName(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getSection().getName(),</b>
+<b class="fc">&nbsp;                reservation.getUpdatedBy().getName(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getId(),</b>
+<b class="fc">&nbsp;                reservation.getRequester().getId(),</b>
+<b class="fc">&nbsp;                reservation.getRoom().getSection().getId(),</b>
+<b class="fc">&nbsp;                reservation.getRecurrenceId()</b>
+<b class="fc">&nbsp;                )).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public void cancelReservation(Long reservationId) {
+<b class="fc">&nbsp;        Optional&lt;Reservation&gt; optionalReservation = reservationRepository.findByIdAndStatus(reservationId, ReservationStatus.APPROVED.label);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (optionalReservation.isEmpty()) throw new EntityNotFoundException(&quot;Nenhuma reserva ativa encontrada para este ID: &quot; + reservationId);</b>
+<b class="fc">&nbsp;        Reservation reservation = optionalReservation.get();</b>
+<b class="fc">&nbsp;        reservation.setStatus(ReservationStatus.CANCELLED.label);</b>
+&nbsp;
+<b class="fc">&nbsp;        reservationRepository.save(reservation);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public void cancelRecurrentReservation(Long recurrenceId) {
+<b class="fc">&nbsp;        Optional&lt;Long&gt; foundRecurrences = reservationRepository.findOneRecurrenceId(recurrenceId, ReservationStatus.APPROVED.label);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (foundRecurrences.isEmpty()) throw new EntityNotFoundException(&quot;Nenhuma reserva ativa encontrada para este ID: &quot; + recurrenceId);</b>
+&nbsp;
+<b class="fc">&nbsp;        reservationRepository.updateStatusByRecurrenceId(recurrenceId, ReservationStatus.CANCELLED.label);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private List&lt;Reservation&gt; createRecurrentReservations(CreateReservationDto dto, Room room, Requester requester, User user) {
+<b class="fc">&nbsp;        Optional&lt;Long&gt; optionalLastId = reservationRepository.findLastRecurrenceId();</b>
+&nbsp;
+<b class="fc">&nbsp;        Long newRecurrenceId = optionalLastId.map(aLong -&gt; aLong + 1).orElse(1L);</b>
+&nbsp;
+<b class="fc">&nbsp;        LocalDate startDate = dto.horaInicio().toLocalDate();</b>
+<b class="fc">&nbsp;        LocalDate endDate = dto.horaFim().toLocalDate();</b>
+&nbsp;
+<b class="fc">&nbsp;        LocalTime startTime = dto.horaInicio().toLocalTime();</b>
+<b class="fc">&nbsp;        LocalTime endTime = dto.horaFim().toLocalTime();</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Integer&gt; weekDays = new ArrayList&lt;&gt;(dto.dias());</b>
+<b class="fc">&nbsp;        Collections.sort(weekDays);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Reservation&gt; reservations = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;        for (Integer weekDay: weekDays) {</b>
+<b class="fc">&nbsp;            LocalDate firstOccur = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(weekDay)));</b>
+&nbsp;
+<b class="fc">&nbsp;            while (!firstOccur.isAfter(endDate)) {</b>
+<b class="fc">&nbsp;                LocalDateTime startDateTime = LocalDateTime.of(firstOccur, startTime);</b>
+<b class="fc">&nbsp;                LocalDateTime endDateTime = LocalDateTime.of(firstOccur, endTime);</b>
+&nbsp;
+<b class="fc">&nbsp;                Reservation reservation = new Reservation(startDateTime, endDateTime, dto.observacoes(), newRecurrenceId, room, requester, ReservationStatus.APPROVED.label, user);</b>
+<b class="fc">&nbsp;                reservations.add(reservation);</b>
+&nbsp;
+<b class="fc">&nbsp;                firstOccur = firstOccur.plusWeeks(1);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        reservations.sort(Comparator.comparing(Reservation::getStartDate));</b>
+&nbsp;
+<b class="fc">&nbsp;        return reservations;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {
+<b class="pc">&nbsp;        if (start != null &amp;&amp; end != null) {</b>
+<b class="fc">&nbsp;            if (start.isAfter(end)) throw new BadParametersException(&quot;A hora de início não pode ser maior que a hora fim da reserva.&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void validateReservationAlreadyExists(LocalDateTime start, LocalDateTime end, Long roomId) {
+<b class="fc">&nbsp;        Specification&lt;Reservation&gt; spec = ReservationSpecification.filter(null, null, roomId, null, null, null, start, end);</b>
+<b class="fc">&nbsp;        List&lt;Reservation&gt; reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(ReservationStatus.APPROVED.label, spec);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!reservations.isEmpty()) throw new EntityAlreadyExistsException(&quot;Já existe uma reserva para esta sala no horário solicitado!&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-26 00:16</div>
+</div>
+</body>
+</html>

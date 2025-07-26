@@ -109,7 +109,7 @@ public class RoomService {
 
         if (optionalRoom.isPresent()) {
             Room room = optionalRoom.get();
-            if (room.getStatus().equals(Status.ACTIVE.value)) {
+            if (room.getStatus().equals(Status.INACTIVE.value)) {
                 room.setStatus(Status.ACTIVE.value);
                 room.setUpdatedAt(LocalDateTime.now());
                 Room saved = roomRepository.save(room);

@@ -18,7 +18,7 @@ sed -i 's/<packaging>jar<\/packaging>/<packaging>war<\/packaging>/g' "$POM_FILE"
 
 # Executa o build com perfil prod
 echo "Executando build com perfil prod..."
-mvn clean package -Pprod -DDB_URL=jdbc:postgresql://localhost:5433/gds -DDB_USERNAME=postgres -DDB_PASSWORD=postgres -DADMIN_CPF=17055661030 -DADMIN_PASSWORD=1234 -DAPP_PROFILE=prod
+mvn clean package -Dmaven.test.skip -Pprod -DDB_URL=jdbc:postgresql://localhost:5433/gds -DDB_USERNAME=postgres -DDB_PASSWORD=postgres -DADMIN_CPF=17055661030 -DADMIN_PASSWORD=1234 -DAPP_PROFILE=prod
 
 # Restaura o pom.xml original
 echo "Restaurando pom.xml original..."
