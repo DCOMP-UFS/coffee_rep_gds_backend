@@ -435,3 +435,4 @@ A URL do serviço aparece no final do comando. Use `https://.../api/...` no `env
 
 - `db-f1-micro` + disco 10 GB + Cloud Run com min 0 é o desenho mais barato para testes.
 - Monitore **Billing → Budgets** e desligue a instância SQL quando não usar (`gcloud sql instances patch ... --activation-policy=NEVER`).
+- teste deploy
