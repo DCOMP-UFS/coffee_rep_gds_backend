@@ -317,6 +317,7 @@ export PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format='valu
 
 # APIs necessárias para WIF + submit no Cloud Build
 gcloud services enable \
+  cloudresourcemanager.googleapis.com \
   iamcredentials.googleapis.com \
   sts.googleapis.com \
   iam.googleapis.com \
