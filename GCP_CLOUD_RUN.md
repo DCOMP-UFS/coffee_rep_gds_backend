@@ -294,9 +294,9 @@ gcloud builds submit --config=cloudbuild.yaml \
 
 (`REGION` e `REPO` exportados como acima; o `.` é o contexto Docker.)
 
-### GitHub Actions — Workload Identity Federation (comandos no Cloud Shell)
+### Opcional: GitHub Actions + Workload Identity Federation (comandos no Cloud Shell)
 
-O `.github/workflows/deploy.yml` usa **OIDC** — sem chave JSON. Execute no **Cloud Shell**.
+Use só se você mantiver um workflow em `.github/workflows` que chame `gcloud` com OIDC (por exemplo `gcloud builds submit` ou `gcloud builds triggers run`). O fluxo **recomendado neste repo** é só o **trigger Cloud Build** ligado ao GitHub — **não exige** workflow nem secrets `GCP_*`. Execute estes comandos no **Cloud Shell** apenas se for usar Actions de novo.
 
 **`GITHUB_REPO`** não é caminho do Windows: é **`organização/nome-do-repo`** como na URL.
 
@@ -392,11 +392,11 @@ gcloud iam workload-identity-pools providers describe github-oidc \
 
 Se **NOT_FOUND**, rode **apenas** o comando `gcloud iam workload-identity-pools providers create-oidc ...` do script acima (bloco completo, mapeamento mínimo). Se **`SA já existe`**, pule o `service-accounts create` e defina `SA_EMAIL=github-actions-wif@plated-shelter-495618-d9.iam.gserviceaccount.com` antes dos `add-iam-policy-binding`.
 
-Cadastre no GitHub (**Settings → Secrets and variables → Actions**): `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_WIF_SERVICE_ACCOUNT`.
+Se usar Actions: cadastre (**Settings → Secrets and variables → Actions**) `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_WIF_SERVICE_ACCOUNT`.
 
-**Monorepo:** no workflow, `BACKEND_PATH` = pasta do backend. **`.github/workflows`** deve estar na **raiz do repositório** clonado pelo GitHub.
+**Monorepo:** em workflows opcionais, use `BACKEND_PATH` = pasta do backend; **`.github/workflows`** na raiz do repo clonado pelo GitHub.
 
-Se já existir **Trigger Cloud Build** no mesmo branch, evite build duplicado (desative um ou use `paths:`).
+Com **Trigger Cloud Build** em push, **não** mantenha um segundo workflow no mesmo evento sem necessidade — evita **dois builds** por commit.
 
 ## 7. Deploy Cloud Run (manual ou primeira vez)
 
