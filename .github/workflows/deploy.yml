@@ -57,8 +57,17 @@ jobs:
       - name: Cloud Build — imagem + deploy Cloud Run
         env:
           BACKEND_PATH: ${{ env.BACKEND_PATH }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -euo pipefail
+          # Evita espaços/newline acidental no secret e força o projeto certo no bucket *_cloudbuild
+          GCP_PROJECT_ID="$(printf '%s' "${GCP_PROJECT_ID}" | tr -d '[:space:]')"
+          if [ -z "${GCP_PROJECT_ID}" ]; then
+            echo "::error::GCP_PROJECT_ID (secret) está vazio."
+            exit 1
+          fi
+          gcloud config set project "${GCP_PROJECT_ID}"
+          echo "gcloud project=$(gcloud config get-value project)"
           cd "${GITHUB_WORKSPACE}"
           if [ -n "${BACKEND_PATH}" ]; then
             cd "${BACKEND_PATH}"
@@ -69,6 +78,7 @@ jobs:
           fi
           SUBST="_REGION=${{ env.REGION }},_REPO_NAME=coffee-rep,_IMAGE_NAME=coffee-rep-api,_TAG=${{ github.sha }}"
           gcloud builds submit \
+            --project="${GCP_PROJECT_ID}" \
             --config=cloudbuild.yaml \
             --substitutions="${SUBST}" \
             .
