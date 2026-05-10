@@ -233,16 +233,20 @@ gcloud secrets add-iam-policy-binding coffee-gds-app-password \
 
 Montagem dos PEM e variáveis esperadas pelo Spring.
 
-**Importante (Cloud Run):** não monte dois segredos como arquivos **no mesmo diretório** (ex.: `/secrets/app.key` e `/secrets/app.pub`). O serviço retorna erro do tipo *“Cannot update secret … a different secret is already mounted in the same directory”*. Use **caminhos sem diretório pai compartilhado**, por exemplo arquivos na raiz do filesystem do container:
+**Importante (Cloud Run):**
 
-- `JWT_PRIVATE_KEY=file:/jwt-private.pem`
-- `JWT_PUBLIC_KEY=file:/jwt-public.pem`
+1. O caminho de montagem **precisa** estar na forma `/<diretório>/<arquivo>` (pelo menos dois segmentos). Caminhos como `/jwt-private.pem` na raiz são **rejeitados** (`Mount path must be in the form /<mountPath>/<path>`).
+
+2. Não monte dois segredos **no mesmo diretório pai** (ex.: `/secrets/a.pem` e `/secrets/b.pem`). Use **um diretório de montagem por segredo**, por exemplo:
+
+- `JWT_PRIVATE_KEY=file:/jwt-private/jwt-private.pem`
+- `JWT_PUBLIC_KEY=file:/jwt-public/jwt-public.pem`
 
 Flags típicas (alinhadas ao `cloudbuild.yaml`):
 
 ```text
---set-secrets=/jwt-private.pem=jwt-private:latest,/jwt-public.pem=jwt-public:latest
---set-env-vars=JWT_PRIVATE_KEY=file:/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public.pem
+--set-secrets=/jwt-private/jwt-private.pem=jwt-private:latest,/jwt-public/jwt-public.pem=jwt-public:latest
+--set-env-vars=JWT_PRIVATE_KEY=file:/jwt-private/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public/jwt-public.pem
 ```
 
 (O segredo `DB_PASSWORD=…` continua na mesma flag `--set-secrets`, separado por vírgula.)
@@ -418,8 +422,8 @@ gcloud run deploy "${SERVICE}" \
   --cpu=1 \
   --min-instances=0 \
   --max-instances=2 \
-  --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=SEU_CPF,ADMIN_PASSWORD=SUA_SENHA_ADMIN,CORS_ORIGINS=https://seu-frontend.example.com,JWT_PRIVATE_KEY=file:/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public.pem" \
-  --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/jwt-private.pem=jwt-private:latest,/jwt-public.pem=jwt-public:latest"
+  --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=SEU_CPF,ADMIN_PASSWORD=SUA_SENHA_ADMIN,CORS_ORIGINS=https://seu-frontend.example.com,JWT_PRIVATE_KEY=file:/jwt-private/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public/jwt-public.pem" \
+  --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/jwt-private/jwt-private.pem=jwt-private:latest,/jwt-public/jwt-public.pem=jwt-public:latest"
 ```
 
 - **`DB_PASSWORD=coffee-gds-app-password:latest`** expõe o conteúdo do segredo como variável de ambiente `DB_PASSWORD` (o Spring lê em `application-prod.properties`).
