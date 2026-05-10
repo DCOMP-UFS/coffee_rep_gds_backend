@@ -23,9 +23,11 @@ docker compose up -d postgres
 docker compose ps
 ```
 
+Se você já usava o banco antigo (`gds`) e trocou o nome do database, apague o volume local para o Postgres recriar o cluster com o nome novo: `docker compose down -v` (isso apaga os dados do volume `pgdata`).
+
 Banco exposto em `localhost:5433` com:
 
-- Database: `gds`
+- Database: `coffee_gds_db`
 - Usuario: `postgres`
 - Senha: `postgres`
 
