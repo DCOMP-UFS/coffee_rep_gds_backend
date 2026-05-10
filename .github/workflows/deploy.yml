@@ -1,71 +1,74 @@
-name: Deploy to EC2
+# Deploy no GCP: Cloud Build → Artifact Registry → Cloud Run (usa coffee_rep_gds_backend/cloudbuild.yaml).
+# Autenticação: Workload Identity Federation (OIDC) — sem chave JSON no GitHub.
+#
+# Configuração GCP (visão geral): criar Pool + Provider OIDC para GitHub
+# (issuer https://token.actions.githubusercontent.com), condição por repositório,
+# e permitir que essa identidade use a service account indicada em GCP_WIF_SERVICE_ACCOUNT.
+# Documentação: https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-providers#github-actions
+#
+# Secrets no GitHub (Settings → Secrets and variables → Actions):
+#   GCP_PROJECT_ID
+#   GCP_WORKLOAD_IDENTITY_PROVIDER   → projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER
+#   GCP_WIF_SERVICE_ACCOUNT          → ex.: github-actions-wif@PROJETO.iam.gserviceaccount.com
+#
+# A SA acima precisa, no mínimo, conseguir executar `gcloud builds submit` no projeto
+# (ex.: roles/cloudbuild.builds.editor + escrita no bucket de staging do Cloud Build).
+#
+# Opcional — sobrescreve substituições do cloudbuild (_ADMIN_*, _CORS_*):
+#   ADMIN_CPF, ADMIN_PASSWORD, CORS_ORIGINS
+# (Senhas com vírgula podem quebrar substituições; prefira ajustar só na GCP ou usar delimiter ^:^ no gcloud.)
+
+name: Deploy backend — GCP (Cloud Build)
 
 on:
   push:
     branches:
       - main
+      - develop
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGION: us-central1
+  # Se o repositório Git for monorepo, coloque aqui o caminho até esta pasta (ex.: coffee_rep_gds_backend). Se o repo for só o backend, deixe vazio.
+  BACKEND_PATH: ""
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
 
-      - name: Generate private and public RSA Key
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Cloud Build — imagem + deploy Cloud Run
+        env:
+          BACKEND_PATH: ${{ env.BACKEND_PATH }}
         run: |
-          openssl genpkey -algorithm RSA -out src/main/resources/app.key -pkeyopt rsa_keygen_bits:2048
-          openssl rsa -pubout -in src/main/resources/app.key -out src/main/resources/app.pub
-
-      - name: Grant execute permission to mvnw
-        run: chmod +x mvnw
-
-      - name: Build Maven
-        run: |
-          ./mvnw clean package -q -Dmaven.test.skip
-
-      - name: Build Docker Images
-        run: |
-          docker build -t clinic_room_backend -f Dockerfile.test .
-
-      - name: Tag Docker Images
-        run: |
-          docker tag clinic_room_backend ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
-
-      - name: Docker Login
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Push Docker Images
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
-
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
-
-      - name: Deploy to EC2
-        run: |
-          sshpass -p "${{ secrets.HETZNER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.HETZNER_HOST }} << 'EOF'
-          sudo docker stop clinic_room_backend || true
-          sudo docker rm clinic_room_backend || true
-          sudo docker network create network_cr || true
-          
-          echo "APP_PROFILE=prod" > .env
-          echo "DB_URL=jdbc:postgresql://${{ secrets.RDS_ENDPOINT }}:5432/gds" >> .env
-          echo "DB_USERNAME=${{ secrets.RDS_USERNAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
-          echo "EXPIRATION_TIME=${{ secrets.EXPIRATION_TIME }}" >> .env
-          echo "ADMIN_CPF=${{ secrets.ADMIN_CPF }}" >> .env
-          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
-          
-          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
-          
-          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
-          sudo docker run --env-file .env -d --network=network_cr --name clinic_room_backend -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/clinic_room_backend:clinic_room_backend
-          sudo docker update --restart unless-stopped clinic_room_backend
-          
-          EOF
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}"
+          if [ -n "${BACKEND_PATH}" ]; then
+            cd "${BACKEND_PATH}"
+          fi
+          if [ ! -f cloudbuild.yaml ]; then
+            echo "::error::cloudbuild.yaml não encontrado em $(pwd). Ajuste env BACKEND_PATH neste workflow."
+            exit 1
+          fi
+          SUBST="_REGION=${{ env.REGION }},_REPO_NAME=coffee-rep,_IMAGE_NAME=coffee-rep-api,_TAG=${{ github.sha }}"
+          gcloud builds submit \
+            --config=cloudbuild.yaml \
+            --substitutions="${SUBST}" \
+            .

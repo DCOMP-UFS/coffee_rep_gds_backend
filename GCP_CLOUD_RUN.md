@@ -231,19 +231,25 @@ gcloud secrets add-iam-policy-binding coffee-gds-app-password \
 
 ### Deploy Cloud Run
 
-Montagem dos PEM e variáveis esperadas pelo Spring:
+Montagem dos PEM e variáveis esperadas pelo Spring.
 
-- `JWT_PRIVATE_KEY=file:/secrets/app.key`
-- `JWT_PUBLIC_KEY=file:/secrets/app.pub`
+**Importante (Cloud Run):** não monte dois segredos como arquivos **no mesmo diretório** (ex.: `/secrets/app.key` e `/secrets/app.pub`). O serviço retorna erro do tipo *“Cannot update secret … a different secret is already mounted in the same directory”*. Use **caminhos sem diretório pai compartilhado**, por exemplo arquivos na raiz do filesystem do container:
 
-Flags típicas (já refletidas no `cloudbuild.yaml`):
+- `JWT_PRIVATE_KEY=file:/jwt-private.pem`
+- `JWT_PUBLIC_KEY=file:/jwt-public.pem`
+
+Flags típicas (alinhadas ao `cloudbuild.yaml`):
 
 ```text
---set-secrets=/secrets/app.key=jwt-private:latest,/secrets/app.pub=jwt-public:latest
---set-env-vars=JWT_PRIVATE_KEY=file:/secrets/app.key,JWT_PUBLIC_KEY=file:/secrets/app.pub
+--set-secrets=/jwt-private.pem=jwt-private:latest,/jwt-public.pem=jwt-public:latest
+--set-env-vars=JWT_PRIVATE_KEY=file:/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public.pem
 ```
 
+(O segredo `DB_PASSWORD=…` continua na mesma flag `--set-secrets`, separado por vírgula.)
+
 ## 6. Artifact Registry + Cloud Build
+
+### Repositório Docker no Artifact Registry (uma vez por projeto/região)
 
 ```bash
 export REGION=us-central1
@@ -253,12 +259,134 @@ gcloud artifacts repositories create "${REPO}" \
   --repository-format=docker \
   --location="${REGION}" \
   --description="Coffee Rep"
+```
 
-# Build, push e deploy (executar na pasta coffee_rep_gds_backend)
-# Ajuste substituições; use a SA coffee-rep-cloud-build como executora do build.
+Se o comando responder que o repositório já existe, pode ignorar.
+
+### Fluxo principal: gatilho (trigger) no GitHub **sem** clonar no Cloud Shell
+
+Quando o **Cloud Build** já está conectado ao repositório GitHub, cada push (ou PR, conforme você configurou) **baixa o código dos servidores do GitHub dentro da infraestrutura do Google**. Nesse cenário **não** é preciso dar `git clone` no Cloud Shell só para buildar: o trigger usa o commit remoto e o arquivo `cloudbuild.yaml` **versionado no repo**.
+
+Confira no Console (**Cloud Build → Triggers**) que:
+
+- O trigger aponta para o **branch** correto (ex.: `develop` / `main`).
+- O **arquivo de configuração** é o caminho real no Git — se o backend está em pasta, use algo como `coffee_rep_gds_backend/cloudbuild.yaml` (ajuste ao seu monorepo).
+- A **service account** do trigger é a de build (`coffee-rep-cloud-build@...`), se você seguiu a seção 2.
+
+Depois disso, o fluxo típico é: **commit + push** → Cloud Build roda → imagem no Artifact Registry → deploy no Cloud Run (se estiver no `cloudbuild.yaml`).
+
+### Opcional: `gcloud builds submit` manual (teste ou sem trigger)
+
+Use só quando quiser disparar build **sem** passar pelo Git (teste rápido, ou repo ainda não ligado ao trigger). Aí o Cloud Build precisa receber **código**: ou você executa o comando **na pasta** que contém `Dockerfile.cloudrun` e `cloudbuild.yaml`, ou envia um tarball.
+
+Exemplo se você **tiver** o projeto clonado no Cloud Shell **apenas** para esse teste:
+
+```bash
+cd ~/caminho/para/coffee_rep_gds_backend
+
 gcloud builds submit --config=cloudbuild.yaml \
   --substitutions=_REGION=${REGION},_REPO_NAME=${REPO},_IMAGE_NAME=coffee-rep-api,_TAG=v1 .
 ```
+
+(`REGION` e `REPO` exportados como acima; o `.` é o contexto Docker.)
+
+### GitHub Actions — Workload Identity Federation (comandos no Cloud Shell)
+
+O `.github/workflows/deploy.yml` usa **OIDC** — sem chave JSON. Execute no **Cloud Shell**.
+
+**`GITHUB_REPO`** não é caminho do Windows: é **`organização/nome-do-repo`** como na URL.
+
+Para este projeto (organização **DCOMP-UFS**, repositório **`coffee_rep_gds_backend`**):
+
+`https://github.com/DCOMP-UFS/coffee_rep_gds_backend` → use **`DCOMP-UFS/coffee_rep_gds_backend`** (respeite maiúsculas/minúsculas iguais à URL).
+
+```bash
+# ---------- Variáveis ----------
+export PROJECT_ID="plated-shelter-495618-d9"
+export GITHUB_REPO="DCOMP-UFS/coffee_rep_gds_backend"
+export POOL_NAME="github-actions-pool"
+export PROVIDER_NAME="github-oidc"
+export SA_NAME="github-actions-wif"
+
+gcloud config set project "${PROJECT_ID}"
+export PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')"
+
+# APIs necessárias para WIF + submit no Cloud Build
+gcloud services enable \
+  iamcredentials.googleapis.com \
+  sts.googleapis.com \
+  iam.googleapis.com \
+  cloudbuild.googleapis.com \
+  storage.googleapis.com \
+  serviceusage.googleapis.com
+
+# ---------- Pool + Provider OIDC (GitHub Actions) ----------
+gcloud iam workload-identity-pools create "${POOL_NAME}" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --display-name="GitHub Actions pool"
+
+# Provider OIDC — incluir --attribute-condition com claims assertion.* (exigência atual da API).
+# Cole o bloco inteiro de uma vez. GITHUB_REPO deve ser igual ao claim repository do GitHub (org/repo).
+gcloud iam workload-identity-pools providers create-oidc "${PROVIDER_NAME}" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --workload-identity-pool="${POOL_NAME}" \
+  --display-name="GitHub OIDC" \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+  --attribute-condition="assertion.repository == \"${GITHUB_REPO}\""
+
+# ---------- Service account usada pelo GitHub Actions ----------
+gcloud iam service-accounts create "${SA_NAME}" \
+  --project="${PROJECT_ID}" \
+  --display-name="GitHub Actions WIF (gcloud builds submit)"
+
+export SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/cloudbuild.builds.editor"
+
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/logging.logWriter"
+
+# Opcional se o submit falhar por bucket de staging:
+# gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+#   --member="serviceAccount:${SA_EMAIL}" \
+#   --role="roles/storage.objectAdmin"
+
+# Só este repositório GitHub pode federar nesta SA
+gcloud iam service-accounts add-iam-policy-binding "${SA_EMAIL}" \
+  --project="${PROJECT_ID}" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_NAME}/attribute.repository/${GITHUB_REPO}"
+
+# ---------- Valores para GitHub → Secrets ----------
+export WIF_PROVIDER="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_NAME}/providers/${PROVIDER_NAME}"
+
+echo "GCP_PROJECT_ID=${PROJECT_ID}"
+echo "GCP_WORKLOAD_IDENTITY_PROVIDER=${WIF_PROVIDER}"
+echo "GCP_WIF_SERVICE_ACCOUNT=${SA_EMAIL}"
+```
+
+**Se o `create-oidc` falhou** (colagem quebrada no Shell ou `INVALID_ARGUMENT`): o pool pode existir sem provider. Confira:
+
+```bash
+gcloud iam workload-identity-pools providers describe github-oidc \
+  --location=global \
+  --workload-identity-pool=github-actions-pool \
+  --project=plated-shelter-495618-d9
+```
+
+Se **NOT_FOUND**, rode **apenas** o comando `gcloud iam workload-identity-pools providers create-oidc ...` do script acima (bloco completo, mapeamento mínimo). Se **`SA já existe`**, pule o `service-accounts create` e defina `SA_EMAIL=github-actions-wif@plated-shelter-495618-d9.iam.gserviceaccount.com` antes dos `add-iam-policy-binding`.
+
+Cadastre no GitHub (**Settings → Secrets and variables → Actions**): `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_WIF_SERVICE_ACCOUNT`.
+
+**Monorepo:** no workflow, `BACKEND_PATH` = pasta do backend. **`.github/workflows`** deve estar na **raiz do repositório** clonado pelo GitHub.
+
+Se já existir **Trigger Cloud Build** no mesmo branch, evite build duplicado (desative um ou use `paths:`).
 
 ## 7. Deploy Cloud Run (manual ou primeira vez)
 
@@ -285,8 +413,8 @@ gcloud run deploy "${SERVICE}" \
   --cpu=1 \
   --min-instances=0 \
   --max-instances=2 \
-  --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=SEU_CPF,ADMIN_PASSWORD=SUA_SENHA_ADMIN,CORS_ORIGINS=https://seu-frontend.example.com,JWT_PRIVATE_KEY=file:/secrets/app.key,JWT_PUBLIC_KEY=file:/secrets/app.pub" \
-  --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/secrets/app.key=jwt-private:latest,/secrets/app.pub=jwt-public:latest"
+  --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=SEU_CPF,ADMIN_PASSWORD=SUA_SENHA_ADMIN,CORS_ORIGINS=https://seu-frontend.example.com,JWT_PRIVATE_KEY=file:/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public.pem" \
+  --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/jwt-private.pem=jwt-private:latest,/jwt-public.pem=jwt-public:latest"
 ```
 
 - **`DB_PASSWORD=coffee-gds-app-password:latest`** expõe o conteúdo do segredo como variável de ambiente `DB_PASSWORD` (o Spring lê em `application-prod.properties`).

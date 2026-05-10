@@ -65,8 +65,8 @@ steps:
           --cpu=1 \
           --min-instances=0 \
           --max-instances=2 \
-          --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=$${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=${_ADMIN_CPF},ADMIN_PASSWORD=${_ADMIN_PASSWORD},CORS_ORIGINS=${_CORS_ORIGINS},JWT_PRIVATE_KEY=file:/secrets/app.key,JWT_PUBLIC_KEY=file:/secrets/app.pub" \
-          --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/secrets/app.key=jwt-private:latest,/secrets/app.pub=jwt-public:latest"
+          --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=$${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=${_ADMIN_CPF},ADMIN_PASSWORD=${_ADMIN_PASSWORD},CORS_ORIGINS=${_CORS_ORIGINS},JWT_PRIVATE_KEY=file:/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public.pem" \
+          --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/jwt-private.pem=jwt-private:latest,/jwt-public.pem=jwt-public:latest"
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_TAG}
