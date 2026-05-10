@@ -170,14 +170,50 @@ Variáveis já esperadas pelo `application-prod.properties`:
 
 ## 5. Chaves JWT (Secret Manager)
 
-O `Dockerfile.cloudrun` **não** inclui `app.key` / `app.pub`. Monte como arquivos e aponte:
+O `Dockerfile.cloudrun` **não** inclui `app.key` / `app.pub`. Em produção o par RSA (PEM) fica no **Secret Manager** e o Cloud Run monta como arquivos em `/secrets/`.
+
+São **dois segredos binários de texto PEM**, não senhas Base64 genéricas: use **OpenSSL** para gerar o par RSA (2048 bits).
+
+### Opção A — Google Cloud Shell (recomendado)
+
+Não é obrigatório clonar o repositório: basta gerar os PEM no diretório atual e enviar ao Secret Manager.
 
 ```bash
-# Na sua máquina (onde já existem app.key e app.pub):
-gcloud secrets create jwt-private --data-file=src/main/resources/app.key --project=plated-shelter-495618-d9
-gcloud secrets create jwt-public  --data-file=src/main/resources/app.pub --project=plated-shelter-495618-d9
+# Projeto já selecionado (ex.: plated-shelter-495618-d9)
+openssl genpkey -algorithm RSA -out app.key -pkeyopt rsa_keygen_bits:2048
+openssl rsa -pubout -in app.key -out app.pub
 
-# Permissão para a SA de runtime do Cloud Run ler segredos (use a mesma RUN_SA da seção 2):
+gcloud secrets create jwt-private --data-file=app.key
+gcloud secrets create jwt-public  --data-file=app.pub
+```
+
+Saída esperada ao criar: `Created version [1] of the secret [jwt-private]` (e o mesmo para `jwt-public`).
+
+Se o segredo **já existir** (nova versão da chave):
+
+```bash
+gcloud secrets versions add jwt-private --data-file=app.key
+gcloud secrets versions add jwt-public  --data-file=app.pub
+```
+
+Opcional — remover cópia local após o upload: `rm app.key app.pub`.
+
+### Opção B — máquina local com repo clonado
+
+Se gerar as chaves dentro do backend (equivalente ao README):
+
+```bash
+gcloud secrets create jwt-private --data-file=src/main/resources/app.key
+gcloud secrets create jwt-public  --data-file=src/main/resources/app.pub
+```
+
+(`app.key` / `app.pub` não vêm do Git; gere antes com OpenSSL na pasta correta.)
+
+### IAM — runtime pode ler os segredos
+
+Permissão para a SA de runtime do Cloud Run (mesma `RUN_SA` da seção 2):
+
+```bash
 export PROJECT_ID=plated-shelter-495618-d9
 export RUN_SA="coffee-rep-cloud-run@${PROJECT_ID}.iam.gserviceaccount.com"
 
@@ -193,12 +229,14 @@ gcloud secrets add-iam-policy-binding coffee-gds-app-password \
   --role="roles/secretmanager.secretAccessor"
 ```
 
-No deploy do Cloud Run, monte volumes de segredo e defina:
+### Deploy Cloud Run
+
+Montagem dos PEM e variáveis esperadas pelo Spring:
 
 - `JWT_PRIVATE_KEY=file:/secrets/app.key`
 - `JWT_PUBLIC_KEY=file:/secrets/app.pub`
 
-Exemplo de flags (ajuste nomes de segredo e caminhos):
+Flags típicas (já refletidas no `cloudbuild.yaml`):
 
 ```text
 --set-secrets=/secrets/app.key=jwt-private:latest,/secrets/app.pub=jwt-public:latest
