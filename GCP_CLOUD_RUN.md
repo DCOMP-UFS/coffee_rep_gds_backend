@@ -352,10 +352,15 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/logging.logWriter"
 
-# Opcional se o submit falhar por bucket de staging:
-# gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-#   --member="serviceAccount:${SA_EMAIL}" \
-#   --role="roles/storage.objectAdmin"
+# Obrigatório para `gcloud builds submit` a partir do GitHub Actions (upload no bucket *_cloudbuild):
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/storage.objectAdmin"
+
+# Permite uso de APIs habilitadas (serviceusage.services.use) — corrige erro ao acessar bucket Cloud Build:
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/serviceusage.serviceUsageConsumer"
 
 # Só este repositório GitHub pode federar nesta SA
 gcloud iam service-accounts add-iam-policy-binding "${SA_EMAIL}" \
