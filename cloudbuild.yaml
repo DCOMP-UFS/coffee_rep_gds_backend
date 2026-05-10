@@ -1,0 +1,72 @@
+# Cloud Build: build → push (Artifact Registry) → deploy (Cloud Run).
+#
+# Pré-requisitos:
+#   - Service accounts criadas (ver GCP_CLOUD_RUN.md, seção "Service Accounts").
+#   - Trigger apontando este arquivo e usando a SA de build (coffee-rep-cloud-build@...).
+#
+# Variáveis que você pode sobrescrever no trigger ou em:
+#   gcloud builds submit --config=cloudbuild.yaml --substitutions=...
+#
+substitutions:
+  _REGION: us-central1
+  _REPO_NAME: coffee-rep
+  _IMAGE_NAME: coffee-rep-api
+  _TAG: latest
+  # Ajuste ao seu projeto / conta de runtime
+  _SERVICE_NAME: coffee-rep-api
+  _CLOUDSQL_INSTANCE: plated-shelter-495618-d9:us-central1:coffee-gds-db
+  _RUN_SA_EMAIL: coffee-rep-cloud-run@plated-shelter-495618-d9.iam.gserviceaccount.com
+  _BUILD_SA_EMAIL: coffee-rep-cloud-build@plated-shelter-495618-d9.iam.gserviceaccount.com
+  # Substitua nos valores reais no trigger (evite commitar segredos em texto)
+  _ADMIN_CPF: "00000000000"
+  _ADMIN_PASSWORD: "defina-no-trigger"
+  _CORS_ORIGINS: "https://seu-frontend.example.com"
+
+# Build executa como SA dedicada (precisa Artifact Registry + deploy Run + actAs na SA runtime)
+serviceAccount: projects/plated-shelter-495618-d9/serviceAccounts/coffee-rep-cloud-build@plated-shelter-495618-d9.iam.gserviceaccount.com
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - id: build-image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile.cloudrun
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_TAG}
+      - .
+
+  - id: push-image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_TAG}
+
+  # DB_URL usa $$ para o bash expandir depois que o Cloud Build já aplicou ${_CLOUDSQL_INSTANCE}
+  - id: deploy-cloud-run
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        DB_URL="jdbc:postgresql:///coffee_gds_db?cloudSqlInstance=${_CLOUDSQL_INSTANCE}&socketFactory=com.google.cloud.sql.postgres.SocketFactory"
+        gcloud run deploy "${_SERVICE_NAME}" \
+          --image="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_TAG}" \
+          --region="${_REGION}" \
+          --platform=managed \
+          --allow-unauthenticated \
+          --service-account="${_RUN_SA_EMAIL}" \
+          --add-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
+          --memory=512Mi \
+          --cpu=1 \
+          --min-instances=0 \
+          --max-instances=2 \
+          --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=$${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=${_ADMIN_CPF},ADMIN_PASSWORD=${_ADMIN_PASSWORD},CORS_ORIGINS=${_CORS_ORIGINS},JWT_PRIVATE_KEY=file:/secrets/app.key,JWT_PUBLIC_KEY=file:/secrets/app.pub" \
+          --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/secrets/app.key=jwt-private:latest,/secrets/app.pub=jwt-public:latest"
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_TAG}
