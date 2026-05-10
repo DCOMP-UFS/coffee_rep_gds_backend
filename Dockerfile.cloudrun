@@ -1,0 +1,19 @@
+# Imagem enxuta para Google Cloud Run (JVM 17, JAR, sem build no startup)
+# Build: a partir da raiz do módulo backend (onde estão pom.xml e mvnw)
+# Não use o profile Maven "prod" aqui: ele força WAR; o padrão gera o app.jar.
+FROM eclipse-temurin:17-jdk-alpine AS build
+WORKDIR /app
+COPY .mvn .mvn
+COPY mvnw mvnw.cmd pom.xml ./
+COPY src src
+RUN chmod +x mvnw 2>/dev/null || true
+RUN ./mvnw -B -q -DskipTests package
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+RUN addgroup -S spring -g 1000 && adduser -S spring -u 1000 -G spring
+COPY --from=build /app/target/app.jar app.jar
+USER spring:spring
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]
