@@ -166,7 +166,7 @@ Variáveis já esperadas pelo `application-prod.properties`:
 - `DB_USERNAME` = usuário da aplicação (`coffee_gds_app`)
 - `DB_PASSWORD` = injetado pelo Cloud Run a partir do segredo **`coffee-gds-app-password`** (`--set-secrets`, não coloque a senha em texto no Console)
 - `ADMIN_CPF`, `ADMIN_PASSWORD` (obrigatórios no perfil prod)
-- `CORS_ORIGINS` = URL(s) do frontend em produção (ex.: `https://seu-app.web.app`)
+- `CORS_ORIGINS` = URL(s) do frontend em produção (ex.: `https://gestao-salas-hu.vercel.app`). Use uma origem por vez na substituição do Cloud Build para não quebrar `--set-env-vars`; várias origens exigem delimitador alternativo no `gcloud run deploy` (ver documentação).
 
 ## 5. Chaves JWT (Secret Manager)
 
@@ -423,7 +423,7 @@ gcloud run deploy "${SERVICE}" \
   --cpu=1 \
   --min-instances=0 \
   --max-instances=2 \
-  --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=SEU_CPF,ADMIN_PASSWORD=SUA_SENHA_ADMIN,CORS_ORIGINS=https://seu-frontend.example.com,JWT_PRIVATE_KEY=file:/jwt-private/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public/jwt-public.pem" \
+  --set-env-vars="SPRING_PROFILES_ACTIVE=prod,APP_PROFILE=prod,DB_URL=${DB_URL},DB_USERNAME=coffee_gds_app,ADMIN_CPF=SEU_CPF,ADMIN_PASSWORD=SUA_SENHA_ADMIN,CORS_ORIGINS=https://gestao-salas-hu.vercel.app,JWT_PRIVATE_KEY=file:/jwt-private/jwt-private.pem,JWT_PUBLIC_KEY=file:/jwt-public/jwt-public.pem" \
   --set-secrets="DB_PASSWORD=coffee-gds-app-password:latest,/jwt-private/jwt-private.pem=jwt-private:latest,/jwt-public/jwt-public.pem=jwt-public:latest"
 ```
 
