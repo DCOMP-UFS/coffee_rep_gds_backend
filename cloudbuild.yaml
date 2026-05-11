@@ -20,7 +20,7 @@ substitutions:
   # Substitua nos valores reais no trigger (evite commitar segredos em texto)
   _ADMIN_CPF: "00000000000"
   _ADMIN_PASSWORD: "defina-no-trigger"
-  _CORS_ORIGINS: "https://seu-frontend.example.com"
+  _CORS_ORIGINS: "https://gestao-salas-hu.vercel.app"
 
 # Build executa como SA dedicada (precisa Artifact Registry + deploy Run + actAs na SA runtime)
 serviceAccount: projects/plated-shelter-495618-d9/serviceAccounts/coffee-rep-cloud-build@plated-shelter-495618-d9.iam.gserviceaccount.com
