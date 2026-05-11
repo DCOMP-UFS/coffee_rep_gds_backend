@@ -11,6 +11,7 @@ import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
+import br.ufs.coffee_rep_gds_backend.repositories.RequesterAbsenceRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
@@ -32,12 +33,14 @@ import java.util.*;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final RequesterAbsenceRepository requesterAbsenceRepository;
     private final RoomDomainService roomService;
     private final RequesterDomainService requesterService;
     private final UserDomainService userService;
 
-    public ReservationService(ReservationRepository reservationRepository, RoomDomainService roomService, RequesterDomainService requesterService, UserDomainService userService) {
+    public ReservationService(ReservationRepository reservationRepository, RequesterAbsenceRepository requesterAbsenceRepository, RoomDomainService roomService, RequesterDomainService requesterService, UserDomainService userService) {
         this.reservationRepository = reservationRepository;
+        this.requesterAbsenceRepository = requesterAbsenceRepository;
         this.roomService = roomService;
         this.requesterService = requesterService;
         this.userService = userService;
@@ -70,7 +73,8 @@ public class ReservationService {
                 reservation.getRoom().getId(),
                 reservation.getRequester().getId(),
                 reservation.getRoom().getSection().getId(),
-                reservation.getRecurrenceId()
+                reservation.getRecurrenceId(),
+                profissionalAusente(reservation)
                 )).toList();
 
         return new PageImpl<>(list, pageable, sourcePage.getTotalElements());
@@ -135,7 +139,8 @@ public class ReservationService {
                 reservation.getRoom().getId(),
                 reservation.getRequester().getId(),
                 reservation.getRoom().getSection().getId(),
-                reservation.getRecurrenceId()
+                reservation.getRecurrenceId(),
+                profissionalAusente(reservation)
                 )).toList();
     }
 
@@ -205,6 +210,16 @@ public class ReservationService {
         List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(ReservationStatus.APPROVED.label, spec);
 
         if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para esta sala no horário solicitado!");
+    }
+
+    private boolean profissionalAusente(Reservation reservation) {
+        if (reservation.getRequester() == null) {
+            return false;
+        }
+        return requesterAbsenceRepository.existsForRequesterOnDate(
+                reservation.getRequester().getId(),
+                reservation.getStartDate().toLocalDate()
+        );
     }
 
 }

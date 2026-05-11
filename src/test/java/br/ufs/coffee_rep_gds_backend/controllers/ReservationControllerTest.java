@@ -38,7 +38,8 @@ class ReservationControllerTest {
     void shouldReturnPageOfReservations() throws Exception {
         ReservationResponseDto dto = new ReservationResponseDto(
                 1L, LocalDateTime.now(), LocalDateTime.now().plusHours(1),
-                "Sala A", "Fulano", "Clinico", "Admin", 1L, 1L, 1L, null
+                "Sala A", "Fulano", "Clinico", "Admin", 1L, 1L, 1L, null,
+                false
         );
 
         Page<ReservationResponseDto> page = new PageImpl<>(List.of(dto));
@@ -84,7 +85,8 @@ class ReservationControllerTest {
     void shouldReturnReservationsInCurrentMonth() throws Exception {
         ReservationResponseDto dto = new ReservationResponseDto(
                 1L, LocalDateTime.now(), LocalDateTime.now().plusHours(1),
-                "Sala A", "Fulano", "TI", "Admin", 1L, 1L, 1L, null
+                "Sala A", "Fulano", "TI", "Admin", 1L, 1L, 1L, null,
+                false
         );
 
         when(reservationService.findReservationsInCurrentMonth(any(), any()))

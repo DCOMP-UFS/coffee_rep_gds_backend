@@ -10,6 +10,7 @@ import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
+import br.ufs.coffee_rep_gds_backend.repositories.RequesterAbsenceRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.RequesterDomainService;
 import br.ufs.coffee_rep_gds_backend.services.domain.RoomDomainService;
@@ -44,6 +45,8 @@ class ReservationServiceTest
 
     @Mock
     private ReservationRepository reservationRepository;
+    @Mock
+    private RequesterAbsenceRepository requesterAbsenceRepository;
     @Mock private RoomDomainService roomService;
     @Mock private RequesterDomainService requesterService;
     @Mock private UserDomainService userService;
@@ -89,6 +92,8 @@ class ReservationServiceTest
                 any(Specification.class),
                 eq(pageable)
         )).thenReturn(reservationPage);
+
+        when(requesterAbsenceRepository.existsForRequesterOnDate(any(), any())).thenReturn(false);
 
         Page<ReservationResponseDto> result = reservationService.findAll(
                 start, end, null, null, null, null, null, null, pageable

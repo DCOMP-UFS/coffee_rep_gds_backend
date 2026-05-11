@@ -14,38 +14,45 @@ import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    String query = "SELECT distinct r.id, r.name, ts.name as section, r.section_id as sectionId, case when tr.id is not null then true else false end as ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
-                   "FROM tb_rooms r " +
-                   "left join tb_reservations tr on r.id = tr.room_id " +
-                   "and now() >= tr.start_date and now() <= tr.end_date  and tr.status = 1 " +
-                   "join tb_sections ts on r.section_id = ts.id " +
-                   "where r.status = :status " +
-                   "and (r.name like concat('%', :name, '%') or :name is null) " +
-                   "and (ts.name like concat('%', :section, '%') or :section is null) " +
-                   "and (:ocupationStatus is null or " +
-                   "(:ocupationStatus = true and tr.id is not null) or " +
-                   "(:ocupationStatus = false AND tr.id IS NULL)) " +
-                   "order by max_date desc";
+    /** Reserva “vale” como ocupação apenas se o profissional não estiver em ausência nesta data (HU Sergipe). */
+    String NO_VACATION = "NOT EXISTS (SELECT 1 FROM tb_requester_absence ra WHERE ra.requester_id = tr.requester_id AND (CURRENT_TIMESTAMP AT TIME ZONE 'America/Maceio')::date BETWEEN ra.start_date AND ra.end_date)";
 
-    String querySection = "SELECT distinct r.id, r.name, ts.name as section, r.section_id as sectionId, case when tr.id is not null then true else false end as ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
-                          "FROM tb_rooms r " +
-                          "left join tb_reservations tr on r.id = tr.room_id " +
-                          "and now() >= tr.start_date and now() <= tr.end_date and tr.status = 1 " +
-                          "join tb_sections ts on r.section_id = ts.id " +
-                          "where r.status = :status " +
-                          "and ts.id = :sectionId " +
-                          "and (r.name like concat('%', :name, '%') or :name is null) " +
-                          "and (:ocupationStatus is null or " +
-                          "(:ocupationStatus = true and tr.id is not null) or " +
-                          "(:ocupationStatus = false AND tr.id IS NULL)) " +
-                          "order by max_date desc";
+    String EFFECTIVE_OCCUPIED = "(tr.id IS NOT NULL AND " + NO_VACATION + ")";
 
-    @Query(nativeQuery = true, value = "SELECT r.id as id, r.name as name, ts.name as section, ts.id as sectionId, case when tr.id is not null then true else false end as ocupationStatus " +
-                                       "FROM tb_rooms r " +
-                                       "LEFT JOIN tb_reservations tr ON r.id = tr.room_id " +
-                                       "AND now() >= tr.start_date AND now() <= tr.end_date AND tr.status = 1 " +
-                                       "JOIN tb_sections ts on r.section_id = ts.id " +
-                                       "WHERE r.id = :id AND r.status = :status")
+    String OCUPATION_CASE = "CASE WHEN " + EFFECTIVE_OCCUPIED + " THEN true ELSE false END";
+
+    String FILTER_OCUPATION = "(:ocupationStatus IS NULL OR " +
+            "(:ocupationStatus = true AND " + EFFECTIVE_OCCUPIED + ") OR " +
+            "(:ocupationStatus = false AND NOT (" + EFFECTIVE_OCCUPIED + ")))";
+
+    String query = "SELECT DISTINCT r.id, r.name, ts.name AS section, r.section_id AS sectionId, " + OCUPATION_CASE + " AS ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
+            "FROM tb_rooms r " +
+            "LEFT JOIN tb_reservations tr ON r.id = tr.room_id " +
+            "AND NOW() >= tr.start_date AND NOW() <= tr.end_date AND tr.status = 1 " +
+            "JOIN tb_sections ts ON r.section_id = ts.id " +
+            "WHERE r.status = :status " +
+            "AND (r.name LIKE CONCAT('%', :name, '%') OR :name IS NULL) " +
+            "AND (ts.name LIKE CONCAT('%', :section, '%') OR :section IS NULL) " +
+            "AND " + FILTER_OCUPATION + " " +
+            "ORDER BY max_date DESC";
+
+    String querySection = "SELECT DISTINCT r.id, r.name, ts.name AS section, r.section_id AS sectionId, " + OCUPATION_CASE + " AS ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
+            "FROM tb_rooms r " +
+            "LEFT JOIN tb_reservations tr ON r.id = tr.room_id " +
+            "AND NOW() >= tr.start_date AND NOW() <= tr.end_date AND tr.status = 1 " +
+            "JOIN tb_sections ts ON r.section_id = ts.id " +
+            "WHERE r.status = :status " +
+            "AND ts.id = :sectionId " +
+            "AND (r.name LIKE CONCAT('%', :name, '%') OR :name IS NULL) " +
+            "AND " + FILTER_OCUPATION + " " +
+            "ORDER BY max_date DESC";
+
+    @Query(nativeQuery = true, value = "SELECT r.id AS id, r.name AS name, ts.name AS section, ts.id AS sectionId, " + OCUPATION_CASE + " AS ocupationStatus " +
+            "FROM tb_rooms r " +
+            "LEFT JOIN tb_reservations tr ON r.id = tr.room_id " +
+            "AND NOW() >= tr.start_date AND NOW() <= tr.end_date AND tr.status = 1 " +
+            "JOIN tb_sections ts ON r.section_id = ts.id " +
+            "WHERE r.id = :id AND r.status = :status")
     Optional<RoomProjection> findActive(Long id, Integer status);
 
     Optional<Room> findByIdAndStatus(Long id, Integer status);
