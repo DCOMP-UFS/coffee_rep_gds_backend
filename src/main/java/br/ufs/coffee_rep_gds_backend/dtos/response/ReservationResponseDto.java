@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 
 public record ReservationResponseDto(
         Long reservationId,
-        LocalDateTime horaInicio,
-        LocalDateTime horaFim,
+        java.time.LocalDateTime horaInicio,
+        java.time.LocalDateTime horaFim,
         String sala,
         String solicitante,
         String setor,
@@ -13,5 +13,6 @@ public record ReservationResponseDto(
         Long salaId,
         Long solicitanteId,
         Long setorId,
-        Long recorrenciaId
+        Long recorrenciaId,
+        Boolean profissionalAusente
 ) {}

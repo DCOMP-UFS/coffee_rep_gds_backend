@@ -432,6 +432,17 @@ gcloud run deploy "${SERVICE}" \
 
 A URL do serviço aparece no final do comando. Use `https://.../api/...` no `environment.prod.ts` do Angular.
 
+### Cold start e `--min-instances`
+
+O primeiro request após um período sem tráfego pode demorar enquanto o Cloud Run sobe o container (Spring Boot costuma levar dezenas de segundos). O frontend Angular dispara **`GET /api/health`** no bootstrap (`APP_INITIALIZER`) para **aquecer** o backend sem bloquear a UI.
+
+| Opção | Prós | Contras |
+|-------|------|---------|
+| `--min-instances=0` (como no exemplo acima) | Menor custo quando não há uso | Cold start após cada período “frio” |
+| `--min-instances=1` | Elimina na prática o cold start para uso contínuo | Uma instância sempre ativa gera custo mínimo contínuo de CPU/memória |
+
+Para demonstrações ou ambientes com SLA mais rígido, avalie **`--min-instances=1`** no `gcloud run deploy`. Mesmo com `min-instances=0`, o ping em `/api/health` reduz a percepção de lentidão ao primeiro clique.
+
 ## 8. Custo
 
 - `db-f1-micro` + disco 10 GB + Cloud Run com min 0 é o desenho mais barato para testes.

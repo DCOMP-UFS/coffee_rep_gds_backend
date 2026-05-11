@@ -61,3 +61,27 @@ Backend disponivel em:
 
 - Backend: `Ctrl + C` no terminal
 - Banco: `docker compose stop postgres`
+
+## Usuario admin local
+
+O container Postgres **nao** cria usuario administrativo. Na primeira subida do backend com perfil `dev`, o `AdminUserConfig` cadastra o admin se o CPF ainda nao existir.
+
+Credenciais padrao (sem `ADMIN_CPF` / `ADMIN_PASSWORD` no ambiente):
+
+- CPF: `17055661030`
+- Senha: `1234`
+- E-mail: `admin@admin.com`
+
+Login: `POST http://localhost:8080/api/auth/login` com JSON `{"cpf":"17055661030","password":"1234"}`.
+
+## Testes automatizados
+
+Requer **Docker** em execucao (Testcontainers sobe um Postgres efemero para integracao).
+
+```powershell
+.\mvnw.cmd test
+.\mvnw.cmd verify
+```
+
+- `test`: testes unitarios (controllers/services com mocks)
+- `verify`: inclui testes de integracao (`*IT`) com Flyway, CRUD e ausencias contra Postgres real
