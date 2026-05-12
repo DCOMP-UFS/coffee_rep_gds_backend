@@ -5,11 +5,11 @@ import br.ufs.coffee_rep_gds_backend.dtos.request.LoginRequest;
 import br.ufs.coffee_rep_gds_backend.dtos.response.LoginResponse;
 import br.ufs.coffee_rep_gds_backend.entities.Role;
 import br.ufs.coffee_rep_gds_backend.entities.User;
+import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
+import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.repositories.RoleRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.UserRepository;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -17,7 +17,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -74,7 +73,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void register(CreateUserDto dto) throws BadRequestException {
+    public void register(CreateUserDto dto) {
         Optional<Role> roleOptional = roleRepository.findByName(Role.Values.BASIC.name());
 
         if (roleOptional.isEmpty()) {
@@ -84,7 +83,13 @@ public class AuthService {
         Optional<User> userOptional = userRepository.findByCpf(dto.cpf());
 
         if (userOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new EntityAlreadyExistsException("Este CPF já está cadastrado.");
+        }
+
+        Optional<User> emailOptional = userRepository.findByEmail(dto.email());
+
+        if (emailOptional.isPresent()) {
+            throw new EntityAlreadyExistsException("Este e-mail já está cadastrado.");
         }
 
         Date birthDate;
@@ -92,7 +97,7 @@ public class AuthService {
         try {
             birthDate = new SimpleDateFormat("yyyy-MM-dd").parse(dto.birthDate());
         } catch (ParseException e) {
-            throw new BadRequestException("O formato da data de aniversário deve ser [yyyy-MM-dd] ");
+            throw new BadParametersException("O formato da data de aniversário deve ser [yyyy-MM-dd].");
         }
 
         var user = new User();

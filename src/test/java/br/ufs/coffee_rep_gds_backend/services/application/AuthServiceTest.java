@@ -6,7 +6,8 @@ import br.ufs.coffee_rep_gds_backend.entities.Role;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.repositories.RoleRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.UserRepository;
-import org.apache.coyote.BadRequestException;
+import br.ufs.coffee_rep_gds_backend.exceptions.BadParametersException;
+import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,11 +19,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,6 +89,7 @@ class AuthServiceTest {
 
         when(roleRepository.findByName("BASIC")).thenReturn(Optional.of(role));
         when(userRepository.findByCpf(dto.cpf())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(dto.email())).thenReturn(Optional.empty());
         when(passwordEncoder.encode("senha123")).thenReturn("encodedPassword");
 
         authService.register(dto);
@@ -113,7 +113,20 @@ class AuthServiceTest {
         when(roleRepository.findByName("BASIC")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByCpf(dto.cpf())).thenReturn(Optional.of(new User()));
 
-        assertThrows(ResponseStatusException.class, () -> authService.register(dto));
+        assertThrows(EntityAlreadyExistsException.class, () -> authService.register(dto));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailAlreadyExists() {
+        var dto = new CreateUserDto("Nome", "999999999", "senha123", "email@teste.com", "31833783026", "1990-01-01");
+
+        when(roleRepository.findByName("BASIC")).thenReturn(Optional.of(new Role()));
+        when(userRepository.findByCpf(dto.cpf())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(new User()));
+
+        var exception = assertThrows(EntityAlreadyExistsException.class, () -> authService.register(dto));
+
+        assertEquals("Este e-mail já está cadastrado.", exception.getMessage());
     }
 
     @Test
@@ -123,7 +136,7 @@ class AuthServiceTest {
         when(roleRepository.findByName("BASIC")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByCpf(dto.cpf())).thenReturn(Optional.empty());
 
-        assertThrows(BadRequestException.class, () -> authService.register(dto));
+        assertThrows(BadParametersException.class, () -> authService.register(dto));
     }
 
 }
