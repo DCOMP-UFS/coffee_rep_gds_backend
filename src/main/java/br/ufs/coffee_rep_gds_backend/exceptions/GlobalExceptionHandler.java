@@ -11,10 +11,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final String GENERIC_ERROR_MESSAGE =
+            "Não foi possível concluir a operação. Verifique os dados informados.";
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> entityNotFoundException(EntityNotFoundException exception, HttpServletRequest request) {
@@ -65,11 +69,34 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> noHandlerFoundExceptionHandler(DataIntegrityViolationException exception, HttpServletRequest request) {
-        ErrorResponse error = new ErrorResponse(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(), exception.getMessage(), request.getRequestURI());
+    public ResponseEntity<ErrorResponse> dataIntegrityViolationException(DataIntegrityViolationException exception, HttpServletRequest request) {
+        String message = GENERIC_ERROR_MESSAGE;
+        String combinedMessage = collectExceptionMessages(exception);
+
+        if (combinedMessage.contains("unique_email") || combinedMessage.contains("(email)=")) {
+            message = "Este e-mail já está cadastrado.";
+        } else if (combinedMessage.contains("unique_cpf") || combinedMessage.contains("(cpf)=")) {
+            message = "Este CPF já está cadastrado.";
+        } else if (combinedMessage.contains("value too long") && combinedMessage.contains("cpf")) {
+            message = "Informe um CPF válido (11 dígitos).";
+        }
+
+        ErrorResponse error = new ErrorResponse(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(), message, request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(error);
+    }
+
+    private static String collectExceptionMessages(Throwable throwable) {
+        StringBuilder builder = new StringBuilder();
+
+        for (Throwable current = throwable; current != null; current = current.getCause()) {
+            if (current.getMessage() != null) {
+                builder.append(current.getMessage()).append(' ');
+            }
+        }
+
+        return builder.toString().toLowerCase();
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -91,9 +118,28 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> responseStatusException(ResponseStatusException exception, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+        String message = exception.getReason();
+        if (message == null || message.isBlank() || message.equals(status.value() + " " + status.name())) {
+            message = status.getReasonPhrase();
+        }
+
+        ErrorResponse error = new ErrorResponse(status.value(), status.getReasonPhrase(), message, request.getRequestURI());
+        return ResponseEntity
+                .status(status)
+                .body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> exceptionHandler(Exception exception, HttpServletRequest request) {
-        ErrorResponse error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), exception.getMessage(), request.getRequestURI());
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                GENERIC_ERROR_MESSAGE,
+                request.getRequestURI()
+        );
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(error);
