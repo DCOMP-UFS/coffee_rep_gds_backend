@@ -25,27 +25,39 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             "(:ocupationStatus = true AND " + EFFECTIVE_OCCUPIED + ") OR " +
             "(:ocupationStatus = false AND NOT (" + EFFECTIVE_OCCUPIED + ")))";
 
-    String query = "SELECT DISTINCT r.id, r.name, ts.name AS section, r.section_id AS sectionId, " + OCUPATION_CASE + " AS ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
-            "FROM tb_rooms r " +
+    String ROOM_OCCUPATION_FROM = "FROM tb_rooms r " +
             "LEFT JOIN tb_reservations tr ON r.id = tr.room_id " +
             "AND NOW() >= tr.start_date AND NOW() <= tr.end_date AND tr.status = 1 " +
-            "JOIN tb_sections ts ON r.section_id = ts.id " +
-            "WHERE r.status = :status " +
+            "JOIN tb_sections ts ON r.section_id = ts.id ";
+
+    String ROOM_OCCUPATION_FILTERS = "WHERE r.status = :status " +
             "AND (r.name LIKE CONCAT('%', :name, '%') OR :name IS NULL) " +
             "AND (ts.name LIKE CONCAT('%', :section, '%') OR :section IS NULL) " +
-            "AND " + FILTER_OCUPATION + " " +
+            "AND " + FILTER_OCUPATION + " ";
+
+    String query = "SELECT DISTINCT r.id, r.name, ts.name AS section, r.section_id AS sectionId, " + OCUPATION_CASE + " AS ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
+            ROOM_OCCUPATION_FROM +
+            ROOM_OCCUPATION_FILTERS +
             "ORDER BY max_date DESC";
 
+    String countQuery = "SELECT COUNT(DISTINCT r.id) " +
+            ROOM_OCCUPATION_FROM +
+            ROOM_OCCUPATION_FILTERS;
+
     String querySection = "SELECT DISTINCT r.id, r.name, ts.name AS section, r.section_id AS sectionId, " + OCUPATION_CASE + " AS ocupationStatus, GREATEST(r.created_at, COALESCE(r.updated_at, r.created_at)) AS max_date " +
-            "FROM tb_rooms r " +
-            "LEFT JOIN tb_reservations tr ON r.id = tr.room_id " +
-            "AND NOW() >= tr.start_date AND NOW() <= tr.end_date AND tr.status = 1 " +
-            "JOIN tb_sections ts ON r.section_id = ts.id " +
+            ROOM_OCCUPATION_FROM +
             "WHERE r.status = :status " +
             "AND ts.id = :sectionId " +
             "AND (r.name LIKE CONCAT('%', :name, '%') OR :name IS NULL) " +
             "AND " + FILTER_OCUPATION + " " +
             "ORDER BY max_date DESC";
+
+    String countQuerySection = "SELECT COUNT(DISTINCT r.id) " +
+            ROOM_OCCUPATION_FROM +
+            "WHERE r.status = :status " +
+            "AND ts.id = :sectionId " +
+            "AND (r.name LIKE CONCAT('%', :name, '%') OR :name IS NULL) " +
+            "AND " + FILTER_OCUPATION;
 
     @Query(nativeQuery = true, value = "SELECT r.id AS id, r.name AS name, ts.name AS section, ts.id AS sectionId, " + OCUPATION_CASE + " AS ocupationStatus " +
             "FROM tb_rooms r " +
@@ -57,13 +69,13 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     Optional<Room> findByIdAndStatus(Long id, Integer status);
 
-    @Query(nativeQuery = true, value = querySection)
+    @Query(nativeQuery = true, value = querySection, countQuery = countQuerySection)
     Page<RoomProjection> findBySectionId(Long sectionId, Integer status, String name, Boolean ocupationStatus, Pageable pageable);
 
     @Query(nativeQuery = true, value = querySection)
     List<RoomProjection> findBySectionIdUnpaged(Long sectionId, Integer status, String name, Boolean ocupationStatus);
 
-    @Query(nativeQuery = true, value = query)
+    @Query(nativeQuery = true, value = query, countQuery = countQuery)
     Page<RoomProjection> findRoomWithOccupation(Integer status, String name, String section, Boolean ocupationStatus, Pageable pageable);
 
     Optional<Room> getRoomByNameIgnoreCaseAndSection(String name, Section section);

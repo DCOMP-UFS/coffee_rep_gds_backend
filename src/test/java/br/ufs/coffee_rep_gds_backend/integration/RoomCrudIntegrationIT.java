@@ -59,4 +59,58 @@ class RoomCrudIntegrationIT extends AbstractPostgresIntegrationTest {
                         .header("Authorization", bearer()))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void listManyRoomsWithPagination() throws Exception {
+        long sectionId = createSection("Setor Volume");
+        for (int i = 1; i <= 50; i++) {
+            createRoom("Sala Volume " + String.format("%02d", i), sectionId);
+        }
+
+        mockMvc.perform(get("/api/room")
+                        .header("Authorization", bearer())
+                        .param("size", "5")
+                        .param("page", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(5))
+                .andExpect(jsonPath("$.page.totalElements").value(org.hamcrest.Matchers.greaterThanOrEqualTo(50)));
+    }
+
+    @Test
+    void listRoomsWithPagination() throws Exception {
+        long sectionId = createSection("Setor Paginação");
+        createRoom("Sala Paginação", sectionId);
+
+        mockMvc.perform(get("/api/room")
+                        .header("Authorization", bearer())
+                        .param("size", "5")
+                        .param("page", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].nome").exists());
+    }
+
+    private long createSection(String name) throws Exception {
+        String sectionResponse = mockMvc.perform(post("/api/section")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {"nome":"%s","observacao":""}
+                                """, name)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return objectMapper.readTree(sectionResponse).get("id").asLong();
+    }
+
+    private void createRoom(String name, long sectionId) throws Exception {
+        mockMvc.perform(post("/api/room")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {"nome":"%s","setorId":%d}
+                                """, name, sectionId)))
+                .andExpect(status().isCreated());
+    }
 }
