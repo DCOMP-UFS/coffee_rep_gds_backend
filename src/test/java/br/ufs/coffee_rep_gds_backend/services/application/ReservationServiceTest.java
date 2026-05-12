@@ -107,6 +107,48 @@ class ReservationServiceTest
     }
 
     @Test
+    void shouldReturnReservationWhenUpdatedByIsNull() {
+        LocalDateTime start = LocalDateTime.of(2025, 7, 1, 10, 0);
+        LocalDateTime end = LocalDateTime.of(2025, 7, 31, 18, 0);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setName("Sala 1");
+
+        var section = new br.ufs.coffee_rep_gds_backend.entities.Section();
+        section.setId(1L);
+        section.setName("Seção A");
+        room.setSection(section);
+
+        Requester requester = new Requester();
+        requester.setId(2L);
+        requester.setName("Fulano");
+
+        Reservation reservation = new Reservation();
+        reservation.setId(100L);
+        reservation.setStartDate(start);
+        reservation.setEndDate(end);
+        reservation.setRoom(room);
+        reservation.setRequester(requester);
+
+        when(reservationRepository.findAllByStartEndDate(
+                eq(ReservationStatus.APPROVED.label),
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(new PageImpl<>(List.of(reservation)));
+
+        when(requesterAbsenceRepository.existsForRequesterOnDate(any(), any())).thenReturn(false);
+
+        Page<ReservationResponseDto> result = reservationService.findAll(
+                start, end, null, null, null, null, null, null, pageable
+        );
+
+        assertEquals(1, result.getTotalElements());
+        assertNull(result.getContent().get(0).criador());
+    }
+
+    @Test
     void shouldThrowExceptionWhenStartDateIsAfterEndDate() {
         LocalDateTime start = LocalDateTime.of(2025, 8, 1, 10, 0);
         LocalDateTime end = LocalDateTime.of(2025, 7, 1, 10, 0);

@@ -62,20 +62,7 @@ public class ReservationService {
         Specification<Reservation> spec = ReservationSpecification.filter(requesterName, roomName, roomId, requesterId, sectionName, sectionId, start, end);
         Page<Reservation> sourcePage = reservationRepository.findAllByStartEndDate(ReservationStatus.APPROVED.label, spec, pageable);
 
-        List<ReservationResponseDto> list = sourcePage.stream().map(reservation -> new ReservationResponseDto(
-                reservation.getId(),
-                reservation.getStartDate(),
-                reservation.getEndDate(),
-                reservation.getRoom().getName(),
-                reservation.getRequester().getName(),
-                reservation.getRoom().getSection().getName(),
-                reservation.getUpdatedBy().getName(),
-                reservation.getRoom().getId(),
-                reservation.getRequester().getId(),
-                reservation.getRoom().getSection().getId(),
-                reservation.getRecurrenceId(),
-                profissionalAusente(reservation)
-                )).toList();
+        List<ReservationResponseDto> list = sourcePage.stream().map(this::toReservationResponseDto).toList();
 
         return new PageImpl<>(list, pageable, sourcePage.getTotalElements());
     }
@@ -128,20 +115,7 @@ public class ReservationService {
         Specification<Reservation> spec = ReservationSpecification.filter(null, null, null, null, sectionName, sectionId, startOfMonth, endOfMonth);
         List<Reservation> allReservationsInCurrentMonth = reservationRepository.findAllReservationsInCurrentMonth(spec);
 
-        return allReservationsInCurrentMonth.stream().map(reservation -> new ReservationResponseDto(
-                reservation.getId(),
-                reservation.getStartDate(),
-                reservation.getEndDate(),
-                reservation.getRoom().getName(),
-                reservation.getRequester().getName(),
-                reservation.getRoom().getSection().getName(),
-                reservation.getUpdatedBy().getName(),
-                reservation.getRoom().getId(),
-                reservation.getRequester().getId(),
-                reservation.getRoom().getSection().getId(),
-                reservation.getRecurrenceId(),
-                profissionalAusente(reservation)
-                )).toList();
+        return allReservationsInCurrentMonth.stream().map(this::toReservationResponseDto).toList();
     }
 
     @Transactional
@@ -219,6 +193,24 @@ public class ReservationService {
         return requesterAbsenceRepository.existsForRequesterOnDate(
                 reservation.getRequester().getId(),
                 reservation.getStartDate().toLocalDate()
+        );
+    }
+
+    private ReservationResponseDto toReservationResponseDto(Reservation reservation) {
+        User updatedBy = reservation.getUpdatedBy();
+        return new ReservationResponseDto(
+                reservation.getId(),
+                reservation.getStartDate(),
+                reservation.getEndDate(),
+                reservation.getRoom().getName(),
+                reservation.getRequester().getName(),
+                reservation.getRoom().getSection().getName(),
+                updatedBy == null ? null : updatedBy.getName(),
+                reservation.getRoom().getId(),
+                reservation.getRequester().getId(),
+                reservation.getRoom().getSection().getId(),
+                reservation.getRecurrenceId(),
+                profissionalAusente(reservation)
         );
     }
 
