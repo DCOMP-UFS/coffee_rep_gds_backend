@@ -18,6 +18,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Base dos testes de integração com PostgreSQL via Testcontainers.
+ * O container é compartilhado entre classes; use CPFs distintos ({@code IntegrationTestCpfs}).
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("integrationtest")

@@ -1,5 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.integration;
 
+import br.ufs.coffee_rep_gds_backend.integration.support.IntegrationTestCpfs;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -24,7 +25,7 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
     void reservationLifecycleAndProfessionalAbsenceFlag() throws Exception {
         long sectionId = createSection("Setor Reserva");
         long roomId = createRoom("Sala Reserva", sectionId);
-        long requesterId = createRequester("Dr. Reserva", "39053344705");
+        long requesterId = createRequester("Dr. Reserva", IntegrationTestCpfs.RESERVATION_FLOW);
 
         LocalDateTime start = LocalDateTime.now(SERGIPE).minusHours(1);
         LocalDateTime end = LocalDateTime.now(SERGIPE).plusHours(2);
@@ -62,7 +63,7 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
     void activeReservationWithAbsenceDoesNotMarkRoomOccupied() throws Exception {
         long sectionId = createSection("Setor Ocupação");
         long roomId = createRoom("Sala Livre", sectionId);
-        long requesterId = createRequester("Dr. Ausente", "11144477735");
+        long requesterId = createRequester("Dr. Ausente", IntegrationTestCpfs.ABSENCE_BLOCKS_RESERVATION);
 
         LocalDateTime start = LocalDateTime.now(SERGIPE).minusHours(1);
         LocalDateTime end = LocalDateTime.now(SERGIPE).plusHours(2);
@@ -87,7 +88,7 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
 
     @Test
     void requesterAbsenceCrudAndValidation() throws Exception {
-        long requesterId = createRequester("Dr. Férias", "52998224725");
+        long requesterId = createRequester("Dr. Férias", IntegrationTestCpfs.ABSENCE_CRUD);
         LocalDate start = LocalDate.now(SERGIPE).plusDays(5);
         LocalDate end = LocalDate.now(SERGIPE).plusDays(10);
 
