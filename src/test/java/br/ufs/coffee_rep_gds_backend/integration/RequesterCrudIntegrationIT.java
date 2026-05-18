@@ -1,5 +1,6 @@
 package br.ufs.coffee_rep_gds_backend.integration;
 
+import br.ufs.coffee_rep_gds_backend.integration.support.IntegrationTestCpfs;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -14,9 +15,10 @@ class RequesterCrudIntegrationIT extends AbstractPostgresIntegrationTest {
 
     @Test
     void requesterCrudLifecycle() throws Exception {
+        String cpf = IntegrationTestCpfs.REQUESTER_CRUD;
         String createBody = """
-                {"nome":"Dr. Integração","cpf":"39053344705","telefone":"79999998888","especialidade":"Clínica"}
-                """;
+                {"nome":"Dr. Integração","cpf":"%s","telefone":"79999998888","especialidade":"Clínica"}
+                """.formatted(cpf);
 
         String createResponse = mockMvc.perform(post("/api/requester")
                         .header("Authorization", bearer())
@@ -39,8 +41,8 @@ class RequesterCrudIntegrationIT extends AbstractPostgresIntegrationTest {
                         .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nome":"Dr. Atualizado","cpf":"39053344705","telefone":"79999997777","especialidade":"Pediatria"}
-                                """))
+                                {"nome":"Dr. Atualizado","cpf":"%s","telefone":"79999997777","especialidade":"Pediatria"}
+                                """.formatted(cpf)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Dr. Atualizado"));
 
