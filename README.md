@@ -35,9 +35,12 @@ Banco exposto em `localhost:5433` com:
 
 Se os arquivos `src/main/resources/app.key` e `src/main/resources/app.pub` nao existirem, gere com:
 
-```bash
-docker run --rm -v "c:/GitHubCloud/coffee_rep_gds/coffee_rep_gds_backend:/work" -w /work alpine/openssl genpkey -algorithm RSA -out src/main/resources/app.key -pkeyopt rsa_keygen_bits:2048
-docker run --rm -v "c:/GitHubCloud/coffee_rep_gds/coffee_rep_gds_backend:/work" -w /work alpine/openssl rsa -pubout -in src/main/resources/app.key -out src/main/resources/app.pub
+No PowerShell, execute na pasta `coffee_rep_gds_backend` (o volume usa o diretorio atual automaticamente):
+
+```powershell
+$backend = (Get-Location).Path -replace '\\','/'
+docker run --rm -v "${backend}:/work" -w /work alpine/openssl genpkey -algorithm RSA -out src/main/resources/app.key -pkeyopt rsa_keygen_bits:2048
+docker run --rm -v "${backend}:/work" -w /work alpine/openssl rsa -pubout -in src/main/resources/app.key -out src/main/resources/app.pub
 ```
 
 ## 3) Rodar o backend manualmente
