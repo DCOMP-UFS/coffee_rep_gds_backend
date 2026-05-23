@@ -282,6 +282,69 @@ class ReservationServiceTest
     }
 
     @Test
+    void shouldCheckOverlapForEachRecurrentOccurrence() {
+        try (MockedStatic<CurrentUserUtils> mocked = mockStatic(CurrentUserUtils.class)) {
+            mocked.when(CurrentUserUtils::getCurrentUserID).thenReturn(1L);
+
+            var dto = new CreateReservationDto(
+                    1L,
+                    2L,
+                    LocalDateTime.of(2030, 5, 27, 14, 0),
+                    LocalDateTime.of(2030, 5, 30, 18, 0),
+                    "Observação",
+                    true,
+                    Set.of(1, 2, 3, 4)
+            );
+
+            Room room = new Room();
+            room.setId(1L);
+            room.setName("Sala A");
+            Requester requester = new Requester();
+            requester.setId(2L);
+            requester.setName("Fulano");
+            User user = new User();
+            user.setUserId(3L);
+
+            when(roomService.getRoomById(1L)).thenReturn(room);
+            when(requesterService.getRequesterById(2L)).thenReturn(requester);
+            when(userService.findByID(any())).thenReturn(user);
+            when(reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(any(), any())).thenReturn(List.of());
+            when(reservationRepository.findLastRecurrenceId()).thenReturn(Optional.of(1L));
+            when(reservationRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+            reservationService.createReservation(dto);
+
+            verify(reservationRepository, times(4)).findAllByStartDateAndEndDateAndRoom_Id(any(), any());
+        }
+    }
+
+    @Test
+    void shouldThrowWhenRecurrentReservationOverlapsExistingSlot() {
+        try (MockedStatic<CurrentUserUtils> mocked = mockStatic(CurrentUserUtils.class)) {
+            mocked.when(CurrentUserUtils::getCurrentUserID).thenReturn(1L);
+
+            var dto = new CreateReservationDto(
+                    1L,
+                    2L,
+                    LocalDateTime.of(2030, 5, 27, 14, 0),
+                    LocalDateTime.of(2030, 5, 27, 18, 0),
+                    "Observação",
+                    true,
+                    Set.of(1)
+            );
+
+            when(roomService.getRoomById(1L)).thenReturn(new Room());
+            when(requesterService.getRequesterById(2L)).thenReturn(new Requester());
+            when(userService.findByID(any())).thenReturn(new User());
+            when(reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(any(), any()))
+                    .thenReturn(List.of(new Reservation()));
+
+            assertThrows(EntityAlreadyExistsException.class, () -> reservationService.createReservation(dto));
+            verify(reservationRepository, never()).saveAll(any());
+        }
+    }
+
+    @Test
     void shouldThrowExceptionWhenReservationAlreadyExists() {
 
         try (MockedStatic<CurrentUserUtils> mocked = mockStatic(CurrentUserUtils.class)) {
