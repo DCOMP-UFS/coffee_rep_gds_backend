@@ -272,10 +272,6 @@ class ReservationServiceTest
             when(requesterService.getRequesterById(2L)).thenReturn(requester);
             when(userService.findByID(any())).thenReturn(user);
 
-            when(reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(any(), any())).thenReturn(List.of());
-
-            when(reservationRepository.findLastRecurrenceId()).thenReturn(Optional.of(1L));
-
             assertThrows(BadParametersException.class, () -> reservationService.createReservation(dto));
         }
 
