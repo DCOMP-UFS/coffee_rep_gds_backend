@@ -74,13 +74,13 @@ public class ReservationService {
         User user = userService.findByID(CurrentUserUtils.getCurrentUserID());
 
         validateStartAndEndDate(dto.horaInicio(), dto.horaFim());
-        validateReservationAlreadyExists(dto.horaInicio(), dto.horaFim(), dto.salaId());
 
         boolean isRecurrent;
         if (dto.fixo() == null) isRecurrent = false;
         else isRecurrent = dto.fixo();
 
         if (!isRecurrent) {
+            assertNoOverlappingReservation(dto.salaId(), dto.horaInicio(), dto.horaFim());
             Reservation reservation = new Reservation(dto.horaInicio(), dto.horaFim(), dto.observacoes(), null, room, requester, ReservationStatus.APPROVED.label, user);
             Reservation reservationCreated = reservationRepository.save(reservation);
 
@@ -94,7 +94,12 @@ public class ReservationService {
             );
         }
 
-        List<Reservation> recurrentReservations = createRecurrentReservations(dto, room, requester, user);
+        List<OccurrenceSlot> occurrenceSlots = buildRecurrentOccurrenceSlots(dto);
+        for (OccurrenceSlot slot : occurrenceSlots) {
+            assertNoOverlappingReservation(dto.salaId(), slot.start(), slot.end());
+        }
+
+        List<Reservation> recurrentReservations = createRecurrentReservations(dto, room, requester, user, occurrenceSlots);
 
         if (recurrentReservations.isEmpty()) {
             throw new BadParametersException("Nenhuma reserva foi criada!");
@@ -138,39 +143,63 @@ public class ReservationService {
         reservationRepository.updateStatusByRecurrenceId(recurrenceId, ReservationStatus.CANCELLED.label);
     }
 
-    private List<Reservation> createRecurrentReservations(CreateReservationDto dto, Room room, Requester requester, User user) {
-        Optional<Long> optionalLastId = reservationRepository.findLastRecurrenceId();
-
-        Long newRecurrenceId = optionalLastId.map(aLong -> aLong + 1).orElse(1L);
-
+    private List<OccurrenceSlot> buildRecurrentOccurrenceSlots(CreateReservationDto dto) {
         LocalDate startDate = dto.horaInicio().toLocalDate();
         LocalDate endDate = dto.horaFim().toLocalDate();
-
         LocalTime startTime = dto.horaInicio().toLocalTime();
         LocalTime endTime = dto.horaFim().toLocalTime();
 
         List<Integer> weekDays = new ArrayList<>(dto.dias());
         Collections.sort(weekDays);
 
-        List<Reservation> reservations = new ArrayList<>();
+        List<OccurrenceSlot> slots = new ArrayList<>();
 
-        for (Integer weekDay: weekDays) {
+        for (Integer weekDay : weekDays) {
             LocalDate firstOccur = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(weekDay)));
 
             while (!firstOccur.isAfter(endDate)) {
-                LocalDateTime startDateTime = LocalDateTime.of(firstOccur, startTime);
-                LocalDateTime endDateTime = LocalDateTime.of(firstOccur, endTime);
-
-                Reservation reservation = new Reservation(startDateTime, endDateTime, dto.observacoes(), newRecurrenceId, room, requester, ReservationStatus.APPROVED.label, user);
-                reservations.add(reservation);
-
+                slots.add(new OccurrenceSlot(
+                        LocalDateTime.of(firstOccur, startTime),
+                        LocalDateTime.of(firstOccur, endTime)
+                ));
                 firstOccur = firstOccur.plusWeeks(1);
             }
         }
 
-        reservations.sort(Comparator.comparing(Reservation::getStartDate));
+        slots.sort(Comparator.comparing(OccurrenceSlot::start));
+        return slots;
+    }
+
+    private List<Reservation> createRecurrentReservations(
+            CreateReservationDto dto,
+            Room room,
+            Requester requester,
+            User user,
+            List<OccurrenceSlot> occurrenceSlots
+    ) {
+        Optional<Long> optionalLastId = reservationRepository.findLastRecurrenceId();
+        Long newRecurrenceId = optionalLastId.map(aLong -> aLong + 1).orElse(1L);
+
+        List<Reservation> reservations = new ArrayList<>();
+
+        for (OccurrenceSlot slot : occurrenceSlots) {
+            Reservation reservation = new Reservation(
+                    slot.start(),
+                    slot.end(),
+                    dto.observacoes(),
+                    newRecurrenceId,
+                    room,
+                    requester,
+                    ReservationStatus.APPROVED.label,
+                    user
+            );
+            reservations.add(reservation);
+        }
 
         return reservations;
+    }
+
+    private record OccurrenceSlot(LocalDateTime start, LocalDateTime end) {
     }
 
     private void validateStartAndEndDate(LocalDateTime start, LocalDateTime end) {
@@ -179,11 +208,16 @@ public class ReservationService {
         }
     }
 
-    private void validateReservationAlreadyExists(LocalDateTime start, LocalDateTime end, Long roomId) {
-        Specification<Reservation> spec = ReservationSpecification.filter(null, null, roomId, null, null, null, start, end);
-        List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(ReservationStatus.APPROVED.label, spec);
+    private void assertNoOverlappingReservation(Long roomId, LocalDateTime start, LocalDateTime end) {
+        Specification<Reservation> spec = ReservationSpecification.overlapsApprovedInRoom(roomId, start, end);
+        List<Reservation> reservations = reservationRepository.findAllByStartDateAndEndDateAndRoom_Id(
+                ReservationStatus.APPROVED.label,
+                spec
+        );
 
-        if (!reservations.isEmpty()) throw new EntityAlreadyExistsException("Já existe uma reserva para esta sala no horário solicitado!");
+        if (!reservations.isEmpty()) {
+            throw new EntityAlreadyExistsException("Já existe uma reserva para esta sala no horário solicitado!");
+        }
     }
 
     private boolean profissionalAusente(Reservation reservation) {
