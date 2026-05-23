@@ -71,4 +71,17 @@ public class ReservationSpecification {
 
         };
     }
+
+    /**
+     * Conflito de horário: mesma sala e intervalos datetime que se intersectam
+     * (existing.start &lt; end AND existing.end &gt; start).
+     * Uso exclusivo na criação de reservas; listagens usam {@link #filter}.
+     */
+    public static Specification<Reservation> overlapsApprovedInRoom(Long roomId, LocalDateTime start, LocalDateTime end) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.and(
+                criteriaBuilder.equal(root.get("room").get("id"), roomId),
+                criteriaBuilder.lessThan(root.get("startDate"), end),
+                criteriaBuilder.greaterThan(root.get("endDate"), start)
+        );
+    }
 }

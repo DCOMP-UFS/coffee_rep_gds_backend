@@ -87,6 +87,38 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
     }
 
     @Test
+    void recurrentReservationsAllowDifferentTimeSlotsOnSameDays() throws Exception {
+        long sectionId = createSection("Setor Recorrência Horário");
+        long roomId = createRoom("Sala Recorrência Horário", sectionId);
+        long requesterId = createRequester("Dr. Horário", "74682489070");
+
+        createRecurrentReservation(
+                roomId,
+                requesterId,
+                "2030-05-27T08:00:00",
+                "2030-05-30T12:00:00",
+                "1,2,3,4"
+        );
+
+        createRecurrentReservation(
+                roomId,
+                requesterId,
+                "2030-05-27T14:00:00",
+                "2030-05-30T18:00:00",
+                "1,2,3,4"
+        );
+
+        mockMvc.perform(post("/api/reservation")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {"salaId":%d,"solicitanteId":%d,"horaInicio":"2030-05-27T10:00:00","horaFim":"2030-05-27T11:00:00","observacoes":"","fixo":false}
+                                """, roomId, requesterId)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Já existe uma reserva para esta sala no horário solicitado!"));
+    }
+
+    @Test
     void requesterAbsenceCrudAndValidation() throws Exception {
         long requesterId = createRequester("Dr. Férias", IntegrationTestCpfs.ABSENCE_CRUD);
         LocalDate start = LocalDate.now(SERGIPE).plusDays(5);
@@ -175,6 +207,22 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
                 .getResponse()
                 .getContentAsString();
         return objectMapper.readTree(response).get("id").asLong();
+    }
+
+    private void createRecurrentReservation(
+            long roomId,
+            long requesterId,
+            String horaInicio,
+            String horaFim,
+            String diasCsv
+    ) throws Exception {
+        mockMvc.perform(post("/api/reservation")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {"salaId":%d,"solicitanteId":%d,"horaInicio":"%s","horaFim":"%s","observacoes":"","fixo":true,"dias":[%s]}
+                                """, roomId, requesterId, horaInicio, horaFim, diasCsv)))
+                .andExpect(status().isCreated());
     }
 
     private long createReservation(long roomId, long requesterId, LocalDateTime start, LocalDateTime end)
