@@ -1,6 +1,5 @@
 package br.ufs.coffee_rep_gds_backend.integration;
 
-import br.ufs.coffee_rep_gds_backend.integration.support.IntegrationTestCpfs;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -25,7 +24,7 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
     void reservationLifecycleAndProfessionalAbsenceFlag() throws Exception {
         long sectionId = createSection("Setor Reserva");
         long roomId = createRoom("Sala Reserva", sectionId);
-        long requesterId = createRequester("Dr. Reserva", IntegrationTestCpfs.RESERVATION_FLOW);
+        long requesterId = createRequester("Dr. Reserva");
 
         LocalDateTime start = LocalDateTime.now(SERGIPE).minusHours(1);
         LocalDateTime end = LocalDateTime.now(SERGIPE).plusHours(2);
@@ -63,7 +62,7 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
     void activeReservationWithAbsenceDoesNotMarkRoomOccupied() throws Exception {
         long sectionId = createSection("Setor Ocupação");
         long roomId = createRoom("Sala Livre", sectionId);
-        long requesterId = createRequester("Dr. Ausente", IntegrationTestCpfs.ABSENCE_BLOCKS_RESERVATION);
+        long requesterId = createRequester("Dr. Ausente");
 
         LocalDateTime start = LocalDateTime.now(SERGIPE).minusHours(1);
         LocalDateTime end = LocalDateTime.now(SERGIPE).plusHours(2);
@@ -90,7 +89,7 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
     void recurrentReservationsAllowDifferentTimeSlotsOnSameDays() throws Exception {
         long sectionId = createSection("Setor Recorrência Horário");
         long roomId = createRoom("Sala Recorrência Horário", sectionId);
-        long requesterId = createRequester("Dr. Horário", "74682489070");
+        long requesterId = createRequester("Dr. Horário");
 
         createRecurrentReservation(
                 roomId,
@@ -120,7 +119,7 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
 
     @Test
     void requesterAbsenceCrudAndValidation() throws Exception {
-        long requesterId = createRequester("Dr. Férias", IntegrationTestCpfs.ABSENCE_CRUD);
+        long requesterId = createRequester("Dr. Férias");
         LocalDate start = LocalDate.now(SERGIPE).plusDays(5);
         LocalDate end = LocalDate.now(SERGIPE).plusDays(10);
 
@@ -195,13 +194,13 @@ class ReservationAndAbsenceIntegrationIT extends AbstractPostgresIntegrationTest
         return objectMapper.readTree(response).get("id").asLong();
     }
 
-    private long createRequester(String name, String cpf) throws Exception {
+    private long createRequester(String name) throws Exception {
         String response = mockMvc.perform(post("/api/requester")
                         .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
-                                {"nome":"%s","cpf":"%s","telefone":"79999990000","especialidade":"Clínica"}
-                                """, name, cpf)))
+                                {"nome":"%s","telefone":"79999990000","especialidade":"Clínica"}
+                                """, name)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
