@@ -8,7 +8,6 @@ import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
-import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RequesterRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
@@ -35,28 +34,26 @@ public class RequesterService {
         this.userDomainService = userDomainService;
     }
 
-    public Page<RequesterResponseDto> getAllRequesters(String name, String cpf, Pageable pageable) {
-        Specification<Requester> specification = RequesterSpecification.all(name, cpf);
+    public Page<RequesterResponseDto> getAllRequesters(String name, Pageable pageable) {
+        Specification<Requester> specification = RequesterSpecification.all(name);
         Page<Requester> requesterPage = requesterRepository.findAllByStatus(Status.ACTIVE.value, specification, pageable);
 
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
                 req.getId(),
                 req.getName(),
-                req.getCpf(),
                 req.getContactNumber(),
                 req.getSpecialty()
         )).toList();
         return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
     }
 
-    public List<RequesterResponseDto> getAllRequesters(String name, String cpf) {
-        Specification<Requester> specification = RequesterSpecification.all(name, cpf);
+    public List<RequesterResponseDto> getAllRequesters(String name) {
+        Specification<Requester> specification = RequesterSpecification.all(name);
         List<Requester> requesters = requesterRepository.findAllByStatusUnpaged(Status.ACTIVE.value, specification);
 
         return requesters.stream().map(req -> new RequesterResponseDto(
                 req.getId(),
                 req.getName(),
-                req.getCpf(),
                 req.getContactNumber(),
                 req.getSpecialty())).toList();
     }
@@ -70,53 +67,37 @@ public class RequesterService {
         return new RequesterResponseDetailDto(
                 requester.getId(),
                 requester.getName(),
-                requester.getCpf(),
                 requester.getContactNumber(),
                 requester.getSpecialty()
         );
     }
 
-    public Page<RequesterResponseDto> getRequestersByRequesterTypeId(Long requesterTypeId, String name, String cpf, Pageable pageable) {
-        Specification<Requester> specification = RequesterSpecification.all(name, cpf);
+    public Page<RequesterResponseDto> getRequestersByRequesterTypeId(Long requesterTypeId, String name, Pageable pageable) {
+        Specification<Requester> specification = RequesterSpecification.all(name);
         Page<Requester> requesterPage = requesterRepository.findAllByRequesterTypeId(requesterTypeId, specification, pageable);
 
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
                 req.getId(),
                 req.getName(),
-                req.getCpf(),
                 req.getContactNumber(),
                 req.getSpecialty())).toList();
         return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
     }
 
     public CreateRequesterResponseDTO create(CreateRequesterDTO dto) {
-        Optional<Requester> optional = requesterRepository.findByCpf(dto.cpf());
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
-        if (optional.isPresent()) {
-            Requester requester = optional.get();
-            if (requester.getStatus().equals(Status.INACTIVE.value)) {
-                requester.setStatus(Status.ACTIVE.value);
-                requester.setUpdatedAt(LocalDateTime.now());
-                requester.setUpdatedBy(user);
-                Requester saved = requesterRepository.save(requester);
-                return new CreateRequesterResponseDTO(
-                        saved.getId(),
-                        saved.getName(),
-                        saved.getCpf(),
-                        saved.getContactNumber(),
-                        saved.getSpecialty()
-                );
-            }
-            throw new EntityAlreadyExistsException("CPF já cadastrado!");
-        }
-
-        Requester requester = new Requester(dto.nome(), dto.cpf(), dto.telefone(), Status.ACTIVE.value, user, dto.especialidade());
+        Requester requester = new Requester(
+                dto.nome(),
+                normalizePhone(dto.telefone()),
+                Status.ACTIVE.value,
+                user,
+                dto.especialidade()
+        );
         Requester saved = requesterRepository.save(requester);
         return new CreateRequesterResponseDTO(
                 saved.getId(),
                 saved.getName(),
-                saved.getCpf(),
                 saved.getContactNumber(),
                 saved.getSpecialty()
         );
@@ -124,21 +105,15 @@ public class RequesterService {
 
     public CreateRequesterResponseDTO update(Long id, UpdateRequesterDTO dto) {
         Optional<Requester> optional = requesterRepository.findById(id);
-        Optional<Requester> byCpf = requesterRepository.findByCpf(dto.cpf());
 
         if (optional.isEmpty()) throw new EntityNotFoundException("Solicitante não encontrado!");
-        if (byCpf.isPresent()) {
-            Requester requester = byCpf.get();
-            if (requester.getStatus().equals(Status.ACTIVE.value) && !requester.getId().equals(id)) throw new EntityAlreadyExistsException("CPF já cadastrado!");
-        }
 
         User user = userDomainService.findByID(CurrentUserUtils.getCurrentUserID());
 
         Requester requester = optional.get();
 
         if (dto.nome() != null && !dto.nome().trim().isEmpty()) requester.setName(dto.nome());
-        requester.setContactNumber(dto.telefone());
-        if (dto.cpf() != null && !dto.cpf().trim().isEmpty()) requester.setCpf(dto.cpf());
+        requester.setContactNumber(normalizePhone(dto.telefone()));
         if (dto.especialidade() != null && !dto.especialidade().trim().isEmpty()) requester.setSpecialty(dto.especialidade());
         requester.setUpdatedAt(LocalDateTime.now());
         requester.setUpdatedBy(user);
@@ -147,7 +122,6 @@ public class RequesterService {
         return new CreateRequesterResponseDTO(
                 saved.getId(),
                 saved.getName(),
-                saved.getCpf(),
                 saved.getContactNumber(),
                 saved.getSpecialty()
         );
@@ -166,5 +140,12 @@ public class RequesterService {
         requester.setUpdatedAt(LocalDateTime.now());
 
         requesterRepository.save(requester);
+    }
+
+    private static String normalizePhone(String telefone) {
+        if (telefone == null || telefone.trim().isEmpty()) {
+            return null;
+        }
+        return telefone;
     }
 }

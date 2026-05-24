@@ -11,16 +11,12 @@ import java.util.List;
 public class RequesterSpecification {
 
     @SuppressWarnings("DuplicatedCode")
-    public static Specification<Requester> all(String name, String cpf) {
+    public static Specification<Requester> all(String name) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (name != null && !name.isEmpty()) {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")),"%" + name.toLowerCase() + "%"));
-            }
-
-            if (cpf != null && !cpf.isEmpty()) {
-                predicates.add(criteriaBuilder.equal(root.get("cpf"), cpf));
             }
 
             Expression<Object> maxDate = criteriaBuilder.selectCase()
