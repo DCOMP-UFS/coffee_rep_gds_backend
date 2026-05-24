@@ -7,7 +7,6 @@ import br.ufs.coffee_rep_gds_backend.entities.Section;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.ReservationStatus;
 import br.ufs.coffee_rep_gds_backend.integration.AbstractPostgresIntegrationTest;
-import br.ufs.coffee_rep_gds_backend.integration.support.IntegrationTestCpfs;
 import br.ufs.coffee_rep_gds_backend.repositories.RequesterRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.ReservationRepository;
 import br.ufs.coffee_rep_gds_backend.repositories.RoomRepository;
@@ -46,7 +45,7 @@ class ReservationSpecificationTest extends AbstractPostgresIntegrationTest {
         Section section = sectionRepository.save(new Section("Setor Overlap Spec", "", 1, admin));
         Room room = roomRepository.save(new Room("Sala Overlap Spec", 1, admin, section));
         Requester requester = requesterRepository.save(
-                new Requester("Dr. Manhã", IntegrationTestCpfs.REQUESTER_CRUD, "79999001122", 1, admin, "Cardiologia")
+                new Requester("Dr. Manhã", "79999001122", 1, admin, "Cardiologia")
         );
 
         reservationRepository.save(new Reservation(
@@ -80,7 +79,7 @@ class ReservationSpecificationTest extends AbstractPostgresIntegrationTest {
         Section section = sectionRepository.save(new Section("Setor Overlap Spec 2", "", 1, admin));
         Room room = roomRepository.save(new Room("Sala Overlap Spec 2", 1, admin, section));
         Requester requester = requesterRepository.save(
-                new Requester("Dr. Tarde", IntegrationTestCpfs.RESERVATION_FLOW, "79999003344", 1, admin, "Cardiologia")
+                new Requester("Dr. Tarde", "79999003344", 1, admin, "Cardiologia")
         );
 
         reservationRepository.save(new Reservation(

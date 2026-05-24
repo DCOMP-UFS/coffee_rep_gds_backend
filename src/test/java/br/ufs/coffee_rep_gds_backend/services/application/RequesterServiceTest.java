@@ -8,11 +8,9 @@ import br.ufs.coffee_rep_gds_backend.dtos.response.RequesterResponseDto;
 import br.ufs.coffee_rep_gds_backend.entities.Requester;
 import br.ufs.coffee_rep_gds_backend.entities.User;
 import br.ufs.coffee_rep_gds_backend.enums.Status;
-import br.ufs.coffee_rep_gds_backend.exceptions.EntityAlreadyExistsException;
 import br.ufs.coffee_rep_gds_backend.exceptions.EntityNotFoundException;
 import br.ufs.coffee_rep_gds_backend.repositories.RequesterRepository;
 import br.ufs.coffee_rep_gds_backend.services.domain.UserDomainService;
-import br.ufs.coffee_rep_gds_backend.specifications.RequesterSpecification;
 import br.ufs.coffee_rep_gds_backend.utils.CurrentUserUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -25,15 +23,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +45,7 @@ class RequesterServiceTest {
     @Test
     void shouldReturnPagedRequesters() {
         User user = new User();
-        Requester requester = new Requester("Nome", "12345678909", "999999999", 1, user, "Médico");
+        Requester requester = new Requester("Nome", "999999999", 1, user, "Médico");
         Page<Requester> page = new PageImpl<Requester>(new ArrayList<Requester>(){{add(requester);}});
 
         Pageable pageable = Pageable.unpaged();
@@ -62,7 +56,7 @@ class RequesterServiceTest {
                 Mockito.eq(pageable)
         )).thenReturn(page);
 
-        Page<RequesterResponseDto> response = requesterService.getAllRequesters("Nome", "12345678909", pageable);
+        Page<RequesterResponseDto> response = requesterService.getAllRequesters("Nome", pageable);
 
         Assertions.assertEquals(1, response.getTotalElements());
     }
@@ -70,12 +64,12 @@ class RequesterServiceTest {
     @Test
     void shouldReturnUnpagedRequesters() {
         User user = new User();
-        Requester requester = new Requester("Nome", "12345678909", "999999999", 1, user, "Médico");
+        Requester requester = new Requester("Nome", "999999999", 1, user, "Médico");
         List<Requester> requesters = new ArrayList<>(){{add(requester);}};
 
         Mockito.when(requesterRepository.findAllByStatusUnpaged(Mockito.eq(1), Mockito.any())).thenReturn(requesters);
 
-        List<RequesterResponseDto> response = requesterService.getAllRequesters("Nome", "12345678909");
+        List<RequesterResponseDto> response = requesterService.getAllRequesters("Nome");
 
         Assertions.assertEquals(1, response.size());
     }
@@ -83,7 +77,7 @@ class RequesterServiceTest {
     @Test
     void shouldReturnARequester() {
         User user = new User();
-        Requester requester = new Requester("Nome", "12345678909", "999999999", 1, user, "Médico");
+        Requester requester = new Requester("Nome", "999999999", 1, user, "Médico");
 
         Optional<Requester> optionalRequester = Optional.of(requester);
 
@@ -110,7 +104,7 @@ class RequesterServiceTest {
     @Test
     void shouldReturnRequesterWhenSearchByRequesterTypeId() {
         User user = new User();
-        Requester requester = new Requester("Nome", "12345678909", "999999999", 1, user, "Médico");
+        Requester requester = new Requester("Nome", "999999999", 1, user, "Médico");
         Page<Requester> page = new PageImpl<Requester>(new ArrayList<Requester>(){{add(requester);}});
 
         Pageable pageable = Pageable.unpaged();
@@ -121,7 +115,7 @@ class RequesterServiceTest {
                 Mockito.eq(pageable)
         )).thenReturn(page);
 
-        Page<RequesterResponseDto> response = requesterService.getRequestersByRequesterTypeId(1L, "Nome", "12345678909", pageable);
+        Page<RequesterResponseDto> response = requesterService.getRequestersByRequesterTypeId(1L, "Nome", pageable);
 
         Assertions.assertEquals(1, response.getTotalElements());
     }
@@ -139,90 +133,47 @@ class RequesterServiceTest {
             Requester requester = new Requester();
             requester.setId(1L);
             requester.setName("Requester");
-            requester.setCpf("12345678909");
             requester.setContactNumber("9999999999");
             requester.setSpecialty("Médico");
             requester.setStatus(1);
 
-            CreateRequesterDTO dto = new CreateRequesterDTO("Requester", "12345678909", "9999999999", "Médico");
+            CreateRequesterDTO dto = new CreateRequesterDTO("Requester", "9999999999", "Médico");
 
             Mockito.when(userDomainService.findByID(1L)).thenReturn(user);
-            Mockito.when(requesterRepository.findByCpf("12345678909")).thenReturn(Optional.empty());
             Mockito.when(requesterRepository.save(Mockito.any(Requester.class))).thenReturn(requester);
 
             CreateRequesterResponseDTO createRequesterResponseDTO = requesterService.create(dto);
 
             Assertions.assertEquals(1L, createRequesterResponseDTO.id());
             Assertions.assertEquals("Requester", createRequesterResponseDTO.nome());
-            Assertions.assertEquals("12345678909", createRequesterResponseDTO.cpf());
             Assertions.assertEquals("9999999999", createRequesterResponseDTO.telefone());
             Assertions.assertEquals("Médico", createRequesterResponseDTO.especialidade());
         }
     }
 
     @Test
-    void shouldEnableARequester() {
+    void shouldCreateARequesterWithoutPhone() {
         try (MockedStatic<CurrentUserUtils> mocked = mockStatic(CurrentUserUtils.class)) {
             mocked.when(CurrentUserUtils::getCurrentUserID).thenReturn(1L);
 
             User user = new User();
             user.setUserId(1L);
-            user.setName("User");
-            user.setStatus(1);
 
             Requester requester = new Requester();
             requester.setId(1L);
             requester.setName("Requester");
-            requester.setCpf("12345678909");
-            requester.setContactNumber("9999999999");
+            requester.setContactNumber(null);
             requester.setSpecialty("Médico");
-            requester.setStatus(0);
+            requester.setStatus(1);
 
-            CreateRequesterDTO dto = new CreateRequesterDTO("Requester", "12345678909", "9999999999", "Médico");
+            CreateRequesterDTO dto = new CreateRequesterDTO("Requester", null, "Médico");
 
             Mockito.when(userDomainService.findByID(1L)).thenReturn(user);
-            Mockito.when(requesterRepository.findByCpf("12345678909")).thenReturn(Optional.of(requester));
             Mockito.when(requesterRepository.save(Mockito.any(Requester.class))).thenReturn(requester);
 
             CreateRequesterResponseDTO createRequesterResponseDTO = requesterService.create(dto);
 
-            Assertions.assertEquals(1L, createRequesterResponseDTO.id());
-            Assertions.assertEquals("Requester", createRequesterResponseDTO.nome());
-            Assertions.assertEquals("12345678909", createRequesterResponseDTO.cpf());
-            Assertions.assertEquals("9999999999", createRequesterResponseDTO.telefone());
-            Assertions.assertEquals("Médico", createRequesterResponseDTO.especialidade());
-        }
-    }
-
-    @Test
-    void shouldReturnUserAlreadyExists() {
-        try (MockedStatic<CurrentUserUtils> mocked = mockStatic(CurrentUserUtils.class)) {
-            mocked.when(CurrentUserUtils::getCurrentUserID).thenReturn(1L);
-
-            User user = new User();
-            user.setUserId(1L);
-            user.setName("User");
-            user.setStatus(1);
-
-            Requester requester = new Requester();
-            requester.setId(1L);
-            requester.setName("Requester");
-            requester.setCpf("12345678909");
-            requester.setContactNumber("9999999999");
-            requester.setSpecialty("Médico");
-            requester.setStatus(1);
-
-            CreateRequesterDTO dto = new CreateRequesterDTO("Requester", "12345678909", "9999999999", "Médico");
-
-            Mockito.when(userDomainService.findByID(1L)).thenReturn(user);
-            Mockito.when(requesterRepository.findByCpf("12345678909")).thenReturn(Optional.of(requester));
-
-            EntityAlreadyExistsException exception = Assertions.assertThrows(
-                    EntityAlreadyExistsException.class,
-                    () -> requesterService.create(dto)
-            );
-
-            Assertions.assertEquals("CPF já cadastrado!", exception.getMessage());
+            Assertions.assertNull(createRequesterResponseDTO.telefone());
         }
     }
 
@@ -239,22 +190,19 @@ class RequesterServiceTest {
             Requester requester = new Requester();
             requester.setId(1L);
             requester.setName("Requester");
-            requester.setCpf("12345678909");
             requester.setContactNumber("9999999999");
             requester.setSpecialty("Médico");
             requester.setStatus(1);
 
-            UpdateRequesterDTO dto = new UpdateRequesterDTO("Requester", "12345678909", "9999999999", "Médico");
+            UpdateRequesterDTO dto = new UpdateRequesterDTO("Requester", "9999999999", "Médico");
 
             Mockito.when(requesterRepository.findById(1L)).thenReturn(Optional.of(requester));
-            Mockito.when(requesterRepository.findByCpf("12345678909")).thenReturn(Optional.of(requester));
             Mockito.when(requesterRepository.save(Mockito.any(Requester.class))).thenReturn(requester);
 
             CreateRequesterResponseDTO createRequesterResponseDTO = requesterService.update(1L, dto);
 
             Assertions.assertEquals(1L, createRequesterResponseDTO.id());
             Assertions.assertEquals("Requester", createRequesterResponseDTO.nome());
-            Assertions.assertEquals("12345678909", createRequesterResponseDTO.cpf());
             Assertions.assertEquals("9999999999", createRequesterResponseDTO.telefone());
             Assertions.assertEquals("Médico", createRequesterResponseDTO.especialidade());
         }
@@ -266,7 +214,7 @@ class RequesterServiceTest {
         try (MockedStatic<CurrentUserUtils> mocked = mockStatic(CurrentUserUtils.class)) {
             mocked.when(CurrentUserUtils::getCurrentUserID).thenReturn(1L);
 
-            UpdateRequesterDTO dto = new UpdateRequesterDTO("Requester", "12345678909", "9999999999", "Médico");
+            UpdateRequesterDTO dto = new UpdateRequesterDTO("Requester", "9999999999", "Médico");
 
             Mockito.when(requesterRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -302,7 +250,7 @@ class RequesterServiceTest {
             Assertions.assertEquals(user, requester.getUpdatedBy());
             Assertions.assertNotNull(requester.getUpdatedAt());
 
-            Mockito.verify(requesterRepository).save(requester); // garante que foi salvo
+            Mockito.verify(requesterRepository).save(requester);
         }
     }
 

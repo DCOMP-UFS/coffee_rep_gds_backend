@@ -30,15 +30,14 @@ public class RequesterController {
     @GetMapping
     public ResponseEntity<?> getAllRequesters(
             @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String cpf,
             @RequestParam(required = false) Boolean unpaged,
             Pageable pageable) {
 
         if (unpaged != null && unpaged) {
-            List<RequesterResponseDto> requesters = requesterService.getAllRequesters(nome, cpf);
+            List<RequesterResponseDto> requesters = requesterService.getAllRequesters(nome);
             return ResponseEntity.ok(requesters);
         }
-        Page<RequesterResponseDto> requesters = requesterService.getAllRequesters(nome, cpf, pageable);
+        Page<RequesterResponseDto> requesters = requesterService.getAllRequesters(nome, pageable);
         return ResponseEntity.ok(requesters);
     }
 
@@ -52,9 +51,8 @@ public class RequesterController {
     public Page<RequesterResponseDto> getRequestersByRequesterTypeId(
             @PathVariable Long requesterTypeId,
             @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String cpf,
             Pageable pageable) {
-        return requesterService.getRequestersByRequesterTypeId(requesterTypeId, nome, cpf, pageable);
+        return requesterService.getRequestersByRequesterTypeId(requesterTypeId, nome, pageable);
     }
 
     @PostMapping

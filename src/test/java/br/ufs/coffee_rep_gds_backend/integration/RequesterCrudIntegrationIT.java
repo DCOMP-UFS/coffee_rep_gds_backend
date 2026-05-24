@@ -1,6 +1,5 @@
 package br.ufs.coffee_rep_gds_backend.integration;
 
-import br.ufs.coffee_rep_gds_backend.integration.support.IntegrationTestCpfs;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -15,10 +14,9 @@ class RequesterCrudIntegrationIT extends AbstractPostgresIntegrationTest {
 
     @Test
     void requesterCrudLifecycle() throws Exception {
-        String cpf = IntegrationTestCpfs.REQUESTER_CRUD;
         String createBody = """
-                {"nome":"Dr. Integração","cpf":"%s","telefone":"79999998888","especialidade":"Clínica"}
-                """.formatted(cpf);
+                {"nome":"Dr. Integração","telefone":"79999998888","especialidade":"Clínica"}
+                """;
 
         String createResponse = mockMvc.perform(post("/api/requester")
                         .header("Authorization", bearer())
@@ -41,13 +39,26 @@ class RequesterCrudIntegrationIT extends AbstractPostgresIntegrationTest {
                         .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nome":"Dr. Atualizado","cpf":"%s","telefone":"79999997777","especialidade":"Pediatria"}
-                                """.formatted(cpf)))
+                                {"nome":"Dr. Atualizado","telefone":"79999997777","especialidade":"Pediatria"}
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Dr. Atualizado"));
 
         mockMvc.perform(delete("/api/requester/{id}", requesterId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldCreateRequesterWithoutPhone() throws Exception {
+        mockMvc.perform(post("/api/requester")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome":"Dr. Sem Telefone","especialidade":"Clínica"}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nome").value("Dr. Sem Telefone"))
+                .andExpect(jsonPath("$.telefone").doesNotExist());
     }
 }

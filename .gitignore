@@ -36,3 +36,4 @@ build/
 /src/main/resources/app.key
 /src/main/resources/app.pub
 /.env
+scripts/seed-dev-data.sql
