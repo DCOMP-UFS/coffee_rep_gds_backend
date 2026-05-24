@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface RequesterRepository extends JpaRepository<Requester, Long>, JpaSpecificationExecutor<Requester> {
 
@@ -42,6 +41,4 @@ public interface RequesterRepository extends JpaRepository<Requester, Long>, Jpa
 
         return findAll(finalSpec, pageable);
     }
-
-    Optional<Requester> findByCpf(String cpf);
 }

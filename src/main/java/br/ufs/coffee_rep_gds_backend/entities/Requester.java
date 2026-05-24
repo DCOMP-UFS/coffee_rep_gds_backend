@@ -18,8 +18,6 @@ public class Requester {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private String cpf;
     private String contactNumber;
 
     @Column(nullable = false)
@@ -45,9 +43,8 @@ public class Requester {
     public Requester() {
     }
 
-    public Requester(String name, String cpf, String contactNumber, Integer status, User updatedBy, String specialty) {
+    public Requester(String name, String contactNumber, Integer status, User updatedBy, String specialty) {
         this.name = name;
-        this.cpf = cpf;
         this.contactNumber = contactNumber;
         this.status = status;
         this.updatedBy = updatedBy;
@@ -68,14 +65,6 @@ public class Requester {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getCpf() {
-        return cpf;
-    }
-
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
     }
 
     public String getContactNumber() {
@@ -139,11 +128,11 @@ public class Requester {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Requester requester = (Requester) o;
-        return Objects.equals(id, requester.id) && Objects.equals(name, requester.name) && Objects.equals(cpf, requester.cpf) && Objects.equals(status, requester.status);
+        return Objects.equals(id, requester.id) && Objects.equals(name, requester.name) && Objects.equals(status, requester.status);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, cpf, status);
+        return Objects.hash(id, name, status);
     }
 }
