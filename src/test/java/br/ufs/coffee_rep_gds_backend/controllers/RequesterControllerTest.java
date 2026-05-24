@@ -41,10 +41,10 @@ class RequesterControllerTest {
     @Test
     void shouldReturnPagedListWhenUnpagedIsFalse() throws Exception {
         Page<RequesterResponseDto> page = new PageImpl<>(List.of(
-                new RequesterResponseDto(1L, "Nome", "12345678909", "99999999", "Medico")
+                new RequesterResponseDto(1L, "Nome", "99999999", "Medico")
         ));
 
-        when(requesterService.getAllRequesters(any(), any(), any())).thenReturn(page);
+        when(requesterService.getAllRequesters(any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/requester")
                         .param("unpaged", "false")
@@ -56,10 +56,10 @@ class RequesterControllerTest {
     @Test
     void shouldReturnUnpagedListWhenUnpagedIsTrue() throws Exception {
         List<RequesterResponseDto> list = List.of(
-                new RequesterResponseDto(1L, "Nome", "12345678909", "99999999", "Medico")
+                new RequesterResponseDto(1L, "Nome", "99999999", "Medico")
         );
 
-        when(requesterService.getAllRequesters(any(), any())).thenReturn(list);
+        when(requesterService.getAllRequesters(any())).thenReturn(list);
 
         mockMvc.perform(get("/api/requester")
                         .param("unpaged", "true")
@@ -70,7 +70,7 @@ class RequesterControllerTest {
 
     @Test
     void shouldReturnRequesterWhenExists() throws Exception {
-        RequesterResponseDetailDto dto = new RequesterResponseDetailDto(1L, "Nome", "12345678909", "99999999", "Medico");
+        RequesterResponseDetailDto dto = new RequesterResponseDetailDto(1L, "Nome", "99999999", "Medico");
 
         when(requesterService.getRequesterById(1L)).thenReturn(dto);
 
@@ -82,10 +82,10 @@ class RequesterControllerTest {
     @Test
     void shouldReturnRequestersByRequesterType() throws Exception {
         Page<RequesterResponseDto> page = new PageImpl<>(List.of(
-                new RequesterResponseDto(1L, "Nome", "12345678909", "99999999", "Medico")
+                new RequesterResponseDto(1L, "Nome", "99999999", "Medico")
         ));
 
-        when(requesterService.getRequestersByRequesterTypeId(eq(1L), any(), any(), any())).thenReturn(page);
+        when(requesterService.getRequestersByRequesterTypeId(eq(1L), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/requester/type/1").with(jwt()))
                 .andExpect(status().isOk())
@@ -94,8 +94,7 @@ class RequesterControllerTest {
 
     @Test
     void shouldReturnCreatedRequester() throws Exception {
-        CreateRequesterDTO dto = new CreateRequesterDTO("Nome", "12345678909", "99999999", "Medico");
-        CreateRequesterResponseDTO response = new CreateRequesterResponseDTO(1L, "Nome", "12345678909", "99999999", "Medico");
+        CreateRequesterResponseDTO response = new CreateRequesterResponseDTO(1L, "Nome", "99999999", "Medico");
 
         when(requesterService.create(any())).thenReturn(response);
 
@@ -105,7 +104,6 @@ class RequesterControllerTest {
                         .content("""
                             {
                                 "nome": "Nome",
-                                "cpf": "12345678909",
                                 "telefone": "99999999",
                                 "especialidade": "Medico"
                             }
@@ -116,8 +114,7 @@ class RequesterControllerTest {
 
     @Test
     void shouldReturnUpdatedRequester() throws Exception {
-        UpdateRequesterDTO dto = new UpdateRequesterDTO("Nome Atualizado", "12345678909", "99999999", "Medico");
-        CreateRequesterResponseDTO response = new CreateRequesterResponseDTO(1L, "Nome Atualizado", "12345678909", "99999999", "Medico");
+        CreateRequesterResponseDTO response = new CreateRequesterResponseDTO(1L, "Nome Atualizado", "99999999", "Medico");
 
         when(requesterService.update(eq(1L), any())).thenReturn(response);
 
@@ -126,8 +123,7 @@ class RequesterControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
-                                "name": "Nome Atualizado",
-                                "cpf": "12345678909",
+                                "nome": "Nome Atualizado",
                                 "telefone": "99999999",
                                 "especialidade": "Medico"
                             }
