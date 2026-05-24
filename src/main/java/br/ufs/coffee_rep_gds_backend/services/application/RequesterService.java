@@ -34,8 +34,8 @@ public class RequesterService {
         this.userDomainService = userDomainService;
     }
 
-    public Page<RequesterResponseDto> getAllRequesters(String name, Pageable pageable) {
-        Specification<Requester> specification = RequesterSpecification.all(name);
+    public Page<RequesterResponseDto> getAllRequesters(String busca, Pageable pageable) {
+        Specification<Requester> specification = RequesterSpecification.all(busca);
         Page<Requester> requesterPage = requesterRepository.findAllByStatus(Status.ACTIVE.value, specification, pageable);
 
         List<RequesterResponseDto> list = requesterPage.stream().map(req -> new RequesterResponseDto(
@@ -47,8 +47,8 @@ public class RequesterService {
         return new PageImpl<>(list, pageable, requesterPage.getTotalElements());
     }
 
-    public List<RequesterResponseDto> getAllRequesters(String name) {
-        Specification<Requester> specification = RequesterSpecification.all(name);
+    public List<RequesterResponseDto> getAllRequesters(String busca) {
+        Specification<Requester> specification = RequesterSpecification.all(busca);
         List<Requester> requesters = requesterRepository.findAllByStatusUnpaged(Status.ACTIVE.value, specification);
 
         return requesters.stream().map(req -> new RequesterResponseDto(
