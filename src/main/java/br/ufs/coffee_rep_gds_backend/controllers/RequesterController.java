@@ -29,15 +29,18 @@ public class RequesterController {
 
     @GetMapping
     public ResponseEntity<?> getAllRequesters(
+            @RequestParam(required = false) String busca,
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) Boolean unpaged,
             Pageable pageable) {
 
+        String searchTerm = busca != null ? busca : nome;
+
         if (unpaged != null && unpaged) {
-            List<RequesterResponseDto> requesters = requesterService.getAllRequesters(nome);
+            List<RequesterResponseDto> requesters = requesterService.getAllRequesters(searchTerm);
             return ResponseEntity.ok(requesters);
         }
-        Page<RequesterResponseDto> requesters = requesterService.getAllRequesters(nome, pageable);
+        Page<RequesterResponseDto> requesters = requesterService.getAllRequesters(searchTerm, pageable);
         return ResponseEntity.ok(requesters);
     }
 

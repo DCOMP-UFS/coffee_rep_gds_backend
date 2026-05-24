@@ -61,4 +61,22 @@ class RequesterCrudIntegrationIT extends AbstractPostgresIntegrationTest {
                 .andExpect(jsonPath("$.nome").value("Dr. Sem Telefone"))
                 .andExpect(jsonPath("$.telefone").doesNotExist());
     }
+
+    @Test
+    void shouldSearchRequestersByBuscaParam() throws Exception {
+        mockMvc.perform(post("/api/requester")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome":"Dr. Busca Cardio","telefone":"79999001234","especialidade":"Cardiologia"}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/requester")
+                        .header("Authorization", bearer())
+                        .param("busca", "Cardio")
+                        .param("unpaged", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.nome == 'Dr. Busca Cardio')]").exists());
+    }
 }

@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -130,6 +131,21 @@ class RequesterControllerTest {
                         """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Nome Atualizado"));
+    }
+
+    @Test
+    void shouldPassBuscaParamToServiceWhenListingPaged() throws Exception {
+        Page<RequesterResponseDto> page = new PageImpl<>(List.of());
+
+        when(requesterService.getAllRequesters(eq("Cardio"), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/requester")
+                        .param("busca", "Cardio")
+                        .param("unpaged", "false")
+                        .with(jwt()))
+                .andExpect(status().isOk());
+
+        verify(requesterService).getAllRequesters(eq("Cardio"), any());
     }
 
     @Test
