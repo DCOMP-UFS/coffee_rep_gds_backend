@@ -1,9 +1,0 @@
-target
-.git
-.gitignore
-.idea
-*.iml
-.DS_Store
-Dockerfile.test
-**/app.key
-**/app.pub
