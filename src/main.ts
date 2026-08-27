@@ -8,8 +8,9 @@ import { configureApp } from './bootstrap';
 import { ENV, Env } from './config/env';
 
 /**
- * Entrypoint detectado automaticamente pela Vercel, que transforma a aplicação inteira
- * numa única Vercel Function.
+ * Entrypoint para execução como servidor tradicional: desenvolvimento local, Docker ou
+ * qualquer host com processo de longa duração. Na Vercel quem responde é `api/index.js`,
+ * que usa `serverless.ts` e não abre porta nenhuma.
  */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });

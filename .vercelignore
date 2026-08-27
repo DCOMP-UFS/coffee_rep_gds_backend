@@ -1,0 +1,6 @@
+# Nada aqui é necessário em produção, e tudo isso pesaria no bundle da função.
+test/
+scripts/
+docs/
+docker-compose.yml
+.github/
