@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2023"],
+    "outDir": "dist",
+    // `moduleResolution: "node"` está obsoleto e deixa de funcionar no TypeScript 7.0, mas a
+    // migração para `node16` exigiria atributos `resolution-mode` em toda importação do
+    // `jose`, distribuído apenas como ESM. Fica para quando o projeto migrar para ESM.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

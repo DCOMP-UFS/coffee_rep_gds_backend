@@ -1,0 +1,50 @@
+{
+  "name": "coffee-rep-gds-backend",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=11"
+  },
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d",
+    "db:migrate": "tsx scripts/migrate-dump.ts",
+    "seed:admin": "tsx scripts/seed-admin.ts",
+    "keys:generate": "tsx scripts/generate-keys.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.2.3",
+    "@nestjs/core": "^11.2.3",
+    "@nestjs/platform-express": "^11.2.3",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.2.3",
+    "jose": "^6.2.10",
+    "mongodb": "^6.20.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.24",
+    "@nestjs/testing": "^11.2.3",
+    "@swc/core": "^1.16.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.7.0",
+    "@types/supertest": "^7.2.1",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "unplugin-swc": "^1.5.11",
+    "vitest": "^4.1.11"
+  }
+}
