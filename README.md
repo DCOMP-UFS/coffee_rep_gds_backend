@@ -206,6 +206,10 @@ reconhece o projeto como NestJS e aplica um preset que gera uma segunda função
 `src/main.ts` — compilada com esbuild e, portanto, sem os metadados. Como essa função responde na
 raiz, ela captura o tráfego e derruba toda requisição com `FUNCTION_INVOCATION_FAILED`.
 
+Sem preset, porém, a plataforma passa a esperar um diretório de saída estático e recusa o build sem
+ele. Daí a pasta `public/`, com uma página única que apenas identifica o serviço: é o preço de não
+ter framework declarado. Ela responde só em `/`; todo o resto é reescrito para a função.
+
 O restante do desenho já respeita as restrições do modelo serverless:
 
 - **Nada de trabalho no boot.** O admin inicial é um script de CLI, não um hook de inicialização que
