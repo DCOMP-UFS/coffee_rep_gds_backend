@@ -1,48 +1,46 @@
 services:
-  postgres:
-    image: postgres
-    container_name: gds_database
+  mongo:
+    image: mongo:8.0
+    container_name: gds_mongo
     restart: unless-stopped
     ports:
-      - 5433:5432
+      - '${MONGO_PORT:-27018}:27017'
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=coffee_gds_db
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-gds}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-gds}
+      - MONGO_INITDB_DATABASE=${MONGO_DB:-coffee_gds_db}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
       interval: 10s
       retries: 5
-      start_period: 5s
+      start_period: 10s
       timeout: 5s
     volumes:
-      - pgdata:/data/postgres
+      - mongodata:/data/db
     networks:
       - gds_network
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: gds_backend
-    depends_on:
-      postgres:
-        condition: service_healthy
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: gds_mongo_express
     restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
     ports:
-      - '8080:8080'
-    volumes:
-      - .:/gds-app
+      - '${MONGO_EXPRESS_PORT:-8081}:8081'
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://${MONGO_ROOT_USER:-gds}:${MONGO_ROOT_PASSWORD:-gds}@mongo:27017/?authSource=admin
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USER:-admin}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD:-admin}
     networks:
       - gds_network
-    env_file:
-      - .env
 
 volumes:
-  pgdata:
+  mongodata:
     driver: local
 
 networks:
   gds_network:
-    name: network_gds
+    name: network_gds_ts
     driver: bridge
