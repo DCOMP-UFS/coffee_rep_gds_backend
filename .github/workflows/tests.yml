@@ -9,25 +9,31 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    env:
+      # Por padrão o binário do mongod vai parar em `node_modules/.cache`, que o `pnpm
+      # install` pode recriar. Fixar o destino dá um caminho estável para o cache abaixo.
+      MONGOMS_DOWNLOAD_DIR: ${{ github.workspace }}/.cache/mongodb-binaries
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: pnpm
 
-      # `mongodb-memory-server` baixa um binário do mongod na primeira execução; sem o
-      # cache cada job pagaria esse download de novo.
+      # O download do mongod passa de 120 MB e acontece no postinstall, então o cache precisa
+      # ser restaurado antes da instalação das dependências.
       - name: Cache do binário do MongoDB
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
-          path: ~/.cache/mongodb-binaries
+          path: ${{ github.workspace }}/.cache/mongodb-binaries
           key: mongodb-binaries-${{ runner.os }}
 
       - name: Install
