@@ -206,6 +206,12 @@ reconhece o projeto como NestJS e aplica um preset que gera uma segunda função
 `src/main.ts` — compilada com esbuild e, portanto, sem os metadados. Como essa função responde na
 raiz, ela captura o tráfego e derruba toda requisição com `FUNCTION_INVOCATION_FAILED`.
 
+O `jose` está preso à linha 5 de propósito. A versão 6 abandonou o build CommonJS e passou a ser
+distribuída só como ESM; o `require` gerado pelo nosso build morre no runtime da Vercel com
+`ERR_REQUIRE_ESM`. O Node local tolera esse `require` desde a versão 22, então a falha não aparece
+em desenvolvimento nem nos testes — só em produção. Só atualize para a 6 junto com a migração do
+projeto para ESM.
+
 Sem preset, porém, a plataforma passa a esperar um diretório de saída estático e recusa o build sem
 ele. Daí a pasta `public/`, com uma página única que apenas identifica o serviço: é o preço de não
 ter framework declarado. Ela responde só em `/`; todo o resto é reescrito para a função.
