@@ -192,9 +192,16 @@ fuso e validação de CPF.
 
 ## Deploy na Vercel
 
-A aplicação inteira vira uma única Vercel Function. Não é preciso `vercel.json` nem wrapper de
-handler: o entrypoint em `src/main.ts` com `app.listen()` é detectado automaticamente. O desenho já
-respeita as restrições do modelo serverless:
+A aplicação inteira vira uma única Vercel Function, servida por `api/index.js`, que delega para
+`src/serverless.ts`. Esse wrapper é necessário: o `src/main.ts` chama `app.listen()`, formato de
+servidor de longa duração que a plataforma não invoca — sem o handler o build passa, nenhuma função
+é criada e toda requisição falha com `FUNCTION_INVOCATION_FAILED`.
+
+O handler é JavaScript puro e importa do `dist/` de propósito. A Vercel compila a pasta `api/` com
+esbuild, que não emite os metadados de decorator exigidos pela injeção de dependências do NestJS;
+o `dist/` é gerado pelo `nest build`, que usa o tsc e os emite corretamente.
+
+O restante do desenho já respeita as restrições do modelo serverless:
 
 - **Nada de trabalho no boot.** O admin inicial é um script de CLI, não um hook de inicialização que
   rodaria a cada cold start.
