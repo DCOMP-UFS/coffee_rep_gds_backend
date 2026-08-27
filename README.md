@@ -201,6 +201,11 @@ O handler é JavaScript puro e importa do `dist/` de propósito. A Vercel compil
 esbuild, que não emite os metadados de decorator exigidos pela injeção de dependências do NestJS;
 o `dist/` é gerado pelo `nest build`, que usa o tsc e os emite corretamente.
 
+Pelo mesmo motivo o `vercel.json` declara `"framework": null`. Deixada à própria sorte, a plataforma
+reconhece o projeto como NestJS e aplica um preset que gera uma segunda função a partir do
+`src/main.ts` — compilada com esbuild e, portanto, sem os metadados. Como essa função responde na
+raiz, ela captura o tráfego e derruba toda requisição com `FUNCTION_INVOCATION_FAILED`.
+
 O restante do desenho já respeita as restrições do modelo serverless:
 
 - **Nada de trabalho no boot.** O admin inicial é um script de CLI, não um hook de inicialização que
