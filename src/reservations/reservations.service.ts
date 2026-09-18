@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 import {
   formatLocalDateTime,
   nowWallClock,
@@ -31,6 +32,7 @@ export class ReservationsService {
     private readonly absences: RequesterAbsencesRepository,
     private readonly rooms: RoomsService,
     private readonly requesters: RequestersService,
+    private readonly audit: AuditService,
   ) {}
 
   async findPaged(
@@ -71,21 +73,41 @@ export class ReservationsService {
     return this.createRecurrent(dto, room.name, requester.name, userId);
   }
 
-  async cancel(id: number): Promise<void> {
-    if (!(await this.repository.findApprovedById(id))) {
+  async cancel(id: number, userId: number): Promise<void> {
+    const reservation = await this.repository.findApprovedById(id);
+    if (!reservation) {
       throw new EntityNotFoundError(`Nenhuma reserva ativa encontrada para este ID: ${id}`);
     }
     await this.repository.cancelById(id);
+    await this.audit.record({
+      action: 'reservation.cancel',
+      entityType: 'reservation',
+      entityId: id,
+      actorUserId: userId,
+      details: {
+        salaId: reservation.roomId,
+        solicitanteId: reservation.requesterId,
+        horaInicio: formatLocalDateTime(reservation.startDate),
+        horaFim: formatLocalDateTime(reservation.endDate),
+      },
+    });
   }
 
   /** Cancela a série inteira, incluindo ocorrências já passadas. */
-  async cancelRecurrence(recurrenceId: number): Promise<void> {
+  async cancelRecurrence(recurrenceId: number, userId: number): Promise<void> {
     if (!(await this.repository.hasApprovedInRecurrence(recurrenceId))) {
       throw new EntityNotFoundError(
         `Nenhuma reserva ativa encontrada para este ID: ${recurrenceId}`,
       );
     }
     await this.repository.cancelByRecurrenceId(recurrenceId);
+    await this.audit.record({
+      action: 'reservation.cancel_recurrence',
+      entityType: 'reservation',
+      entityId: recurrenceId,
+      actorUserId: userId,
+      details: { recorrenciaId: recurrenceId },
+    });
   }
 
   private async createSingle(
@@ -99,6 +121,22 @@ export class ReservationsService {
     const [created] = await this.repository.insertMany([
       this.buildDocument(dto, null, { start: dto.horaInicio, end: dto.horaFim }, userId),
     ]);
+
+    await this.audit.record({
+      action: 'reservation.create',
+      entityType: 'reservation',
+      entityId: created._id,
+      actorUserId: userId,
+      details: {
+        salaId: dto.salaId,
+        sala: roomName,
+        solicitanteId: dto.solicitanteId,
+        solicitante: requesterName,
+        horaInicio: formatLocalDateTime(created.startDate),
+        horaFim: formatLocalDateTime(created.endDate),
+        recorrente: false,
+      },
+    });
 
     return {
       id: created._id,
@@ -134,6 +172,22 @@ export class ReservationsService {
     await this.repository.insertMany(
       slots.map((slot) => this.buildDocument(dto, recurrenceId, slot, userId)),
     );
+
+    await this.audit.record({
+      action: 'reservation.create',
+      entityType: 'reservation',
+      entityId: recurrenceId,
+      actorUserId: userId,
+      details: {
+        salaId: dto.salaId,
+        sala: roomName,
+        solicitanteId: dto.solicitanteId,
+        solicitante: requesterName,
+        recorrente: true,
+        recorrenciaId: recurrenceId,
+        ocorrencias: slots.length,
+      },
+    });
 
     // Os nulos somem da resposta: o frontend recebe só os três campos preenchidos.
     return {

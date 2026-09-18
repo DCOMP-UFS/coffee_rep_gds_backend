@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 import { nowWallClock } from '../common/date/local-date-time';
 import { EntityAlreadyExistsError, EntityNotFoundError } from '../common/errors/domain-errors';
 import { PageEnvelope, toPage } from '../common/pagination/page';
@@ -24,6 +25,7 @@ export class RoomsService {
   constructor(
     private readonly repository: RoomsRepository,
     private readonly sections: SectionsRepository,
+    private readonly audit: AuditService,
   ) {}
 
   async findPaged(filters: RoomFilters, pageable: Pageable): Promise<PageEnvelope<RoomResponse>> {
@@ -76,6 +78,13 @@ export class RoomsService {
         status: STATUS_ACTIVE,
         updatedAt: nowWallClock(),
       });
+      await this.audit.record({
+        action: 'room.create',
+        entityType: 'room',
+        entityId: reactivated._id,
+        actorUserId: userId,
+        details: { nome: reactivated.name, setorId: section._id, reativado: true },
+      });
       return { id: reactivated._id, nome: reactivated.name, setor: section.name };
     }
 
@@ -86,6 +95,14 @@ export class RoomsService {
       createdAt: nowWallClock(),
       updatedAt: null,
       updatedBy: userId,
+    });
+
+    await this.audit.record({
+      action: 'room.create',
+      entityType: 'room',
+      entityId: created._id,
+      actorUserId: userId,
+      details: { nome: created.name, setorId: section._id },
     });
 
     return { id: created._id, nome: created.name, setor: section.name };
@@ -114,6 +131,13 @@ export class RoomsService {
     }
 
     const saved = await this.repository.update(id, changes);
+    await this.audit.record({
+      action: 'room.update',
+      entityType: 'room',
+      entityId: saved._id,
+      actorUserId: userId,
+      details: { nome: saved.name, setorId: section._id },
+    });
     return { id: saved._id, nome: saved.name, setor: section.name };
   }
 
@@ -127,6 +151,13 @@ export class RoomsService {
       status: STATUS_INACTIVE,
       updatedAt: nowWallClock(),
       updatedBy: userId,
+    });
+    await this.audit.record({
+      action: 'room.delete',
+      entityType: 'room',
+      entityId: id,
+      actorUserId: userId,
+      details: { nome: room.name, setorId: room.sectionId },
     });
   }
 }

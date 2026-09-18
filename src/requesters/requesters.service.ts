@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 import { nowWallClock } from '../common/date/local-date-time';
 import { EntityNotFoundError } from '../common/errors/domain-errors';
 import { PageEnvelope, toPage } from '../common/pagination/page';
@@ -15,7 +16,10 @@ import { RequestersRepository } from './requesters.repository';
 
 @Injectable()
 export class RequestersService {
-  constructor(private readonly repository: RequestersRepository) {}
+  constructor(
+    private readonly repository: RequestersRepository,
+    private readonly audit: AuditService,
+  ) {}
 
   async findActivePaged(
     search: string | null | undefined,
@@ -62,6 +66,14 @@ export class RequestersService {
       updatedBy: userId,
     });
 
+    await this.audit.record({
+      action: 'requester.create',
+      entityType: 'requester',
+      entityId: created._id,
+      actorUserId: userId,
+      details: { nome: created.name },
+    });
+
     return toCreateRequesterResponse(created);
   }
 
@@ -88,7 +100,15 @@ export class RequestersService {
     if (!isBlank(dto.nome)) changes.name = dto.nome!;
     if (!isBlank(dto.especialidade)) changes.specialty = dto.especialidade!;
 
-    return toCreateRequesterResponse(await this.repository.update(id, changes));
+    const updated = await this.repository.update(id, changes);
+    await this.audit.record({
+      action: 'requester.update',
+      entityType: 'requester',
+      entityId: updated._id,
+      actorUserId: userId,
+      details: { nome: updated.name },
+    });
+    return toCreateRequesterResponse(updated);
   }
 
   async remove(id: number, userId: number): Promise<void> {
@@ -101,6 +121,13 @@ export class RequestersService {
       status: STATUS_INACTIVE,
       updatedAt: nowWallClock(),
       updatedBy: userId,
+    });
+    await this.audit.record({
+      action: 'requester.delete',
+      entityType: 'requester',
+      entityId: id,
+      actorUserId: userId,
+      details: { nome: requester.name },
     });
   }
 }

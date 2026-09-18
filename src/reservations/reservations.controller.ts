@@ -67,14 +67,20 @@ export class ReservationsController {
   /** Cancelamento pontual é PATCH; cancelamento de série é DELETE. */
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  cancel(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.reservationsService.cancel(id);
+  cancel(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUserId() userId: number,
+  ): Promise<void> {
+    return this.reservationsService.cancel(id, userId);
   }
 
   @Delete('recurrent/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  cancelRecurrence(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.reservationsService.cancelRecurrence(id);
+  cancelRecurrence(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUserId() userId: number,
+  ): Promise<void> {
+    return this.reservationsService.cancelRecurrence(id, userId);
   }
 
   private requireDate(value: string | undefined, field: string): Date {

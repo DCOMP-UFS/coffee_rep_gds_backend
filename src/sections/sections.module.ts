@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { AuditModule } from '../audit/audit.module';
 import { RoomsModule } from '../rooms/rooms.module';
 import { SectionsController } from './sections.controller';
 import { SectionsRepository } from './sections.repository';
@@ -9,7 +10,7 @@ import { SectionsService } from './sections.service';
  * para as salas, e a criação de sala valida o setor.
  */
 @Module({
-  imports: [forwardRef(() => RoomsModule)],
+  imports: [forwardRef(() => RoomsModule), AuditModule],
   controllers: [SectionsController],
   providers: [SectionsRepository, SectionsService],
   exports: [SectionsRepository, SectionsService],
