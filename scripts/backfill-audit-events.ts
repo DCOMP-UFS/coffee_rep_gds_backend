@@ -106,6 +106,14 @@ async function main(): Promise<void> {
     console.log(
       `Inferidos: ${inferred.length} | Já existiam: ${skipped} | A gravar: ${toInsert.length}`,
     );
+    console.log(
+      `Documentos lidos: sections=${sections.length}, rooms=${rooms.length}, requesters=${requesters.length}, absences=${absences.length}, reservations=${reservations.length}, users=${users.length}`,
+    );
+    printBreakdown('Por ação', toInsert.map((e) => e.action));
+    printBreakdown(
+      'Por origem (backfillSource)',
+      toInsert.map((e) => String(e.details.backfillSource ?? '?')),
+    );
 
     if (!apply) {
       for (const event of toInsert.slice(0, 20)) {
@@ -126,33 +134,61 @@ async function main(): Promise<void> {
     }
 
     const counters = db.collection<CounterDocument>(COLLECTIONS.counters);
-    for (const event of toInsert) {
-      const counter = await counters.findOneAndUpdate(
-        { _id: COLLECTIONS.auditEvents },
-        { $inc: { seq: 1 } },
-        { upsert: true, returnDocument: 'after' },
-      );
-      if (!counter) {
-        throw new Error('Falha ao obter próximo id de auditEvents');
-      }
+    const batchSize = 500;
+    let written = 0;
 
-      const document: AuditEventDocument = {
-        _id: counter.seq,
-        action: event.action,
-        entityType: event.entityType,
-        entityId: event.entityId,
-        actorUserId: event.actorUserId,
-        actorName: event.actorName,
-        details: event.details,
-        createdAt: event.createdAt,
-      };
-      await auditCol.insertOne(document);
+    // Reserva um bloco de ids de uma vez (em vez de 1 round-trip por evento).
+    const reserved = await counters.findOneAndUpdate(
+      { _id: COLLECTIONS.auditEvents },
+      { $inc: { seq: toInsert.length } },
+      { upsert: true, returnDocument: 'after' },
+    );
+    if (!reserved) {
+      throw new Error('Falha ao reservar ids de auditEvents');
+    }
+    let nextId = reserved.seq - toInsert.length + 1;
+
+    console.log(`Gravando ${toInsert.length} eventos em lotes de ${batchSize}...`);
+
+    for (let i = 0; i < toInsert.length; i += batchSize) {
+      const slice = toInsert.slice(i, i + batchSize);
+      const documents: AuditEventDocument[] = slice.map((event) => {
+        const document: AuditEventDocument = {
+          _id: nextId,
+          action: event.action,
+          entityType: event.entityType,
+          entityId: event.entityId,
+          actorUserId: event.actorUserId,
+          actorName: event.actorName,
+          details: event.details,
+          createdAt: event.createdAt,
+        };
+        nextId += 1;
+        return document;
+      });
+
+      await auditCol.insertMany(documents, { ordered: true });
+      written += documents.length;
+      const pct = ((written / toInsert.length) * 100).toFixed(1);
+      console.log(`  ${written}/${toInsert.length} (${pct}%)`);
     }
 
-    console.log(`Gravados ${toInsert.length} eventos em ${COLLECTIONS.auditEvents}.`);
+    console.log(`Gravados ${written} eventos em ${COLLECTIONS.auditEvents}.`);
   } finally {
     await client.close();
   }
 }
 
 main().catch((error) => reportAndExit('Falha no backfill de auditoria', error));
+
+function printBreakdown(title: string, keys: string[]): void {
+  const counts = new Map<string, number>();
+  for (const key of keys) {
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const lines = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  console.log(`${title}:`);
+  for (const [key, count] of lines) {
+    console.log(`  ${key}: ${count}`);
+  }
+}

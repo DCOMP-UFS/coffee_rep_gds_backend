@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import request from 'supertest';
 import { AuditModule } from '../src/audit/audit.module';
 import { AuditRepository } from '../src/audit/audit.repository';
 import { AuditService } from '../src/audit/audit.service';
@@ -9,7 +10,14 @@ import { ReservationsModule } from '../src/reservations/reservations.module';
 import { RoomsModule } from '../src/rooms/rooms.module';
 import { SectionsModule } from '../src/sections/sections.module';
 import { UsersRepository } from '../src/users/users.repository';
-import { authed, basicToken, seedCatalog, seedUsers } from './support/fixtures';
+import {
+  BASIC_CPF,
+  DEFAULT_PASSWORD,
+  authed,
+  basicToken,
+  seedCatalog,
+  seedUsers,
+} from './support/fixtures';
 import { TestApp, createTestApp } from './support/test-app';
 
 describe('Auditoria', () => {
@@ -121,6 +129,25 @@ describe('Auditoria', () => {
 
     const miss = await client.get('/api/audit?q=Ninguem&page=0&size=10').expect(200);
     expect(miss.body.page.totalElements).toBe(0);
+  });
+
+  it('login bem-sucedido gera evento auth.login', async () => {
+    await request(context.app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ cpf: BASIC_CPF, password: DEFAULT_PASSWORD })
+      .expect(200);
+
+    const response = await client.get('/api/audit?action=auth.login&page=0&size=10').expect(200);
+
+    expect(response.body.content).toHaveLength(1);
+    expect(response.body.content[0]).toMatchObject({
+      action: 'auth.login',
+      entityType: 'user',
+      entityId: 5,
+      actorUserId: 5,
+      actorName: 'Brenda HU',
+      details: expect.objectContaining({ role: 'BASIC' }),
+    });
   });
 });
 
