@@ -82,6 +82,18 @@ export interface CounterDocument {
   seq: number;
 }
 
+/** Evento append-only de auditoria (histórico de ações). */
+export interface AuditEventDocument {
+  _id: number;
+  action: string;
+  entityType: string;
+  entityId: number | null;
+  actorUserId: number | null;
+  actorName: string;
+  details: Record<string, unknown>;
+  createdAt: Date;
+}
+
 export const COLLECTIONS = {
   users: 'users',
   sections: 'sections',
@@ -89,6 +101,7 @@ export const COLLECTIONS = {
   requesters: 'requesters',
   requesterAbsences: 'requesterAbsences',
   reservations: 'reservations',
+  auditEvents: 'auditEvents',
   counters: 'counters',
 } as const;
 
