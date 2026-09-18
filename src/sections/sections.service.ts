@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 import { nowWallClock } from '../common/date/local-date-time';
 import { EntityAlreadyExistsError, EntityNotFoundError } from '../common/errors/domain-errors';
 import { PageEnvelope, toPage } from '../common/pagination/page';
@@ -19,6 +20,7 @@ export class SectionsService {
   constructor(
     private readonly repository: SectionsRepository,
     private readonly rooms: RoomsRepository,
+    private readonly audit: AuditService,
   ) {}
 
   async findActivePaged(
@@ -51,6 +53,13 @@ export class SectionsService {
         updatedAt: nowWallClock(),
         updatedBy: userId,
       });
+      await this.audit.record({
+        action: 'section.create',
+        entityType: 'section',
+        entityId: reactivated._id,
+        actorUserId: userId,
+        details: { nome: reactivated.name, reativado: true },
+      });
       return toCreateSectionResponse(reactivated);
     }
 
@@ -61,6 +70,14 @@ export class SectionsService {
       createdAt: nowWallClock(),
       updatedAt: null,
       updatedBy: userId,
+    });
+
+    await this.audit.record({
+      action: 'section.create',
+      entityType: 'section',
+      entityId: created._id,
+      actorUserId: userId,
+      details: { nome: created.name },
     });
 
     return toCreateSectionResponse(created);
@@ -96,7 +113,15 @@ export class SectionsService {
       changes.observations = blankToNull(dto.observacao);
     }
 
-    return toCreateSectionResponse(await this.repository.update(id, changes));
+    const updated = await this.repository.update(id, changes);
+    await this.audit.record({
+      action: 'section.update',
+      entityType: 'section',
+      entityId: updated._id,
+      actorUserId: userId,
+      details: { nome: updated.name },
+    });
+    return toCreateSectionResponse(updated);
   }
 
   /**
@@ -116,6 +141,13 @@ export class SectionsService {
       updatedBy: userId,
     });
     await this.rooms.deactivateBySection(id, userId, now);
+    await this.audit.record({
+      action: 'section.delete',
+      entityType: 'section',
+      entityId: id,
+      actorUserId: userId,
+      details: { nome: section.name },
+    });
   }
 }
 
