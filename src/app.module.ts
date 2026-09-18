@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { MongoModule } from './database/mongo.module';
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module';
     MongoModule,
     AuthModule,
     UsersModule,
+    AuditModule,
     SectionsModule,
     RoomsModule,
     RequestersModule,
