@@ -51,7 +51,10 @@ export class RequesterAbsencesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.service.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUserId() userId: number,
+  ): Promise<void> {
+    return this.service.remove(id, userId);
   }
 }

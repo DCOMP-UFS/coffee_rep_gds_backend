@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 import { formatLocalDate, nowWallClock } from '../common/date/local-date-time';
 import { BadParametersError, EntityNotFoundError } from '../common/errors/domain-errors';
 import { RequesterAbsenceDocument } from '../database/documents';
@@ -11,6 +12,7 @@ export class RequesterAbsencesService {
   constructor(
     private readonly repository: RequesterAbsencesRepository,
     private readonly requesters: RequestersRepository,
+    private readonly audit: AuditService,
   ) {}
 
   /** Nunca paginado: o frontend espera sempre um array puro. */
@@ -33,6 +35,19 @@ export class RequesterAbsencesService {
       createdAt: nowWallClock(),
       updatedAt: null,
       updatedBy: userId,
+    });
+
+    await this.audit.record({
+      action: 'absence.create',
+      entityType: 'absence',
+      entityId: created._id,
+      actorUserId: userId,
+      details: {
+        solicitanteId: requester._id,
+        solicitanteNome: requester.name,
+        dataInicio: formatLocalDate(created.startDate),
+        dataFim: formatLocalDate(created.endDate),
+      },
     });
 
     return toResponse(created, requester.name);
@@ -59,14 +74,44 @@ export class RequesterAbsencesService {
       updatedBy: userId,
     });
 
+    await this.audit.record({
+      action: 'absence.update',
+      entityType: 'absence',
+      entityId: saved._id,
+      actorUserId: userId,
+      details: {
+        solicitanteId: requester._id,
+        solicitanteNome: requester.name,
+        dataInicio: formatLocalDate(saved.startDate),
+        dataFim: formatLocalDate(saved.endDate),
+      },
+    });
+
     return toResponse(saved, requester.name);
   }
 
   /** Exclusão definitiva, diferente do soft delete dos demais cadastros. */
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId: number): Promise<void> {
+    const existing = await this.repository.findById(id);
+    if (!existing) {
+      throw new EntityNotFoundError(`Ausência não encontrada: ${id}`);
+    }
+
     if (!(await this.repository.deleteById(id))) {
       throw new EntityNotFoundError(`Ausência não encontrada: ${id}`);
     }
+
+    await this.audit.record({
+      action: 'absence.delete',
+      entityType: 'absence',
+      entityId: id,
+      actorUserId: userId,
+      details: {
+        solicitanteId: existing.requesterId,
+        dataInicio: formatLocalDate(existing.startDate),
+        dataFim: formatLocalDate(existing.endDate),
+      },
+    });
   }
 
   private validateRange(dto: CreateRequesterAbsenceDto): void {
