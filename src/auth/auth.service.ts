@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { compare, hash } from 'bcryptjs';
+import { AuditService } from '../audit/audit.service';
 import { BadCredentialsError, EntityAlreadyExistsError } from '../common/errors/domain-errors';
 import { BadParametersError } from '../common/errors/domain-errors';
 import { nowWallClock, parseLocalDate } from '../common/date/local-date-time';
@@ -16,6 +17,7 @@ export class AuthService {
   constructor(
     private readonly users: UsersRepository,
     private readonly tokens: TokenService,
+    private readonly audit: AuditService,
   ) {}
 
   /**
@@ -47,7 +49,7 @@ export class AuthService {
       throw new BadParametersError('O formato da data de aniversário deve ser [yyyy-MM-dd].');
     }
 
-    await this.users.insert({
+    const created = await this.users.insert({
       name: dto.name,
       phone: dto.phone,
       password: await hash(dto.password, BCRYPT_ROUNDS),
@@ -59,6 +61,15 @@ export class AuthService {
       createdAt: nowWallClock(),
       updatedAt: null,
       updatedBy: null,
+    });
+
+    await this.audit.record({
+      action: 'auth.register',
+      entityType: 'user',
+      entityId: created._id,
+      actorUserId: created._id,
+      actorName: created.name?.trim() || dto.name,
+      details: { email: created.email },
     });
   }
 }
