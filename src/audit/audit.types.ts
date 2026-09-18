@@ -15,6 +15,7 @@ export const AUDIT_ACTIONS = [
   'reservation.cancel',
   'reservation.cancel_recurrence',
   'auth.register',
+  'auth.login',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

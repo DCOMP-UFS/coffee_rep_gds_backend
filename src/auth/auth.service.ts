@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { compare, hash } from 'bcryptjs';
 import { AuditService } from '../audit/audit.service';
+import { UNKNOWN_ACTOR_NAME } from '../audit/audit.types';
 import { BadCredentialsError, EntityAlreadyExistsError } from '../common/errors/domain-errors';
 import { BadParametersError } from '../common/errors/domain-errors';
 import { nowWallClock, parseLocalDate } from '../common/date/local-date-time';
@@ -32,6 +33,16 @@ export class AuthService {
     }
 
     const { token, expiresIn } = await this.tokens.sign(user._id, user.roles);
+
+    await this.audit.record({
+      action: 'auth.login',
+      entityType: 'user',
+      entityId: user._id,
+      actorUserId: user._id,
+      actorName: user.name?.trim() || UNKNOWN_ACTOR_NAME,
+      details: { role: user.roles[0] ?? null },
+    });
+
     return { accessToken: token, expiresIn };
   }
 
