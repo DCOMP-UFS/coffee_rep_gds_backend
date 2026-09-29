@@ -1,6 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { Collection, Db, Filter } from 'mongodb';
+import { Collection, Db, Filter, Sort } from 'mongodb';
 import { Pageable } from '../common/pagination/pageable';
+import { SortableFields, SortSpec } from '../common/pagination/sort';
 import { AuditEventDocument, COLLECTIONS } from '../database/documents';
 import { CountersService } from '../database/counters.service';
 import { MONGO_DB } from '../database/mongo.tokens';
@@ -11,6 +12,15 @@ export interface AuditListFilters {
   entityType?: string | null;
   createdFrom?: Date | null;
   createdTo?: Date | null;
+  /** `null` mantém os mais recentes primeiro. */
+  sort?: SortSpec | null;
+}
+
+export const AUDIT_SORTABLE_FIELDS: SortableFields = { createdAt: 'createdAt' };
+
+function auditSort(sort: SortSpec | null | undefined): Sort {
+  if (!sort) return { createdAt: -1, _id: -1 };
+  return { [sort.field]: sort.direction, _id: sort.direction };
 }
 
 @Injectable()
@@ -63,7 +73,7 @@ export class AuditRepository implements OnModuleInit {
     const [items, total] = await Promise.all([
       this.collection
         .find(filter)
-        .sort({ createdAt: -1, _id: -1 })
+        .sort(auditSort(filters.sort))
         .skip(pageable.page * pageable.size)
         .limit(pageable.size)
         .toArray(),
@@ -75,7 +85,7 @@ export class AuditRepository implements OnModuleInit {
   async findUnpaged(filters: AuditListFilters): Promise<AuditEventDocument[]> {
     return this.collection
       .find(this.buildFilter(filters))
-      .sort({ createdAt: -1, _id: -1 })
+      .sort(auditSort(filters.sort))
       .toArray();
   }
 
