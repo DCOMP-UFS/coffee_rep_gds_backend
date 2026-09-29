@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Collection, Db, Document } from 'mongodb';
 import { nowWallClock, startOfUtcDay } from '../common/date/local-date-time';
-import { paginationStages, recencySortStages } from '../common/pagination/sort-stages';
-import { contains, equalsIgnoreCase } from '../common/validation/text';
+import { PT_COLLATION, SortableFields, SortSpec, sortStages } from '../common/pagination/sort';
+import { paginationStages } from '../common/pagination/sort-stages';
+import { containsIgnoreCase, equalsIgnoreCase } from '../common/validation/text';
 import {
   COLLECTIONS,
   RESERVATION_APPROVED,
@@ -19,7 +20,12 @@ export interface RoomFilters {
   sectionId?: number | null;
   /** `null` traz todas; `true` só ocupadas; `false` só livres. */
   occupied?: boolean | null;
+  /** `null` mantém a ordem por recência. */
+  sort?: SortSpec | null;
 }
+
+/** Campos aceitos em `?sort=`, com os nomes da resposta. */
+export const ROOM_SORTABLE_FIELDS: SortableFields = { nome: 'name', setor: 'section.name' };
 
 /** Sala com o nome do setor e a ocupação já calculados. */
 export interface RoomWithOccupation {
@@ -48,8 +54,9 @@ export class RoomsRepository {
    * instante atual **e** o profissional dessa reserva não está em ausência hoje — a
    * regra "HU Sergipe", em que férias do profissional liberam a sala.
    *
-   * O `LIKE` de nome de sala e de setor é case-sensitive aqui, ao contrário dos demais
-   * filtros do sistema, porque o SQL original não aplica `LOWER`.
+   * O filtro por nome de sala e de setor ignora maiúsculas, como os demais filtros do
+   * sistema. No Java ele diferenciava, porque o SQL nativo não aplicava `LOWER`
+   * (`docs/BUGS-HERDADOS.md`).
    */
   private occupationStages(filters: RoomFilters): Document[] {
     const now = nowWallClock();
@@ -57,7 +64,7 @@ export class RoomsRepository {
 
     const match: Document = { status: STATUS_ACTIVE };
     if (filters.name?.trim()) {
-      match.name = { $regex: contains(filters.name.trim()) };
+      match.name = { $regex: containsIgnoreCase(filters.name.trim()) };
     }
     if (filters.sectionId !== null && filters.sectionId !== undefined) {
       match.sectionId = filters.sectionId;
@@ -78,7 +85,9 @@ export class RoomsRepository {
     ];
 
     if (filters.sectionName?.trim()) {
-      stages.push({ $match: { 'section.name': { $regex: contains(filters.sectionName.trim()) } } });
+      stages.push({
+        $match: { 'section.name': { $regex: containsIgnoreCase(filters.sectionName.trim()) } },
+      });
     }
 
     stages.push(
@@ -154,15 +163,19 @@ export class RoomsRepository {
   ): Promise<{ items: RoomWithOccupation[]; total: number }> {
     const base = this.occupationStages(filters);
 
-    const listStages: Document[] = [...base, ...recencySortStages()];
+    const listStages: Document[] = [...base, ...sortStages(filters.sort ?? null)];
     if (pageable) {
       listStages.push(...paginationStages(pageable.page, pageable.size));
     }
     listStages.push(this.projectionStage());
 
     const [items, counted] = await Promise.all([
-      this.collection.aggregate<RoomWithOccupation>(listStages).toArray(),
-      this.collection.aggregate<{ total: number }>([...base, { $count: 'total' }]).toArray(),
+      this.collection
+        .aggregate<RoomWithOccupation>(listStages, { collation: PT_COLLATION })
+        .toArray(),
+      this.collection
+        .aggregate<{ total: number }>([...base, { $count: 'total' }], { collation: PT_COLLATION })
+        .toArray(),
     ]);
 
     return { items, total: counted[0]?.total ?? 0 };
