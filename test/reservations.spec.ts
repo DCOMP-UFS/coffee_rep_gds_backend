@@ -326,6 +326,99 @@ describe('Reservas', () => {
     });
   });
 
+  describe('GET /api/reservation — busca, tipo e ordenação', () => {
+    const ids = (body: { content: { reservationId: number }[] }) =>
+      body.content.map((r) => r.reservationId);
+
+    function list(params: string) {
+      return client.get(`/api/reservation?${PERIOD}&page=0&size=20&${params}`).expect(200);
+    }
+
+    // 7714: Pediatria - Sala 01, Ana, 24/08 · 7715: Oftalmologia - Sala 05, Bruno, 20/08
+    // 7716 e 7717: série fixa na Pediatria - Sala 02, Ana, 24/08 e 31/08
+    beforeEach(async () => {
+      await reserve(simple).expect(201);
+      await reserve({
+        salaId: 36,
+        solicitanteId: 3,
+        horaInicio: '2026-08-20T08:00',
+        horaFim: '2026-08-20T10:00',
+      }).expect(201);
+      await reserve({
+        salaId: 13,
+        solicitanteId: 2,
+        horaInicio: '2026-08-24T08:00',
+        horaFim: '2026-08-31T10:00',
+        fixo: true,
+        dias: [1],
+      }).expect(201);
+    });
+
+    it('mantém a ordem por recência quando `sort` não é enviado', async () => {
+      const response = await list('');
+
+      expect(ids(response.body)).toEqual([7717, 7716, 7715, 7714]);
+    });
+
+    it('busca no nome da sala e do setor, ignorando maiúsculas', async () => {
+      expect(ids((await list('busca=OFTALMO')).body)).toEqual([7715]);
+      expect(ids((await list('busca=sala 02')).body)).toEqual([7717, 7716]);
+    });
+
+    it('busca no nome do solicitante', async () => {
+      expect(ids((await list('busca=bruno')).body)).toEqual([7715]);
+    });
+
+    it('busca no nome de quem criou a reserva', async () => {
+      const response = await list('busca=brenda');
+
+      expect(response.body.page.totalElements).toBe(4);
+    });
+
+    it('devolve vazio quando a busca não encontra nada, com total zerado', async () => {
+      const response = await list('busca=inexistente');
+
+      expect(response.body.content).toEqual([]);
+      expect(response.body.page.totalElements).toBe(0);
+    });
+
+    it('filtra só as fixas com recorrente=true', async () => {
+      expect(ids((await list('recorrente=true')).body)).toEqual([7717, 7716]);
+    });
+
+    it('filtra só as pontuais com recorrente=false', async () => {
+      expect(ids((await list('recorrente=false')).body)).toEqual([7715, 7714]);
+    });
+
+    it('ignora `recorrente` com valor inválido, sem responder erro', async () => {
+      const response = await list('recorrente=talvez');
+
+      expect(response.body.page.totalElements).toBe(4);
+    });
+
+    it('ordena por horário de início crescente, desempatando por id', async () => {
+      expect(ids((await list('sort=horaInicio,asc')).body)).toEqual([7715, 7714, 7716, 7717]);
+    });
+
+    it('ordena por sala crescente', async () => {
+      expect(ids((await list('sort=sala,asc')).body)).toEqual([7715, 7714, 7716, 7717]);
+    });
+
+    it('ordena por solicitante decrescente', async () => {
+      expect(ids((await list('sort=solicitante,desc')).body)).toEqual([7717, 7716, 7714, 7715]);
+    });
+
+    it('ignora `sort` fora da lista permitida e mantém a recência', async () => {
+      expect(ids((await list('sort=criador,asc')).body)).toEqual([7717, 7716, 7715, 7714]);
+    });
+
+    it('combina busca, tipo e ordenação com os filtros existentes', async () => {
+      const response = await list('busca=pediatria&recorrente=true&setorId=4&sort=horaInicio,desc');
+
+      expect(ids(response.body)).toEqual([7717, 7716]);
+    });
+  });
+
   describe('GET /api/reservation/current-month', () => {
     it('devolve array puro, sem envelope', async () => {
       const response = await client.get('/api/reservation/current-month').expect(200);
