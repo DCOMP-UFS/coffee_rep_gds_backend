@@ -193,6 +193,26 @@ migrados têm `createdAt` idêntico em lotes inteiros e, sem o desempate, a orde
 variaria de uma requisição para outra. Isso não altera a ordenação percebida, apenas a
 torna estável.
 
+**Corrigido depois da migração para React:** `?sort=campo,asc|desc` passou a ser aceito em
+salas, solicitantes, reservas e auditoria, só para os campos de uma lista permitida por
+endpoint (ver README). Sem `sort`, ou com um valor fora da lista, a ordem continua a de
+recência — clientes antigos não percebem diferença. Textos são comparados com collation
+`pt`, ignorando acento e maiúsculas, e o desempate por id segue o mesmo sentido.
+
+---
+
+## 13. Busca de sala por nome diferenciava maiúsculas
+
+**Onde:** `GET /api/room?nome=` e `GET /api/room?setor=`.
+
+**Comportamento:** o Java filtrava salas com SQL nativo e `LIKE '%termo%'` sem `LOWER`, então
+`nome=pediatria` não encontrava "Pediatria - Sala 01". As demais listagens usavam
+Specifications com `lower()` e não tinham o problema.
+
+**Corrigido depois da migração para React:** os dois filtros passaram a ignorar maiúsculas,
+como as outras buscas. Quem buscava com a grafia exata continua recebendo o mesmo resultado;
+só aparecem resultados que antes eram omitidos.
+
 ---
 
 ## Divergências intencionais, em resumo
@@ -204,6 +224,10 @@ Só três pontos fogem da replicação literal, e todos foram escolhas conscient
 | 3 | Nome duplicado de setor passou a ser detectado | Manter o bug permitiria violar o índice único da coleção |
 | 9 | Hash de senha não é mais exposto em `GET /api/user` | Replicar seria criar uma falha de segurança nova |
 | 12 | Desempate por id na ordenação | Torna estável uma ordem que os dados migrados deixavam ambígua |
+
+Depois da migração do frontend para React, o contrato deixou de precisar ser idêntico ao do
+Java, e dois itens foram corrigidos de forma aditiva: o 12 (`?sort=` agora é respeitado) e o 13
+(busca de sala sem diferenciar maiúsculas).
 
 Além disso, dois pontos deixaram de ser exceções não tratadas (que resultariam em 500) e
 passaram a ter comportamento definido, sem mudar nenhum caso de sucesso:

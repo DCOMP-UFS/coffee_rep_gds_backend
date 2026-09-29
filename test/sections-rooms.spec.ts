@@ -227,6 +227,52 @@ describe('Setores e salas', () => {
     });
   });
 
+  describe('GET /api/room — busca e ordenação', () => {
+    const ids = (body: { content: { id: number }[] }) => body.content.map((r) => r.id);
+
+    it('busca por nome ignorando maiúsculas (regressão do LIKE case-sensitive)', async () => {
+      const response = await client.get('/api/room?nome=pediatria').expect(200);
+
+      expect(ids(response.body).sort()).toEqual([12, 13]);
+    });
+
+    it('busca pelo nome do setor ignorando maiúsculas', async () => {
+      const response = await client.get('/api/room?setor=OFTALMO').expect(200);
+
+      expect(ids(response.body)).toEqual([36]);
+    });
+
+    it('mantém a ordem por recência quando `sort` não é enviado', async () => {
+      const response = await client.get('/api/room').expect(200);
+
+      expect(ids(response.body)).toEqual([36, 13, 12]);
+    });
+
+    it('ordena por nome crescente', async () => {
+      const response = await client.get('/api/room?sort=nome,asc').expect(200);
+
+      expect(ids(response.body)).toEqual([36, 12, 13]);
+    });
+
+    it('ordena por setor decrescente, desempatando por id no mesmo sentido', async () => {
+      const response = await client.get('/api/room?sort=setor,desc').expect(200);
+
+      expect(ids(response.body)).toEqual([13, 12, 36]);
+    });
+
+    it('ignora `sort` inválido e mantém a recência', async () => {
+      const response = await client.get('/api/room?sort=nome,sideways').expect(200);
+
+      expect(ids(response.body)).toEqual([36, 13, 12]);
+    });
+
+    it('ordena também na rota por setor', async () => {
+      const response = await client.get('/api/room/section/4?sort=nome,desc').expect(200);
+
+      expect(ids(response.body)).toEqual([13, 12]);
+    });
+  });
+
   describe('cálculo de ocupação', () => {
     async function reserveNow(roomId: number, requesterId: number): Promise<void> {
       const now = new Date();

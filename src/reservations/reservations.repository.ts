@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Collection, Db, Document } from 'mongodb';
-import { paginationStages, recencySortStages } from '../common/pagination/sort-stages';
+import { PT_COLLATION, SortableFields, SortSpec, sortStages } from '../common/pagination/sort';
+import { paginationStages } from '../common/pagination/sort-stages';
 import { containsIgnoreCase } from '../common/validation/text';
 import {
   COLLECTIONS,
@@ -20,7 +21,20 @@ export interface ReservationFilters {
   roomId?: number | null;
   requesterId?: number | null;
   sectionId?: number | null;
+  /** Busca em OR sobre sala, setor, solicitante e criador. */
+  search?: string | null;
+  /** `true` só recorrentes; `false` só pontuais; `null` todas. */
+  recurring?: boolean | null;
+  /** `null` mantém a ordem por recência. */
+  sort?: SortSpec | null;
 }
+
+/** Campos aceitos em `?sort=`, com os nomes da resposta. */
+export const RESERVATION_SORTABLE_FIELDS: SortableFields = {
+  horaInicio: 'startDate',
+  sala: 'room.name',
+  solicitante: 'requester.name',
+};
 
 /** Reserva já enriquecida com sala, setor, solicitante e criador. */
 export interface ReservationView extends ReservationDocument {
@@ -103,6 +117,8 @@ export class ReservationsRepository {
     if (filters.requesterId !== null && filters.requesterId !== undefined) {
       match.requesterId = filters.requesterId;
     }
+    if (filters.recurring === true) match.recurrenceId = { $ne: null };
+    if (filters.recurring === false) match.recurrenceId = null;
 
     const stages: Document[] = [{ $match: match }, ...this.joinStages()];
 
@@ -116,6 +132,16 @@ export class ReservationsRepository {
     }
     if (filters.sectionId !== null && filters.sectionId !== undefined) {
       joined['section._id'] = filters.sectionId;
+    }
+    const term = filters.search?.trim();
+    if (term) {
+      const pattern = containsIgnoreCase(term);
+      joined.$or = [
+        { 'room.name': { $regex: pattern } },
+        { 'section.name': { $regex: pattern } },
+        { 'requester.name': { $regex: pattern } },
+        { 'createdBy.name': { $regex: pattern } },
+      ];
     }
 
     if (Object.keys(joined).length > 0) {
@@ -143,15 +169,19 @@ export class ReservationsRepository {
   ): Promise<{ items: ReservationView[]; total: number }> {
     const base = this.filterStages(filters);
 
-    const listStages: Document[] = [...base, ...recencySortStages()];
+    const listStages: Document[] = [...base, ...sortStages(filters.sort ?? null)];
     if (pageable) {
       listStages.push(...paginationStages(pageable.page, pageable.size));
     }
     listStages.push(this.projectionStage());
 
     const [items, counted] = await Promise.all([
-      this.collection.aggregate<ReservationView>(listStages).toArray(),
-      this.collection.aggregate<{ total: number }>([...base, { $count: 'total' }]).toArray(),
+      this.collection
+        .aggregate<ReservationView>(listStages, { collation: PT_COLLATION })
+        .toArray(),
+      this.collection
+        .aggregate<{ total: number }>([...base, { $count: 'total' }], { collation: PT_COLLATION })
+        .toArray(),
     ]);
 
     return { items, total: counted[0]?.total ?? 0 };

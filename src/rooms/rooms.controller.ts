@@ -14,6 +14,7 @@ import {
 import { CurrentUserId } from '../auth/current-user';
 import { PageEnvelope } from '../common/pagination/page';
 import { parsePageable, unpagedSchema } from '../common/pagination/pageable';
+import { parseSort } from '../common/pagination/sort';
 import { zodPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateRoomDto,
@@ -24,6 +25,7 @@ import {
   occupiedSchema,
   updateRoomSchema,
 } from './dto/room.dto';
+import { ROOM_SORTABLE_FIELDS } from './rooms.repository';
 import { RoomsService } from './rooms.service';
 
 type RoomListResult = RoomResponse[] | PageEnvelope<RoomResponse>;
@@ -82,6 +84,7 @@ export class RoomsController {
       sectionName: sectionId === null ? query.setor : null,
       sectionId,
       occupied: occupiedSchema.parse(query.ocupada),
+      sort: parseSort(query.sort, ROOM_SORTABLE_FIELDS),
     };
 
     if (unpagedSchema.parse(query.unpaged)) {

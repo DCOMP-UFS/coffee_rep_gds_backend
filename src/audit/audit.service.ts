@@ -2,8 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { formatLocalDateTime, nowWallClock, parseLocalDate } from '../common/date/local-date-time';
 import { PageEnvelope, toPage } from '../common/pagination/page';
 import { Pageable } from '../common/pagination/pageable';
+import { parseSort } from '../common/pagination/sort';
 import { UsersRepository } from '../users/users.repository';
-import { AuditRepository, AuditListFilters } from './audit.repository';
+import { AUDIT_SORTABLE_FIELDS, AuditRepository, AuditListFilters } from './audit.repository';
 import { AuditEventResponse } from './dto/audit.dto';
 import { RecordAuditInput, UNKNOWN_ACTOR_NAME } from './audit.types';
 
@@ -93,6 +94,7 @@ export class AuditService {
       entityType: query.entityType ?? null,
       createdFrom,
       createdTo,
+      sort: parseSort(query.sort, AUDIT_SORTABLE_FIELDS),
     };
   }
 }

@@ -131,6 +131,55 @@ describe('Auditoria', () => {
     expect(miss.body.page.totalElements).toBe(0);
   });
 
+  describe('ordenação por data', () => {
+    const ids = (body: { content: { id: number }[] }) => body.content.map((e) => e.id);
+
+    beforeEach(async () => {
+      const event = (id: number, createdAt: string) => ({
+        _id: id,
+        action: 'room.create',
+        entityType: 'room',
+        entityId: 12,
+        actorUserId: 5,
+        actorName: 'Brenda HU',
+        details: {},
+        createdAt: new Date(`${createdAt}Z`),
+      });
+      await context.db
+        .collection(COLLECTIONS.auditEvents)
+        .insertMany([
+          event(1, '2026-09-01T10:00:00'),
+          event(2, '2026-09-03T10:00:00'),
+          event(3, '2026-09-02T10:00:00'),
+          event(4, '2026-09-02T10:00:00'),
+        ] as never);
+    });
+
+    it('traz os mais recentes primeiro quando `sort` não é enviado', async () => {
+      const response = await client.get('/api/audit?page=0&size=10').expect(200);
+
+      expect(ids(response.body)).toEqual([2, 4, 3, 1]);
+    });
+
+    it('traz os mais antigos primeiro com sort=createdAt,asc', async () => {
+      const response = await client.get('/api/audit?sort=createdAt,asc&page=0&size=10').expect(200);
+
+      expect(ids(response.body)).toEqual([1, 3, 4, 2]);
+    });
+
+    it('ignora `sort` fora da lista permitida', async () => {
+      const response = await client.get('/api/audit?sort=actorName,asc&page=0&size=10').expect(200);
+
+      expect(ids(response.body)).toEqual([2, 4, 3, 1]);
+    });
+
+    it('ordena também com unpaged=true', async () => {
+      const response = await client.get('/api/audit?unpaged=true&sort=createdAt,asc').expect(200);
+
+      expect(response.body.map((e: { id: number }) => e.id)).toEqual([1, 3, 4, 2]);
+    });
+  });
+
   it('login bem-sucedido gera evento auth.login', async () => {
     await request(context.app.getHttpServer())
       .post('/api/auth/login')

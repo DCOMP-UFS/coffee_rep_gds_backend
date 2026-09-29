@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { COLLECTIONS } from '../src/database/documents';
+import { COLLECTIONS, STATUS_ACTIVE } from '../src/database/documents';
 import { RequesterAbsencesModule } from '../src/requester-absences/requester-absences.module';
 import { RequestersModule } from '../src/requesters/requesters.module';
 import { authed, basicToken, seedCatalog, seedUsers } from './support/fixtures';
@@ -101,6 +101,87 @@ describe('Solicitantes e ausências', () => {
     it('responde 400 com mensagem sem exclamação para id inexistente', async () => {
       const response = await client.get('/api/requester/999').expect(400);
       expect(response.body.message).toBe('Solicitante não encontrado');
+    });
+  });
+
+  describe('GET /api/requester — filtros e ordenação', () => {
+    const ids = (body: { content: { id: number }[] }) => body.content.map((r) => r.id);
+
+    beforeEach(async () => {
+      await context.db.collection(COLLECTIONS.requesters).insertOne({
+        _id: 4,
+        name: 'álvaro Dias',
+        contactNumber: null,
+        specialty: 'cardiologia',
+        status: STATUS_ACTIVE,
+        createdAt: new Date('2026-05-01T00:00:00Z'),
+        updatedAt: null,
+        updatedBy: 5,
+      } as never);
+    });
+
+    it('mantém a ordem por recência quando `sort` não é enviado', async () => {
+      const response = await client.get('/api/requester').expect(200);
+
+      expect(ids(response.body)).toEqual([3, 2, 4]);
+    });
+
+    it('filtra por especialidade exata, ignorando maiúsculas', async () => {
+      const response = await client.get('/api/requester?especialidade=CARDIOLOGIA').expect(200);
+
+      expect(ids(response.body).sort()).toEqual([2, 4]);
+    });
+
+    it('não trata especialidade como busca parcial', async () => {
+      const response = await client.get('/api/requester?especialidade=cardio').expect(200);
+
+      expect(response.body.content).toEqual([]);
+    });
+
+    it('combina especialidade com a busca livre', async () => {
+      const response = await client
+        .get('/api/requester?especialidade=Cardiologia&busca=ana')
+        .expect(200);
+
+      expect(ids(response.body)).toEqual([2]);
+    });
+
+    it('ordena por nome ignorando acento e maiúsculas', async () => {
+      const response = await client.get('/api/requester?sort=nome,asc').expect(200);
+
+      expect(response.body.content.map((r: { nome: string }) => r.nome)).toEqual([
+        'álvaro Dias',
+        'Dr. Bruno Lima',
+        'Dra. Ana Souza',
+      ]);
+    });
+
+    it('ordena por especialidade decrescente, desempatando por id', async () => {
+      const response = await client.get('/api/requester?sort=especialidade,desc').expect(200);
+
+      expect(ids(response.body)).toEqual([3, 4, 2]);
+    });
+
+    it('ignora `sort` fora da lista permitida e mantém a recência', async () => {
+      const response = await client.get('/api/requester?sort=contactNumber,asc').expect(200);
+
+      expect(ids(response.body)).toEqual([3, 2, 4]);
+    });
+
+    it('aplica filtros e ordenação também com unpaged=true', async () => {
+      const response = await client
+        .get('/api/requester?unpaged=true&especialidade=cardiologia&sort=nome,desc')
+        .expect(200);
+
+      expect(response.body.map((r: { id: number }) => r.id)).toEqual([2, 4]);
+    });
+
+    it('conta no total apenas os filtrados', async () => {
+      const response = await client
+        .get('/api/requester?especialidade=cardiologia&page=0&size=1')
+        .expect(200);
+
+      expect(response.body.page.totalElements).toBe(2);
     });
   });
 

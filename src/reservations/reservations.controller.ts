@@ -16,6 +16,7 @@ import { requireLocalDateTime } from '../common/date/local-date-time';
 import { ValidationError } from '../common/errors/domain-errors';
 import { PageEnvelope } from '../common/pagination/page';
 import { parsePageable } from '../common/pagination/pageable';
+import { parseSort } from '../common/pagination/sort';
 import { zodPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateReservationDto,
@@ -23,6 +24,7 @@ import {
   ReservationResponse,
   createReservationSchema,
 } from './dto/reservation.dto';
+import { RESERVATION_SORTABLE_FIELDS } from './reservations.repository';
 import { ReservationsService } from './reservations.service';
 
 @Controller('api/reservation')
@@ -42,6 +44,9 @@ export class ReservationsController {
         roomId: parseOptionalId(query.salaId),
         requesterId: parseOptionalId(query.solicitanteId),
         sectionId: parseOptionalId(query.setorId),
+        search: query.busca ?? null,
+        recurring: parseOptionalBoolean(query.recorrente),
+        sort: parseSort(query.sort, RESERVATION_SORTABLE_FIELDS),
       },
       parsePageable(query),
     );
@@ -97,4 +102,11 @@ function parseOptionalId(value: string | undefined): number | null {
   if (!value) return null;
   const parsed = Number.parseInt(value, 10);
   return Number.isInteger(parsed) ? parsed : null;
+}
+
+/** Só `true` e `false` filtram; qualquer outro valor é ignorado, em vez de responder erro. */
+function parseOptionalBoolean(value: string | undefined): boolean | null {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return null;
 }
