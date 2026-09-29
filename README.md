@@ -134,6 +134,22 @@ Há também assimetrias de nome a preservar: a escrita usa `telefone`/`observaca
 `contato`/`observacoes`; a listagem de reservas usa `reservationId` e campos em português, enquanto a
 criação responde em inglês.
 
+### Filtros e ordenação das listagens
+
+Todos os parâmetros abaixo são opcionais e aditivos. Valor desconhecido ou inválido é ignorado
+(nunca responde 400), e sem `sort` a ordem continua a de recência, com desempate por id.
+
+| Endpoint | Filtros | `sort` aceito |
+|---|---|---|
+| `GET /api/room` | `nome`, `setor` (parciais, sem diferenciar maiúsculas), `ocupada` | `nome`, `setor` |
+| `GET /api/requester` | `busca` (nome, especialidade ou telefone), `especialidade` (exata, sem diferenciar maiúsculas) | `nome`, `especialidade` |
+| `GET /api/reservation` | `inicio` e `fim` (obrigatórios), `busca` (sala, setor, solicitante ou criador), `recorrente=true\|false`, `setorId`, `salaId`, `solicitanteId` | `horaInicio`, `sala`, `solicitante` |
+| `GET /api/audit` | `q`, `action`, `entityType`, `createdFrom`, `createdTo` | `createdAt` |
+
+O formato é o do Spring: `sort=campo,asc` ou `sort=campo,desc`. Textos são ordenados com collation
+`pt` (ignora acento e maiúsculas), e o desempate por id segue o mesmo sentido. A lista de campos
+permitidos fica em `*_SORTABLE_FIELDS`, ao lado de cada repositório.
+
 ### Fuso horário
 
 Os dados foram importados como **horário de parede em UTC**. Toda escrita usa `nowWallClock()`, que
