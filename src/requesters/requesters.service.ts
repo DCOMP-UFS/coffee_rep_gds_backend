@@ -12,7 +12,7 @@ import {
   RequesterResponse,
   UpdateRequesterDto,
 } from './dto/requester.dto';
-import { RequestersRepository } from './requesters.repository';
+import { RequesterFilters, RequestersRepository } from './requesters.repository';
 
 @Injectable()
 export class RequestersService {
@@ -22,15 +22,15 @@ export class RequestersService {
   ) {}
 
   async findActivePaged(
-    search: string | null | undefined,
+    filters: RequesterFilters,
     pageable: Pageable,
   ): Promise<PageEnvelope<RequesterResponse>> {
-    const { items, total } = await this.repository.findActive(search, pageable);
+    const { items, total } = await this.repository.findActive(filters, pageable);
     return toPage(items.map(toRequesterResponse), pageable, total);
   }
 
-  async findActiveUnpaged(search: string | null | undefined): Promise<RequesterResponse[]> {
-    const { items } = await this.repository.findActive(search, null);
+  async findActiveUnpaged(filters: RequesterFilters): Promise<RequesterResponse[]> {
+    const { items } = await this.repository.findActive(filters, null);
     return items.map(toRequesterResponse);
   }
 

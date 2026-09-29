@@ -14,6 +14,7 @@ import {
 import { CurrentUserId } from '../auth/current-user';
 import { PageEnvelope } from '../common/pagination/page';
 import { parsePageable, unpagedSchema } from '../common/pagination/pageable';
+import { parseSort } from '../common/pagination/sort';
 import { zodPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateRequesterDto,
@@ -23,6 +24,7 @@ import {
   createRequesterSchema,
   updateRequesterSchema,
 } from './dto/requester.dto';
+import { REQUESTER_SORTABLE_FIELDS, RequesterFilters } from './requesters.repository';
 import { RequestersService } from './requesters.service';
 
 @Controller('api/requester')
@@ -34,13 +36,17 @@ export class RequestersController {
   getAll(
     @Query() query: Record<string, string>,
   ): Promise<RequesterResponse[] | PageEnvelope<RequesterResponse>> {
-    const search = query.busca ?? query.nome;
+    const filters: RequesterFilters = {
+      search: query.busca ?? query.nome,
+      specialty: query.especialidade,
+      sort: parseSort(query.sort, REQUESTER_SORTABLE_FIELDS),
+    };
 
     if (unpagedSchema.parse(query.unpaged)) {
-      return this.requestersService.findActiveUnpaged(search);
+      return this.requestersService.findActiveUnpaged(filters);
     }
 
-    return this.requestersService.findActivePaged(search, parsePageable(query));
+    return this.requestersService.findActivePaged(filters, parsePageable(query));
   }
 
   /**
@@ -52,7 +58,7 @@ export class RequestersController {
     @Param('requesterTypeId', ParseIntPipe) _requesterTypeId: number,
     @Query() query: Record<string, string>,
   ): Promise<PageEnvelope<RequesterResponse>> {
-    return this.requestersService.findActivePaged(query.nome, parsePageable(query));
+    return this.requestersService.findActivePaged({ search: query.nome }, parsePageable(query));
   }
 
   @Get(':id')
