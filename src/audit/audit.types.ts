@@ -16,6 +16,11 @@ export const AUDIT_ACTIONS = [
   'reservation.cancel_recurrence',
   'auth.register',
   'auth.login',
+  'user.role_change',
+  'role_request.create',
+  'role_request.approve',
+  'role_request.reject',
+  'role_request.cancel',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -27,6 +32,7 @@ export const AUDIT_ENTITY_TYPES = [
   'absence',
   'reservation',
   'user',
+  'role_request',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];

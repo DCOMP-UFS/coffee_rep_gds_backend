@@ -8,6 +8,7 @@ import { HealthController } from './health/health.controller';
 import { RequesterAbsencesModule } from './requester-absences/requester-absences.module';
 import { RequestersModule } from './requesters/requesters.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { RoleRequestsModule } from './role-requests/role-requests.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { SectionsModule } from './sections/sections.module';
 import { UsersModule } from './users/users.module';
@@ -23,6 +24,7 @@ import { UsersModule } from './users/users.module';
     RequestersModule,
     RequesterAbsencesModule,
     ReservationsModule,
+    RoleRequestsModule,
   ],
   controllers: [HealthController],
   providers: [

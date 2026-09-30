@@ -11,7 +11,8 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CurrentUserId } from '../auth/current-user';
+import { AuthenticatedUser, CurrentUser, CurrentUserId } from '../auth/current-user';
+import { RequirePermission } from '../auth/require-permission.decorator';
 import { requireLocalDateTime } from '../common/date/local-date-time';
 import { ValidationError } from '../common/errors/domain-errors';
 import { PageEnvelope } from '../common/pagination/page';
@@ -60,25 +61,32 @@ export class ReservationsController {
     );
   }
 
+  /** Pontual exige assistente ou acima; `fixo: true` é conferido no service. */
+  @RequirePermission('reservation.single.manage')
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body(zodPipe(createReservationSchema)) dto: CreateReservationDto,
-    @CurrentUserId() userId: number,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<CreateReservationResponse> {
-    return this.reservationsService.create(dto, userId);
+    return this.reservationsService.create(dto, user);
   }
 
-  /** Cancelamento pontual é PATCH; cancelamento de série é DELETE. */
+  /**
+   * Cancelamento pontual é PATCH; cancelamento de série é DELETE. Cancelar uma
+   * ocorrência de série exige a permissão de recorrentes, conferida no service.
+   */
+  @RequirePermission('reservation.single.manage')
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   cancel(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUserId() userId: number,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    return this.reservationsService.cancel(id, userId);
+    return this.reservationsService.cancel(id, user);
   }
 
+  @RequirePermission('reservation.recurring.manage')
   @Delete('recurrent/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   cancelRecurrence(

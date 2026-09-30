@@ -83,7 +83,7 @@ describe('Auth e usuários', () => {
   });
 
   describe('POST /api/auth/register', () => {
-    it('cria usuário BASIC e responde 200 com corpo vazio', async () => {
+    it('cria usuário VIEWER e responde 200 com corpo vazio', async () => {
       await http()
         .post('/api/auth/register')
         .send({
@@ -101,7 +101,7 @@ describe('Auth e usuários', () => {
         .collection(COLLECTIONS.users)
         .findOne({ cpf: '30577082426' });
 
-      expect(created?.roles).toEqual(['BASIC']);
+      expect(created?.roles).toEqual(['VIEWER']);
       expect(created?.status).toBe(1);
       expect(created?.password).not.toBe('segredo');
     });

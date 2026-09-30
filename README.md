@@ -54,6 +54,7 @@ Para mudar, ajuste `MONGO_PORT` no `.env`.
 | `pnpm db:reset`        | Apaga o volume e sobe do zero                              |
 | `pnpm db:migrate`      | Lê o dump SQL e recria as coleções no Mongo (idempotente)  |
 | `pnpm seed:admin`      | Cria o admin inicial (idempotente)                         |
+| `pnpm db:migrate-roles`| Converte BASIC em COORDINATOR; dry-run sem `--apply`       |
 | `pnpm keys:generate`   | Gera o par RSA; com `--write`, grava direto no `.env`      |
 
 `db:migrate` limpa cada coleção antes de inserir, então pode ser rodado quantas vezes for preciso.
@@ -150,6 +151,67 @@ O formato é o do Spring: `sort=campo,asc` ou `sort=campo,desc`. Textos são ord
 `pt` (ignora acento e maiúsculas), e o desempate por id segue o mesmo sentido. A lista de campos
 permitidos fica em `*_SORTABLE_FIELDS`, ao lado de cada repositório.
 
+### Perfis, permissões e pedidos de acesso
+
+Há quatro perfis. Os três primeiros formam a hierarquia operacional, e cada nível inclui o anterior;
+o administrador é único (`admin@admin.com`), fica fora dela e não pode ser atribuído nem rebaixado
+pela API.
+
+| Permissão | Visualizador | Assistente administrativo | Coordenação | Administrador |
+|---|:-:|:-:|:-:|:-:|
+| Consultar tudo (salas, reservas, calendário…) | ✓ | ✓ | ✓ | ✓ |
+| `reservation.single.manage`: criar e cancelar reservas pontuais | | ✓ | ✓ | ✓ |
+| `absence.manage`: registrar, editar e remover ausências | | ✓ | ✓ | ✓ |
+| `reservation.recurring.manage`: reservas recorrentes e ocorrências de série | | | ✓ | ✓ |
+| `catalog.manage`: setores, salas e solicitantes | | | ✓ | ✓ |
+| `audit.read`: histórico de alterações | | | ✓ | ✓ |
+| `users.manage` e `roleRequests.review`: perfis e pedidos de acesso | | | | ✓ |
+
+A matriz vive num único lugar, `src/auth/permissions.ts`, e as rotas a declaram com
+`@RequirePermission(...)`. Toda conta nova nasce **Visualizador**. O guard relê o usuário do banco a
+cada requisição, então promoções e rebaixamentos valem na hora, inclusive para tokens já emitidos, e
+um usuário removido passa a receber 401. `GET /api/auth/me` devolve o perfil e as permissões
+calculadas, e é por ele que o frontend decide o que mostrar.
+
+Reservas têm uma regra a mais, que depende do corpo: a rota exige `reservation.single.manage`, e o
+serviço exige `reservation.recurring.manage` para `fixo: true` e para cancelar qualquer ocorrência
+que tenha `recurrenceId`.
+
+Pedidos de acesso (`/api/role-request`):
+
+- Qualquer usuário pede um perfil acima do atual, com justificativa de 10 a 500 caracteres. Um
+  índice único parcial garante no máximo um pedido pendente por pessoa.
+- Só o administrador aprova ou recusa. O fechamento é um `findOneAndUpdate` condicionado a
+  `status: PENDING`, o que impede aprovação dupla em cliques simultâneos.
+- `PATCH /api/user/:id/role` troca o perfil diretamente e cancela o pedido pendente da pessoa.
+- Tudo é registrado na auditoria (`role_request.*` e `user.role_change`).
+
+Cada pedido novo envia um e-mail pelo [Resend](https://resend.com) para `ADMIN_NOTIFICATION_EMAILS`,
+com o link "Analisar pedido" apontando para `FRONTEND_URL/admin`. O envio é aguardado (a Vercel pode
+congelar trabalho iniciado depois da resposta), com limite de 5 segundos, e nunca derruba a
+requisição: sem chave, sem destinatários ou com falha no Resend, o pedido é gravado e fica só um
+aviso no log. Sem domínio verificado, o remetente precisa ser `onboarding@resend.dev` e o Resend só
+entrega para o e-mail dono da conta.
+
+| Variável | Uso |
+|---|---|
+| `RESEND_API_KEY` | Chave da API do Resend. Vazia desliga o envio. |
+| `MAIL_FROM` | Remetente; padrão `Gestão de Salas <onboarding@resend.dev>`. |
+| `ADMIN_NOTIFICATION_EMAILS` | Destinatários, separados por vírgula. |
+| `FRONTEND_URL` | Base do frontend, usada no link do e-mail. |
+
+#### Migração dos perfis
+
+Os usuários do modelo antigo são `BASIC`. Enquanto a migração não roda, o backend já trata `BASIC`
+como Coordenação, então a ordem de deploy é segura. A migração converte o valor gravado, confere
+se há exatamente um ADMIN e cria os índices de `roleRequests`:
+
+```bash
+pnpm db:migrate-roles                                    # dry-run: só mostra o que mudaria
+pnpm db:migrate-roles --apply                            # banco do .env
+pnpm db:migrate-roles --env .env.atlas --apply --yes     # Atlas (--yes obrigatório fora do local)
+```
+
 ### Fuso horário
 
 Os dados foram importados como **horário de parede em UTC**. Toda escrita usa `nowWallClock()`, que
@@ -170,6 +232,7 @@ O dump vive em `../db-backup/gestao-salas-dump.sql` (configurável via `DUMP_PAT
 | `tb_requester_absence`                     | `requesterAbsences`                             |
 | `tb_reservations`                          | `reservations`                                  |
 | sequences                                  | `counters`                                      |
+| (novo)                                     | `roleRequests` (pedidos de acesso)              |
 
 Decisões da modelagem:
 
@@ -179,7 +242,8 @@ Decisões da modelagem:
 - **Relacionamentos por referência** (`sectionId`, `roomId`, `requesterId`, `updatedBy`) em vez de
   documentos embutidos: reservas são consultadas por período de forma independente das salas, e
   salas/solicitantes são editados sozinhos.
-- **Roles embutidas no usuário**: são apenas `ADMIN` e `BASIC`, o que não justifica duas coleções.
+- **Roles embutidas no usuário**: são poucas (`VIEWER`, `ASSISTANT`, `COORDINATOR`, `ADMIN` e o
+  legado `BASIC`), o que não justifica duas coleções.
 - **Datas.** As colunas eram `timestamp without time zone` (horário de parede, sem fuso). São
   interpretadas como UTC na importação, de modo que o valor exibido continua idêntico ao do
   Postgres — uma reserva às 07:00 permanece às 07:00.
@@ -253,3 +317,12 @@ Dois pontos dependem de configuração fora do código:
 
 No momento do deploy também é preciso apontar `apiUrl` em `src/environments/environment.prod.ts` do
 frontend para a nova URL, e incluir a origem do frontend em `CORS_ORIGINS`.
+
+### Ordem de deploy dos perfis
+
+1. Cadastre `RESEND_API_KEY`, `MAIL_FROM`, `ADMIN_NOTIFICATION_EMAILS` e `FRONTEND_URL` nas
+   variáveis de ambiente da Vercel.
+2. Publique o backend. Como `BASIC` já vale como Coordenação, ninguém perde acesso.
+3. Rode `pnpm db:migrate-roles --env .env.atlas` (dry-run), confira a lista e repita com
+   `--apply --yes`.
+4. Publique o frontend, que depende de `GET /api/auth/me`.

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service';
+import { Actor } from '../auth/current-user';
 import {
   formatLocalDateTime,
   nowWallClock,
@@ -23,6 +24,7 @@ import {
   ReservationResponse,
 } from './dto/reservation.dto';
 import { OccurrenceSlot, buildOccurrenceSlots } from './recurrence';
+import { assertCanManageReservation } from './reservation-permissions';
 import { ReservationFilters, ReservationView, ReservationsRepository } from './reservations.repository';
 
 @Injectable()
@@ -60,7 +62,10 @@ export class ReservationsService {
     return this.toResponses(items);
   }
 
-  async create(dto: CreateReservationDto, userId: number): Promise<CreateReservationResponse> {
+  async create(dto: CreateReservationDto, actor: Actor): Promise<CreateReservationResponse> {
+    assertCanManageReservation(actor.role, Boolean(dto.fixo));
+    const { userId } = actor;
+
     const room = await this.rooms.getActiveById(dto.salaId);
     const requester = await this.requesters.getById(dto.solicitanteId);
 
@@ -73,17 +78,19 @@ export class ReservationsService {
     return this.createRecurrent(dto, room.name, requester.name, userId);
   }
 
-  async cancel(id: number, userId: number): Promise<void> {
+  async cancel(id: number, actor: Actor): Promise<void> {
     const reservation = await this.repository.findApprovedById(id);
     if (!reservation) {
       throw new EntityNotFoundError(`Nenhuma reserva ativa encontrada para este ID: ${id}`);
     }
+    assertCanManageReservation(actor.role, reservation.recurrenceId != null);
+
     await this.repository.cancelById(id);
     await this.audit.record({
       action: 'reservation.cancel',
       entityType: 'reservation',
       entityId: id,
-      actorUserId: userId,
+      actorUserId: actor.userId,
       details: {
         salaId: reservation.roomId,
         solicitanteId: reservation.requesterId,

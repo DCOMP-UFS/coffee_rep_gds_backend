@@ -2,6 +2,7 @@ import { hash } from 'bcryptjs';
 import { Db } from 'mongodb';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { ROLE_ASSISTANT, ROLE_COORDINATOR, ROLE_VIEWER } from '../../src/auth/roles';
 import { TokenService } from '../../src/auth/token.service';
 import {
   COLLECTIONS,
@@ -52,12 +53,52 @@ export async function seedUsers(db: Db): Promise<void> {
       updatedAt: null,
       updatedBy: null,
     },
+    ...ROLE_FIXTURES.map((fixture) => ({
+      _id: fixture.id,
+      name: fixture.name,
+      email: fixture.email,
+      cpf: fixture.cpf,
+      password,
+      phone: '79988887777',
+      birthDate: at('1990-01-01T00:00:00'),
+      status: STATUS_ACTIVE,
+      roles: [fixture.role],
+      createdAt: at('2026-06-01T10:00:00'),
+      updatedAt: null,
+      updatedBy: null,
+    })),
   ] as never);
 
+  // Os ids dos perfis novos ficam acima do contador que algumas suítes reiniciam em 5.
   await db
     .collection(COLLECTIONS.counters)
-    .insertOne({ _id: COLLECTIONS.users, seq: 5 } as never);
+    .insertOne({ _id: COLLECTIONS.users, seq: 12 } as never);
 }
+
+/** Um usuário por perfil da hierarquia nova (o ADMIN é o `_id` 1). */
+export const VIEWER_USER = {
+  id: 10,
+  name: 'Vera Recepção',
+  email: 'vera@teste.com',
+  cpf: '10000000010',
+  role: ROLE_VIEWER,
+};
+export const ASSISTANT_USER = {
+  id: 11,
+  name: 'Alice Assistente',
+  email: 'alice@teste.com',
+  cpf: '10000000011',
+  role: ROLE_ASSISTANT,
+};
+export const COORDINATOR_USER = {
+  id: 12,
+  name: 'Carla Coordenação',
+  email: 'carla@teste.com',
+  cpf: '10000000012',
+  role: ROLE_COORDINATOR,
+};
+
+const ROLE_FIXTURES = [VIEWER_USER, ASSISTANT_USER, COORDINATOR_USER];
 
 export async function tokenFor(
   app: INestApplication,
@@ -74,6 +115,18 @@ export function adminToken(app: INestApplication): Promise<string> {
 
 export function basicToken(app: INestApplication): Promise<string> {
   return tokenFor(app, 5, [ROLE_BASIC]);
+}
+
+export function viewerToken(app: INestApplication): Promise<string> {
+  return tokenFor(app, VIEWER_USER.id, [ROLE_VIEWER]);
+}
+
+export function assistantToken(app: INestApplication): Promise<string> {
+  return tokenFor(app, ASSISTANT_USER.id, [ROLE_ASSISTANT]);
+}
+
+export function coordinatorToken(app: INestApplication): Promise<string> {
+  return tokenFor(app, COORDINATOR_USER.id, [ROLE_COORDINATOR]);
 }
 
 /** Cliente autenticado, para não repetir o header em cada teste. */
