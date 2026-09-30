@@ -212,7 +212,7 @@ describe('Permissões por perfil', () => {
     });
   });
 
-  describe('administrador do sistema', () => {
+  describe('administrador de tecnologia', () => {
     it('faz tudo o que a coordenação faz e ainda gerencia usuários e pedidos', async () => {
       await clients.admin.post('/api/section').send({ nome: 'Nova' }).expect(201);
       await clients.admin.post('/api/reservation').send(recurrent).expect(201);

@@ -202,7 +202,7 @@ function footer(): string {
     `<tr><td style="background:${BRAND.card};border:1px solid ${BRAND.border};border-top:0;border-radius:0 0 12px 12px;padding:0 32px">` +
     `<p style="margin:0;padding:16px 0 20px;border-top:1px solid ${BRAND.border};font-size:12px;line-height:1.6;color:${BRAND.muted}">` +
     `Aviso automático do <strong>Gestão de Salas</strong> · Ambulatório HU-UFS. ` +
-    `Só o administrador do sistema pode aprovar ou recusar pedidos de acesso.</p>` +
+    `Só o administrador de tecnologia pode aprovar ou recusar pedidos de acesso.</p>` +
     `</td></tr>`
   );
 }

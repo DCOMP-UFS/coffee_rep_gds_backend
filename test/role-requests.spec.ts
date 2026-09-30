@@ -337,7 +337,7 @@ describe('Pedidos de elevação de acesso', () => {
       expect(await rolesOf(5)).toEqual([ROLE_COORDINATOR]);
     });
 
-    it('nunca altera o administrador do sistema', async () => {
+    it('nunca altera o administrador de tecnologia', async () => {
       const response = await admin
         .patch('/api/user/1/role')
         .send({ role: ROLE_VIEWER })
