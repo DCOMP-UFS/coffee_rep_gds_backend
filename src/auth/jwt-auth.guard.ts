@@ -2,21 +2,29 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { AuthorizationDeniedError } from '../common/errors/domain-errors';
+import { UsersRepository } from '../users/users.repository';
 import { AUTHORITIES_KEY } from './authorities.decorator';
 import { setAuthenticatedUser } from './current-user';
+import { PERMISSION_DENIED_MESSAGE, Permission, hasPermission } from './permissions';
 import { IS_PUBLIC_KEY } from './public.decorator';
+import { PERMISSIONS_KEY } from './require-permission.decorator';
+import { resolveRole } from './roles';
 import { TokenService } from './token.service';
 import { UnauthenticatedError } from './unauthenticated.error';
 
 /**
  * Equivale ao resource server OAuth2 do Java combinado com `@PreAuthorize`: por padrão
  * toda rota exige um Bearer token válido, e `@Public()` abre exceções.
+ *
+ * O token só identifica o usuário. O perfil é lido do banco a cada requisição, então uma
+ * promoção ou um rebaixamento vale na hora, sem esperar o token expirar.
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly tokenService: TokenService,
+    private readonly users: UsersRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,26 +35,49 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const token = extractBearerToken(request);
+    const userId = await this.authenticate(context, request);
 
-    if (!token) {
+    const user = await this.users.findById(userId);
+    if (!user) {
       this.challenge(context);
       throw new UnauthenticatedError();
     }
 
-    let userId: number;
-    let authorities: string[];
+    const role = resolveRole(user.roles);
+    const authorities = [`SCOPE_${role}`];
+    setAuthenticatedUser(request, { userId, role, authorities });
 
-    try {
-      const claims = await this.tokenService.verify(token);
-      userId = Number.parseInt(claims.sub, 10);
-      authorities = claims.scope
-        .split(' ')
-        .filter(Boolean)
-        .map((scope) => `SCOPE_${scope}`);
-    } catch {
-      this.challenge(context);
-      throw new UnauthenticatedError();
+    const requiredAuthorities = this.reflector.getAllAndOverride<string[]>(AUTHORITIES_KEY, targets);
+    if (
+      requiredAuthorities?.length &&
+      !requiredAuthorities.some((authority) => authorities.includes(authority))
+    ) {
+      throw new AuthorizationDeniedError('Access Denied');
+    }
+
+    const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(
+      PERMISSIONS_KEY,
+      targets,
+    );
+    if (requiredPermissions?.some((permission) => !hasPermission(role, permission))) {
+      throw new AuthorizationDeniedError(PERMISSION_DENIED_MESSAGE);
+    }
+
+    return true;
+  }
+
+  /** Valida o Bearer token e devolve o id do usuário (claim `sub`). */
+  private async authenticate(context: ExecutionContext, request: Request): Promise<number> {
+    const token = extractBearerToken(request);
+    let userId = Number.NaN;
+
+    if (token) {
+      try {
+        const claims = await this.tokenService.verify(token);
+        userId = Number.parseInt(claims.sub, 10);
+      } catch {
+        userId = Number.NaN;
+      }
     }
 
     if (!Number.isInteger(userId)) {
@@ -54,14 +85,7 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthenticatedError();
     }
 
-    setAuthenticatedUser(request, { userId, authorities });
-
-    const required = this.reflector.getAllAndOverride<string[]>(AUTHORITIES_KEY, targets);
-    if (required?.length && !required.some((authority) => authorities.includes(authority))) {
-      throw new AuthorizationDeniedError('Access Denied');
-    }
-
-    return true;
+    return userId;
   }
 
   /** Cabeçalho que o Spring Security devolve junto do 401. */

@@ -1,11 +1,19 @@
-import { ROLE_ADMIN, ROLE_BASIC, UserDocument } from '../database/documents';
+import { ROLE_ADMIN, ROLE_ASSISTANT, ROLE_BASIC, ROLE_COORDINATOR, ROLE_VIEWER } from '../auth/roles';
+import { UserDocument } from '../database/documents';
 import { formatLocalDateTime } from '../common/date/local-date-time';
 
 /**
- * Ids das roles no `data.sql` do Java. As roles foram embutidas no usuário durante a
- * migração, mas `GET /api/user` expõe a entidade JPA crua, com objetos `{roleId, name}`.
+ * Ids das roles no `data.sql` do Java (ADMIN = 1, BASIC = 2), mais os perfis novos. As
+ * roles foram embutidas no usuário durante a migração, mas `GET /api/user` expõe a
+ * entidade JPA crua, com objetos `{roleId, name}`.
  */
-const ROLE_IDS: Record<string, number> = { [ROLE_ADMIN]: 1, [ROLE_BASIC]: 2 };
+const ROLE_IDS: Record<string, number> = {
+  [ROLE_ADMIN]: 1,
+  [ROLE_BASIC]: 2,
+  [ROLE_COORDINATOR]: 3,
+  [ROLE_ASSISTANT]: 4,
+  [ROLE_VIEWER]: 5,
+};
 
 export interface UserResponse {
   userId: number;

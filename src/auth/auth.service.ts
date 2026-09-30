@@ -5,10 +5,14 @@ import { UNKNOWN_ACTOR_NAME } from '../audit/audit.types';
 import { BadCredentialsError, EntityAlreadyExistsError } from '../common/errors/domain-errors';
 import { BadParametersError } from '../common/errors/domain-errors';
 import { nowWallClock, parseLocalDate } from '../common/date/local-date-time';
-import { ROLE_BASIC, STATUS_ACTIVE } from '../database/documents';
+import { STATUS_ACTIVE } from '../database/documents';
 import { UsersRepository } from '../users/users.repository';
-import { CreateUserDto, LoginDto, LoginResponse } from './dto/auth.dto';
+import { AuthenticatedUser } from './current-user';
+import { CreateUserDto, CurrentUserResponse, LoginDto, LoginResponse } from './dto/auth.dto';
+import { permissionsFor } from './permissions';
+import { ROLE_VIEWER } from './roles';
 import { TokenService } from './token.service';
+import { UnauthenticatedError } from './unauthenticated.error';
 
 /** Custo do BCrypt usado pelo Spring Security, mantido para não encarecer o login. */
 const BCRYPT_ROUNDS = 10;
@@ -67,7 +71,8 @@ export class AuthService {
       cpf: dto.cpf,
       email: dto.email,
       birthDate,
-      roles: [ROLE_BASIC],
+      // Todo cadastro nasce com o menor nível; mais acesso só por pedido aprovado.
+      roles: [ROLE_VIEWER],
       status: STATUS_ACTIVE,
       createdAt: nowWallClock(),
       updatedAt: null,
@@ -82,5 +87,21 @@ export class AuthService {
       actorName: created.name?.trim() || dto.name,
       details: { email: created.email },
     });
+  }
+
+  /** O perfil já vem resolvido do banco pelo `JwtAuthGuard`. */
+  async me(authenticated: AuthenticatedUser): Promise<CurrentUserResponse> {
+    const user = await this.users.findById(authenticated.userId);
+    if (!user) {
+      throw new UnauthenticatedError();
+    }
+
+    return {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: authenticated.role,
+      permissions: permissionsFor(authenticated.role),
+    };
   }
 }

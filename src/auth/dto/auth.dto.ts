@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { isValidCpf } from '../../common/validation/cpf';
+import { Permission } from '../permissions';
+import { Role } from '../roles';
 
 /**
  * O `LoginRequest` do Java **não** tem `@Valid` nem constraints: credenciais ausentes
@@ -32,4 +34,13 @@ export type CreateUserDto = z.infer<typeof createUserSchema>;
 export interface LoginResponse {
   accessToken: string;
   expiresIn: number;
+}
+
+/** Sessão do usuário logado: o frontend decide o que exibir a partir de `permissions`. */
+export interface CurrentUserResponse {
+  id: number;
+  name: string | null;
+  email: string | null;
+  role: Role;
+  permissions: Permission[];
 }

@@ -7,13 +7,13 @@ import { TokenService } from './token.service';
 
 /**
  * Global porque o `JwtAuthGuard`, registrado como guard de aplicação, depende do
- * `TokenService`.
+ * `TokenService` e do `UsersRepository` (reexportado via `UsersModule`) em qualquer módulo.
  */
 @Global()
 @Module({
   imports: [UsersModule, AuditModule],
   controllers: [AuthController],
   providers: [AuthService, TokenService],
-  exports: [TokenService],
+  exports: [TokenService, UsersModule],
 })
 export class AuthModule {}

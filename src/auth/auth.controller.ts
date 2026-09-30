@@ -1,7 +1,15 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { zodPipe } from '../common/pipes/zod-validation.pipe';
 import { AuthService } from './auth.service';
-import { CreateUserDto, LoginDto, LoginResponse, createUserSchema, loginSchema } from './dto/auth.dto';
+import { CurrentUser, AuthenticatedUser } from './current-user';
+import {
+  CreateUserDto,
+  CurrentUserResponse,
+  LoginDto,
+  LoginResponse,
+  createUserSchema,
+  loginSchema,
+} from './dto/auth.dto';
 import { Public } from './public.decorator';
 
 @Controller('api/auth')
@@ -24,5 +32,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   register(@Body(zodPipe(createUserSchema)) dto: CreateUserDto): Promise<void> {
     return this.authService.register(dto);
+  }
+
+  @Get('me')
+  me(@CurrentUser() user: AuthenticatedUser): Promise<CurrentUserResponse> {
+    return this.authService.me(user);
   }
 }
