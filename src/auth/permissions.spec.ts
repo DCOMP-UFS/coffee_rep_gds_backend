@@ -14,13 +14,12 @@ describe('permissionsFor', () => {
     ]);
   });
 
-  it('coordenação cuida do cadastro, das recorrentes e vê o histórico', () => {
+  it('coordenação cuida do cadastro e das recorrentes', () => {
     expect(permissionsFor(ROLE_COORDINATOR)).toEqual([
       'catalog.manage',
       'reservation.recurring.manage',
       'reservation.single.manage',
       'absence.manage',
-      'audit.read',
     ]);
   });
 
@@ -33,6 +32,6 @@ describe('permissionsFor', () => {
   });
 
   it('administrador tem todas as permissões', () => {
-    expect(permissionsFor(ROLE_ADMIN)).toHaveLength(7);
+    expect(permissionsFor(ROLE_ADMIN)).toHaveLength(6);
   });
 });

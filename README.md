@@ -159,12 +159,11 @@ pela API.
 
 | Permissão | Visualizador | Assistente administrativo | Coordenação | Administrador |
 |---|:-:|:-:|:-:|:-:|
-| Consultar tudo (salas, reservas, calendário…) | ✓ | ✓ | ✓ | ✓ |
+| Consultar tudo (salas, reservas, calendário, histórico…) | ✓ | ✓ | ✓ | ✓ |
 | `reservation.single.manage`: criar e cancelar reservas pontuais | | ✓ | ✓ | ✓ |
 | `absence.manage`: registrar, editar e remover ausências | | ✓ | ✓ | ✓ |
 | `reservation.recurring.manage`: reservas recorrentes e ocorrências de série | | | ✓ | ✓ |
 | `catalog.manage`: setores, salas e solicitantes | | | ✓ | ✓ |
-| `audit.read`: histórico de alterações | | | ✓ | ✓ |
 | `users.manage` e `roleRequests.review`: perfis e pedidos de acesso | | | | ✓ |
 
 A matriz vive num único lugar, `src/auth/permissions.ts`, e as rotas a declaram com
