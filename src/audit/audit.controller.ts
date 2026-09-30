@@ -1,5 +1,4 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { RequirePermission } from '../auth/require-permission.decorator';
 import { PageEnvelope } from '../common/pagination/page';
 import { parsePageable, unpagedSchema } from '../common/pagination/pageable';
 import { AuditService } from './audit.service';
@@ -9,7 +8,6 @@ import { AuditEventResponse } from './dto/audit.dto';
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
-  @RequirePermission('audit.read')
   @Get()
   getAll(
     @Query() query: Record<string, string>,
