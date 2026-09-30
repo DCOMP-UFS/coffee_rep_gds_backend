@@ -26,6 +26,14 @@ export function formatLocalDateTime(date: Date | null | undefined): string | nul
   );
 }
 
+/** Formato de exibição em português (`dd/MM/yyyy às HH:mm`), usado em e-mails. */
+export function formatBrazilianDateTime(date: Date): string {
+  return (
+    `${pad(date.getUTCDate())}/${pad(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}` +
+    ` às ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`
+  );
+}
+
 /** Serializa como `yyyy-MM-dd`, sem fuso. */
 export function formatLocalDate(date: Date | null | undefined): string | null {
   if (!date) return null;
