@@ -42,6 +42,9 @@ export async function createTestApp(modules: Type<unknown>[]): Promise<TestApp> 
     JWT_PRIVATE_KEY: privateKey,
     JWT_PUBLIC_KEY: publicKey,
     EXPIRATION_TIME: '86400',
+    // Os testes nunca chamam o Resend de verdade, mesmo com a chave no ambiente da máquina.
+    RESEND_API_KEY: '',
+    ADMIN_NOTIFICATION_EMAILS: '',
   } as NodeJS.ProcessEnv);
 
   const moduleRef = await Test.createTestingModule({
