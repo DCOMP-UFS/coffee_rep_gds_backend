@@ -12,6 +12,12 @@ const csv = (fallback: string) =>
         .filter(Boolean),
     );
 
+/** Variável opcional: vazia ou só com espaços conta como ausente. */
+const optionalText = z
+  .string()
+  .optional()
+  .transform((value) => value?.trim() || undefined);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(8080),
@@ -31,6 +37,14 @@ const envSchema = z.object({
 
   ADMIN_CPF: z.string().min(1).default('17055661030'),
   ADMIN_PASSWORD: z.string().min(1).default('1234'),
+
+  /** Sem chave, os e-mails são apenas registrados no log (caso dos testes e do ambiente local). */
+  RESEND_API_KEY: optionalText,
+  MAIL_FROM: z.string().trim().min(1).default('Gestão de Salas <onboarding@resend.dev>'),
+  /** Quem recebe o aviso de novo pedido de acesso, separado por vírgula. */
+  ADMIN_NOTIFICATION_EMAILS: optionalText,
+  /** Base do frontend, usada nos links dos e-mails. */
+  FRONTEND_URL: optionalText.pipe(z.url().optional()),
 });
 
 export type Env = z.infer<typeof envSchema>;
