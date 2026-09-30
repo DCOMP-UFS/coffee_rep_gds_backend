@@ -27,7 +27,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   [ROLE_VIEWER]: 'Visualizador',
   [ROLE_ASSISTANT]: 'Assistente administrativo',
   [ROLE_COORDINATOR]: 'Coordenação',
-  [ROLE_ADMIN]: 'Administrador do sistema',
+  [ROLE_ADMIN]: 'Administrador de tecnologia',
 };
 
 const ROLE_RANK: Record<Role, number> = {
