@@ -3,6 +3,7 @@ import { Collection, Db } from 'mongodb';
 import { COLLECTIONS, UserDocument } from '../database/documents';
 import { MONGO_DB } from '../database/mongo.tokens';
 import { CountersService } from '../database/counters.service';
+import { nowWallClock } from '../common/date/local-date-time';
 
 @Injectable()
 export class UsersRepository {
@@ -29,6 +30,13 @@ export class UsersRepository {
 
   findAll(): Promise<UserDocument[]> {
     return this.collection.find().toArray();
+  }
+
+  async updateRoles(id: number, roles: string[], updatedBy: number): Promise<void> {
+    await this.collection.updateOne(
+      { _id: id },
+      { $set: { roles, updatedAt: nowWallClock(), updatedBy } },
+    );
   }
 
   async insert(user: Omit<UserDocument, '_id'>): Promise<UserDocument> {

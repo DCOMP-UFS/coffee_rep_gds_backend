@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { Authorities } from '../auth/authorities.decorator';
 import { CurrentUserId } from '../auth/current-user';
+import { ROLES } from '../auth/roles';
 import { UserResponse, toUserResponse } from './users.mapper';
 import { UsersService } from './users.service';
 
@@ -20,7 +21,7 @@ export class UsersController {
     return users.map(toUserResponse);
   }
 
-  @Authorities('SCOPE_ADMIN', 'SCOPE_BASIC')
+  @Authorities(...ROLES.map((role) => `SCOPE_${role}`))
   @Get('authority')
   async authority(@CurrentUserId() userId: number): Promise<string> {
     const user = await this.usersService.findById(userId);
