@@ -14,8 +14,7 @@ export const STATUS_INACTIVE = 0;
 export const RESERVATION_APPROVED = 1;
 export const RESERVATION_CANCELLED = 2;
 
-export const ROLE_ADMIN = 'ADMIN';
-export const ROLE_BASIC = 'BASIC';
+export { ROLE_ADMIN, ROLE_BASIC } from '../auth/roles';
 
 /** Campos de auditoria comuns a todos os agregados. */
 interface Auditable {
@@ -94,6 +93,37 @@ export interface AuditEventDocument {
   createdAt: Date;
 }
 
+export const ROLE_REQUEST_PENDING = 'PENDING';
+export const ROLE_REQUEST_APPROVED = 'APPROVED';
+export const ROLE_REQUEST_REJECTED = 'REJECTED';
+export const ROLE_REQUEST_CANCELLED = 'CANCELLED';
+
+export const ROLE_REQUEST_STATUSES = [
+  ROLE_REQUEST_PENDING,
+  ROLE_REQUEST_APPROVED,
+  ROLE_REQUEST_REJECTED,
+  ROLE_REQUEST_CANCELLED,
+] as const;
+
+export type RoleRequestStatus = (typeof ROLE_REQUEST_STATUSES)[number];
+
+/** Pedido de elevação de perfil, revisado pelo administrador. */
+export interface RoleRequestDocument {
+  _id: number;
+  userId: number;
+  /** Cópia do nome e do e-mail no momento do pedido, para a listagem não depender de join. */
+  userName: string;
+  userEmail: string | null;
+  currentRole: string;
+  requestedRole: string;
+  justification: string;
+  status: RoleRequestStatus;
+  reviewedBy: number | null;
+  reviewedAt: Date | null;
+  reviewNote: string | null;
+  createdAt: Date;
+}
+
 export const COLLECTIONS = {
   users: 'users',
   sections: 'sections',
@@ -102,6 +132,7 @@ export const COLLECTIONS = {
   requesterAbsences: 'requesterAbsences',
   reservations: 'reservations',
   auditEvents: 'auditEvents',
+  roleRequests: 'roleRequests',
   counters: 'counters',
 } as const;
 
