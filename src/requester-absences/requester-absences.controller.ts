@@ -12,6 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { CurrentUserId } from '../auth/current-user';
+import { RequirePermission } from '../auth/require-permission.decorator';
 import { zodPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateRequesterAbsenceDto,
@@ -31,6 +32,7 @@ export class RequesterAbsencesController {
     return this.service.findAll(Number.isInteger(parsed) ? parsed : null);
   }
 
+  @RequirePermission('absence.manage')
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -40,6 +42,7 @@ export class RequesterAbsencesController {
     return this.service.create(dto, userId);
   }
 
+  @RequirePermission('absence.manage')
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -49,6 +52,7 @@ export class RequesterAbsencesController {
     return this.service.update(id, dto, userId);
   }
 
+  @RequirePermission('absence.manage')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(

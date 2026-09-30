@@ -12,6 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { CurrentUserId } from '../auth/current-user';
+import { RequirePermission } from '../auth/require-permission.decorator';
 import { PageEnvelope } from '../common/pagination/page';
 import { parsePageable, unpagedSchema } from '../common/pagination/pageable';
 import { zodPipe } from '../common/pipes/zod-validation.pipe';
@@ -43,6 +44,7 @@ export class SectionsController {
     return this.sectionsService.findActivePaged(name, parsePageable(query));
   }
 
+  @RequirePermission('catalog.manage')
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -52,6 +54,7 @@ export class SectionsController {
     return this.sectionsService.create(dto, userId);
   }
 
+  @RequirePermission('catalog.manage')
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -61,6 +64,7 @@ export class SectionsController {
     return this.sectionsService.update(id, dto, userId);
   }
 
+  @RequirePermission('catalog.manage')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUserId() userId: number): Promise<void> {
