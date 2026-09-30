@@ -48,15 +48,33 @@ export function maskUri(uri: string): string {
   return uri.replace(/\/\/([^:/@]+):([^@]+)@/, '//$1:****@');
 }
 
+function isLocalUri(uri: string): boolean {
+  return /(@|\/\/)(localhost|127\.0\.0\.1)(:|\/)/.test(uri);
+}
+
+/**
+ * Gravação não destrutiva (ex.: migração de dados) contra um cluster remoto: exige
+ * `--yes` para que ninguém altere a produção por engano.
+ */
+export function assertRemoteWriteConfirmed(uri: string, description: string): void {
+  if (isLocalUri(uri) || process.argv.includes('--yes')) {
+    return;
+  }
+
+  throw new ScriptUsageError(
+    `O destino não é local:\n  ${maskUri(uri)}\n\n` +
+      `Esta operação ${description}.\n` +
+      'Se for mesmo isso que você quer, repita o comando acrescentando --yes.',
+  );
+}
+
 /**
  * A migração apaga cada coleção antes de inserir. Contra o Mongo local isso é rotina;
  * contra um cluster remoto seria destrutivo por acidente, então o alvo remoto exige
  * confirmação explícita com `--yes`.
  */
 export function assertDestructiveTargetAllowed(uri: string): void {
-  const isLocal = /(@|\/\/)(localhost|127\.0\.0\.1)(:|\/)/.test(uri);
-
-  if (isLocal || process.argv.includes('--yes')) {
+  if (isLocalUri(uri) || process.argv.includes('--yes')) {
     return;
   }
 
