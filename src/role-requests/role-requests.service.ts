@@ -31,7 +31,7 @@ import { RoleRequestReview, RoleRequestsRepository, isDuplicateKeyError } from '
 
 export const ROLE_REQUEST_MESSAGES = {
   notFound: 'Pedido não encontrado!',
-  adminCannotRequest: 'O administrador do sistema já tem acesso total e não precisa fazer pedidos.',
+  adminCannotRequest: 'O administrador de tecnologia já tem acesso total e não precisa fazer pedidos.',
   mustBeAbove: 'Escolha um perfil acima do seu perfil atual.',
   alreadyPending:
     'Você já tem um pedido pendente. Aguarde a análise ou cancele o pedido atual antes de fazer outro.',

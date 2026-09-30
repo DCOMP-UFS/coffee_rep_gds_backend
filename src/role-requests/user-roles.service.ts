@@ -8,7 +8,7 @@ import { UsersRepository } from '../users/users.repository';
 import { RoleRequestsRepository } from './role-requests.repository';
 
 export const ADMIN_ROLE_LOCKED_MESSAGE =
-  'O perfil do administrador do sistema não pode ser alterado.';
+  'O perfil do administrador de tecnologia não pode ser alterado.';
 
 export const DIRECT_CHANGE_NOTE = 'Perfil alterado diretamente pelo administrador.';
 
