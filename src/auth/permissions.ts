@@ -2,7 +2,7 @@ import { ROLE_ADMIN, ROLE_ASSISTANT, ROLE_COORDINATOR, Role } from './roles';
 
 /**
  * Matriz única de permissões. Leitura não aparece aqui: qualquer usuário autenticado
- * consulta calendário, salas, reservas, setores, solicitantes e ausências.
+ * consulta calendário, salas, reservas, setores, solicitantes, ausências e o histórico.
  * O frontend recebe a lista calculada em `GET /api/auth/me`, sem duplicar esta tabela.
  */
 export const PERMISSIONS = {
@@ -13,7 +13,6 @@ export const PERMISSIONS = {
   /** Criar e cancelar reservas pontuais, inclusive as de outras pessoas. */
   'reservation.single.manage': [ROLE_ADMIN, ROLE_COORDINATOR, ROLE_ASSISTANT],
   'absence.manage': [ROLE_ADMIN, ROLE_COORDINATOR, ROLE_ASSISTANT],
-  'audit.read': [ROLE_ADMIN, ROLE_COORDINATOR],
   'users.manage': [ROLE_ADMIN],
   'roleRequests.review': [ROLE_ADMIN],
 } as const satisfies Record<string, readonly Role[]>;

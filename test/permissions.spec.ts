@@ -95,12 +95,13 @@ describe('Permissões por perfil', () => {
   }
 
   describe('visualizador', () => {
-    it('consulta salas, reservas, setores, solicitantes e ausências', async () => {
+    it('consulta salas, reservas, setores, solicitantes, ausências e o histórico', async () => {
       await clients.viewer.get('/api/room').expect(200);
       await clients.viewer.get(`/api/reservation?${PERIOD}`).expect(200);
       await clients.viewer.get('/api/section').expect(200);
       await clients.viewer.get('/api/requester').expect(200);
       await clients.viewer.get('/api/requester-absence').expect(200);
+      await clients.viewer.get('/api/audit').expect(200);
     });
 
     it.each([
@@ -120,7 +121,6 @@ describe('Permissões por perfil', () => {
             .send({ solicitanteId: 2, dataInicio: '2026-08-24', dataFim: '2026-08-25' }),
       ],
       ['POST /api/reservation', (c: Client) => c.post('/api/reservation').send(single)],
-      ['GET /api/audit', (c: Client) => c.get('/api/audit')],
       ['GET /api/user', (c: Client) => c.get('/api/user')],
       ['GET /api/role-request', (c: Client) => c.get('/api/role-request')],
     ])('recebe 403 em %s', async (_name, call) => {
@@ -166,22 +166,24 @@ describe('Permissões por perfil', () => {
       await clients.assistant.delete(`/api/requester-absence/${created.body.id}`).expect(204);
     });
 
-    it('não altera o cadastro nem vê o histórico', async () => {
+    it('não altera o cadastro', async () => {
       await clients.assistant.post('/api/section').send({ nome: 'Nova' }).expect(403);
       await clients.assistant.post('/api/room').send({ nome: 'Sala X', setorId: 4 }).expect(403);
-      await clients.assistant.get('/api/audit').expect(403);
+    });
+
+    it('consulta o histórico', async () => {
+      await clients.assistant.get('/api/audit').expect(200);
     });
   });
 
   describe('coordenação', () => {
-    it('gerencia o cadastro e vê o histórico', async () => {
+    it('gerencia o cadastro', async () => {
       await clients.coordinator.post('/api/section').send({ nome: 'Nova' }).expect(201);
       await clients.coordinator.post('/api/room').send({ nome: 'Sala X', setorId: 4 }).expect(201);
       await clients.coordinator
         .post('/api/requester')
         .send({ nome: 'Dr. X', especialidade: 'Clínica' })
         .expect(201);
-      await clients.coordinator.get('/api/audit').expect(200);
     });
 
     it('cria e cancela reservas recorrentes, inclusive uma ocorrência', async () => {
@@ -206,7 +208,6 @@ describe('Permissões por perfil', () => {
     it('mantém o acesso de coordenação', async () => {
       await clients.basic.post('/api/section').send({ nome: 'Nova' }).expect(201);
       await clients.basic.post('/api/reservation').send(recurrent).expect(201);
-      await clients.basic.get('/api/audit').expect(200);
       await clients.basic.get('/api/user').expect(403);
     });
   });
@@ -215,7 +216,6 @@ describe('Permissões por perfil', () => {
     it('faz tudo o que a coordenação faz e ainda gerencia usuários e pedidos', async () => {
       await clients.admin.post('/api/section').send({ nome: 'Nova' }).expect(201);
       await clients.admin.post('/api/reservation').send(recurrent).expect(201);
-      await clients.admin.get('/api/audit').expect(200);
       await clients.admin.get('/api/user').expect(200);
       await clients.admin.get('/api/role-request').expect(200);
       await clients.admin.get('/api/role-request/summary').expect(200);
