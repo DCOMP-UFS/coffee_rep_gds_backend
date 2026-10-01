@@ -325,3 +325,9 @@ frontend para a nova URL, e incluir a origem do frontend em `CORS_ORIGINS`.
 3. Rode `pnpm db:migrate-roles --env .env.atlas` (dry-run), confira a lista e repita com
    `--apply --yes`.
 4. Publique o frontend, que depende de `GET /api/auth/me`.
+
+## Licença
+
+Software proprietário, com todos os direitos reservados. Uso, cópia, modificação, distribuição
+ou exploração comercial dependem de autorização por escrito do titular. Os termos completos estão
+em [LICENSE](LICENSE).
