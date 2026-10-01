@@ -12,6 +12,8 @@ Decisões de arquitetura com contexto que não cabe em comentário de código es
 - [BUGS-HERDADOS.md](docs/BUGS-HERDADOS.md) — comportamentos do Java replicados de propósito.
 - [DEPENDENCIA-CIRCULAR-SETORES-SALAS.md](docs/DEPENDENCIA-CIRCULAR-SETORES-SALAS.md) — por que
   setores e salas dependem do repositório um do outro, e não do serviço.
+- [TESTE-INSTAVEL-FUSO-HORARIO.md](docs/TESTE-INSTAVEL-FUSO-HORARIO.md) — por que os testes calculam
+  "hoje" e o "mês corrente" com `nowWallClock()`, e o incidente na virada do mês que motivou a regra.
 
 ## Pré-requisitos
 
@@ -217,6 +219,11 @@ Os dados foram importados como **horário de parede em UTC**. Toda escrita usa `
 converte o instante atual para o fuso da aplicação (`America/Sao_Paulo`) antes de gravar. Usar
 `new Date()` cru seria um bug silencioso: às 09:00 em São Paulo o instante UTC é 12:00, e o cálculo
 de sala ocupada apontaria a sala errada.
+
+A mesma regra vale para os testes: dados que dependem de "hoje" ou do "mês corrente" devem ser
+montados com `nowWallClock()`. Lidos em UTC, eles divergem do serviço no último dia de cada mês, das
+21:00 às 23:59 no horário de Brasília. O incidente que motivou a regra está em
+[docs/TESTE-INSTAVEL-FUSO-HORARIO.md](docs/TESTE-INSTAVEL-FUSO-HORARIO.md).
 
 ## Modelo de dados
 
