@@ -1,4 +1,5 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { nowWallClock } from '../src/common/date/local-date-time';
 import { COLLECTIONS } from '../src/database/documents';
 import { ReservationsModule } from '../src/reservations/reservations.module';
 import { at, authed, basicToken, seedCatalog, seedUsers } from './support/fixtures';
@@ -425,28 +426,57 @@ describe('Reservas', () => {
       expect(Array.isArray(response.body)).toBe(true);
     });
 
-    it('traz as reservas do mês corrente', async () => {
-      const now = new Date();
+    /** Reserva das 08:00 às 10:00 (horário de parede) no dia 15 do mês informado (0 = janeiro). */
+    async function insertReservationOnDay15(id: number, year: number, month: number) {
       await context.db.collection(COLLECTIONS.reservations).insertOne({
-        _id: 8000,
+        _id: id,
         roomId: 12,
         requesterId: 2,
-        startDate: new Date(
-          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 15, 8, 0, 0),
-        ),
-        endDate: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 15, 10, 0, 0)),
+        startDate: new Date(Date.UTC(year, month, 15, 8, 0, 0)),
+        endDate: new Date(Date.UTC(year, month, 15, 10, 0, 0)),
         observations: null,
         status: 1,
         recurrenceId: null,
-        createdAt: now,
+        createdAt: new Date(),
         updatedAt: null,
         updatedBy: 5,
       } as never);
+    }
+
+    it('traz as reservas do mês corrente', async () => {
+      // O mês corrente é o de São Paulo, o mesmo relógio que o serviço usa.
+      const today = nowWallClock();
+      await insertReservationOnDay15(8000, today.getUTCFullYear(), today.getUTCMonth());
 
       const response = await client.get('/api/reservation/current-month').expect(200);
 
       expect(response.body).toHaveLength(1);
       expect(response.body[0].reservationId).toBe(8000);
+    });
+
+    describe('na virada do mês', () => {
+      // 01/08/2025 01:30 em UTC ainda é 31/07/2025 22:30 em São Paulo: o mês corrente é julho.
+      const UTC_INSTANT_STILL_JULY_IN_SAO_PAULO = new Date('2025-08-01T01:30:00Z');
+
+      beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'], shouldAdvanceTime: true });
+        vi.setSystemTime(UTC_INSTANT_STILL_JULY_IN_SAO_PAULO);
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it('usa o mês de São Paulo, e não o de UTC', async () => {
+        await insertReservationOnDay15(8001, 2025, 6);
+        await insertReservationOnDay15(8002, 2025, 7);
+
+        const response = await client.get('/api/reservation/current-month').expect(200);
+
+        expect(response.body.map((item: { reservationId: number }) => item.reservationId)).toEqual(
+          [8001],
+        );
+      });
     });
   });
 

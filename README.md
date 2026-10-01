@@ -12,6 +12,8 @@ Decisões de arquitetura com contexto que não cabe em comentário de código es
 - [BUGS-HERDADOS.md](docs/BUGS-HERDADOS.md) — comportamentos do Java replicados de propósito.
 - [DEPENDENCIA-CIRCULAR-SETORES-SALAS.md](docs/DEPENDENCIA-CIRCULAR-SETORES-SALAS.md) — por que
   setores e salas dependem do repositório um do outro, e não do serviço.
+- [TESTE-INSTAVEL-FUSO-HORARIO.md](docs/TESTE-INSTAVEL-FUSO-HORARIO.md) — por que os testes calculam
+  "hoje" e o "mês corrente" com `nowWallClock()`, e o incidente na virada do mês que motivou a regra.
 
 ## Pré-requisitos
 
@@ -218,6 +220,11 @@ converte o instante atual para o fuso da aplicação (`America/Sao_Paulo`) antes
 `new Date()` cru seria um bug silencioso: às 09:00 em São Paulo o instante UTC é 12:00, e o cálculo
 de sala ocupada apontaria a sala errada.
 
+A mesma regra vale para os testes: dados que dependem de "hoje" ou do "mês corrente" devem ser
+montados com `nowWallClock()`. Lidos em UTC, eles divergem do serviço no último dia de cada mês, das
+21:00 às 23:59 no horário de Brasília. O incidente que motivou a regra está em
+[docs/TESTE-INSTAVEL-FUSO-HORARIO.md](docs/TESTE-INSTAVEL-FUSO-HORARIO.md).
+
 ## Modelo de dados
 
 O dump vive em `../db-backup/gestao-salas-dump.sql` (configurável via `DUMP_PATH`).
@@ -325,3 +332,9 @@ frontend para a nova URL, e incluir a origem do frontend em `CORS_ORIGINS`.
 3. Rode `pnpm db:migrate-roles --env .env.atlas` (dry-run), confira a lista e repita com
    `--apply --yes`.
 4. Publique o frontend, que depende de `GET /api/auth/me`.
+
+## Licença
+
+Software proprietário, com todos os direitos reservados. Uso, cópia, modificação, distribuição
+ou exploração comercial dependem de autorização por escrito do titular. Os termos completos estão
+em [LICENSE](LICENSE).
